@@ -15,7 +15,7 @@
     "check:prettier": "prettier -c './**/*.{js,ts,json,yml,md,tsx}'",
     "check:code": "eslint . --max-warnings=0",
     "fix:code": "npm run check:code -- --fix",
-    "fix:prettier": "prettier --write ./**/*.{js,ts,json,yml,md,tsx}"
+    "fix:prettier": "prettier --write ./**/*.{js,ts,json,yml,md}"
   },
   "repository": {
     "type": "git",
