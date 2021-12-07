@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+name: Package CI
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install dependencies
+        run: npm ci
+      - name: Build package
+        run: npm run build
+      - name: Run tests
+        run: npm run test
+      - name: Run linter
+        run: npm run check:code
+      - name: Run prettifier
+        run: npm run check:prettier
+      - name: Publish
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        run: npx semantic-release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
