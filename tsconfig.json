@@ -3,7 +3,7 @@
     "outDir": "dist",
     "module": "commonjs",
     "target": "es2019",
-    "lib": ["es2019"],
+    "lib": ["es2019", "dom"],
     "sourceMap": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
@@ -17,8 +17,9 @@
     "noUnusedLocals": true,
     "declaration": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "src/test-utils/**/*.ts" , "src/**/*.spec.ts"]
 }
