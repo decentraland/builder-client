@@ -5,8 +5,8 @@ import { Signer } from '@ethersproject/abstract-signer'
 
 /**
  * Creates an identity to later be used in the IAuthentication implementation.
- * @params signer - Any Ethereum signer (RPC or Wallet signer)
- * @params expiration - ttl in seconds of the identity
+ * @param signer - Any Ethereum signer (RPC or Wallet signer).
+ * @param expiration - TTL in seconds of the identity.
  */
 export async function createIdentity(
   signer: Signer,
