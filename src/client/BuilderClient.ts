@@ -16,6 +16,7 @@ export class BuilderClient {
       baseURL: url
     })
 
+    // Uses the interceptors API to add the auth headers to all requests
     this.axios.interceptors.request.use((config) => {
       if (!config.method || !config.url) {
         return config
@@ -30,6 +31,7 @@ export class BuilderClient {
       return config
     })
 
+    // Uses the interceptors API to throw when the builder server returns a 200 with a ok property set to false
     this.axios.interceptors.response.use((response) => {
       if (response.data && response.data.ok === false) {
         throw new ClientError(
@@ -42,6 +44,11 @@ export class BuilderClient {
     })
   }
 
+  /**
+   * Creates the authorization headers for the given method and path.
+   * @param method - The HTTP method.
+   * @param path - The HTTP request path.
+   */
   private createAuthHeaders(
     method: string,
     path: string
@@ -55,6 +62,11 @@ export class BuilderClient {
     return headers
   }
 
+  /**
+   * Updates or inserts an item.
+   * @param item - The item to insert or update.
+   * @param newContent - The content to be added or updated in the item. This content must be contained in the items contents.
+   */
   async upsertItem(
     item: Item,
     newContent: Record<string, Blob | Buffer>
@@ -95,9 +107,15 @@ export class BuilderClient {
     }
   }
 
-  async getContentSize(fileName: string): Promise<number> {
+  /**
+   * Gets the content size of an already uploaded content file.
+   * @param contentIdentifier - The content hash.
+   */
+  async getContentSize(contentIdentifier: string): Promise<number> {
     try {
-      const response = await this.axios.head(`/v1/storage/contents/${fileName}`)
+      const response = await this.axios.head(
+        `/v1/storage/contents/${contentIdentifier}`
+      )
       return Number(response.headers['content-length'])
     } catch (error) {
       if (axios.isAxiosError(error)) {
