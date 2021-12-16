@@ -1,5 +1,5 @@
 import { Rarity } from '@dcl/schemas'
-import { capitalize } from '../test-utils/string'
+import { toCamelCase } from '../test-utils/string'
 import { ItemFactory } from './ItemFactory'
 import { LocalItem, WearableCategory } from './types'
 
@@ -21,8 +21,9 @@ const testPropertyBuilder = <T extends keyof LocalItem>(
   property: T,
   value: LocalItem[T]
 ) => {
-  const capitalizedProperty = capitalize(property)
+  const camelCasedProperty = toCamelCase(property)
   let factory: ItemFactory
+  console.log('Camel cased property', camelCasedProperty)
 
   describe(`when updating the item's ${property}`, () => {
     beforeEach(() => {
@@ -31,7 +32,7 @@ const testPropertyBuilder = <T extends keyof LocalItem>(
 
     describe("and the item hasn't been initialized", () => {
       it('should throw an error signaling that the item has not been initialized', () => {
-        expect(() => factory[`with${capitalizedProperty}`](value)).toThrow(
+        expect(() => factory[`with${camelCasedProperty}`](value)).toThrow(
           'Item has not been initialized'
         )
       })
@@ -42,8 +43,8 @@ const testPropertyBuilder = <T extends keyof LocalItem>(
         createBasicItem(factory)
       })
 
-      it('should build an item with the updated id', () => {
-        factory[`with${capitalizedProperty}`](value)
+      it(`should build an item with the updated ${property}`, () => {
+        factory[`with${camelCasedProperty}`](value)
         return expect(factory.create()).resolves.toEqual(
           expect.objectContaining({ [property]: value })
         )
@@ -56,7 +57,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
   property: T,
   value: LocalItem['data'][T]
 ) => {
-  const capitalizedProperty = capitalize(property)
+  const camelCasedProperty = toCamelCase(property)
   let factory: ItemFactory
 
   describe(`when updating the item's ${property}`, () => {
@@ -66,7 +67,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
 
     describe("and the item hasn't been initialized", () => {
       it('should throw an error signaling that the item has not been initialized', () => {
-        expect(() => factory[`with${capitalizedProperty}`](value)).toThrow(
+        expect(() => factory[`with${camelCasedProperty}`](value)).toThrow(
           'Item has not been initialized'
         )
       })
@@ -78,7 +79,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
       })
 
       it('should build an item with the updated id', () => {
-        factory[`with${capitalizedProperty}`](value)
+        factory[`with${camelCasedProperty}`](value)
         return expect(factory.create()).resolves.toEqual(
           expect.objectContaining({
             data: expect.objectContaining({ [property]: value })

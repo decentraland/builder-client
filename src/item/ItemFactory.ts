@@ -163,7 +163,6 @@ export class ItemFactory {
     name: string,
     rarity: Rarity,
     category: WearableCategory,
-    owner: string,
     collectionId?: string,
     description?: string
   ) {
@@ -180,10 +179,10 @@ export class ItemFactory {
       description: description || '',
       thumbnail: THUMBNAIL_PATH,
       type: ItemType.WEARABLE,
-      collectionId,
-      contentHash: null,
+      collection_id: collectionId ?? null,
+      content_hash: null,
       rarity,
-      owner,
+      urn: null,
       data: {
         category,
         replaces: [],
@@ -256,15 +255,6 @@ export class ItemFactory {
    */
   public withCollectionId(collectionId: string): ItemFactory {
     return this.setItemProperty('collection_id', collectionId)
-  }
-
-  /**
-   * Sets or updates the item's owner.
-   * It requires the item to be defined first.
-   * @param owner - The item's owner.
-   */
-  public withOwner(owner: string): ItemFactory {
-    return this.setItemProperty('eth_address', owner)
   }
 
   /**
