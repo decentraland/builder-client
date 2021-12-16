@@ -1,6 +1,6 @@
 import { Hashing } from 'dcl-catalyst-commons'
 import toBuffer from 'blob-to-buffer'
-import { Blob } from 'buffer'
+// import { Blob } from 'buffer'
 import { BodyShapeType } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { HashedContent, RawContent, SortedContent } from './types'
@@ -41,12 +41,12 @@ export async function computeHashes(
   }, {})
 }
 
-export async function calculateBufferHash(buffer: Buffer): Promise<string> {
+export async function calculateBufferHash(buffer: Uint8Array): Promise<string> {
   return Hashing.calculateIPFSHash(buffer)
 }
 
 export async function makeContentFiles(
-  files: Record<string, string | Blob | Buffer>
+  files: Record<string, string | Blob | Uint8Array>
 ): Promise<Map<string, Buffer>> {
   // const makeRequests = []
   // for (const fileName of Object.keys(files)) {
@@ -65,8 +65,8 @@ export async function makeContentFiles(
 
 export function makeContentFile(
   path: string,
-  content: string | Blob
-): Promise<{ name: string; content: Buffer }> {
+  content: string | Blob | Uint8Array
+): Promise<{ name: string; content: Uint8Array }> {
   return new Promise((resolve, reject) => {
     if (typeof content === 'string') {
       const buffer = Buffer.from(content)
@@ -74,7 +74,7 @@ export function makeContentFile(
       // TODO: See what to do with the blob here
     } else if (content instanceof Blob) {
       // TODO: fix this any
-      toBuffer(content, (err: Error, buffer: Buffer) => {
+      toBuffer(content, (err: Error, buffer: Uint8Array) => {
         if (err) reject(err)
         resolve({ name: path, content: buffer })
       })

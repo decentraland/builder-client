@@ -1,26 +1,26 @@
-import { THUMBNAIL_PATH } from './constants'
+import { Rarity } from '@dcl/schemas'
 import {
   computeHashes,
   prefixContentName,
   sortContent
 } from '../content/content'
 import { SortedContent } from '../content/types'
+import { THUMBNAIL_PATH } from './constants'
 import {
   BodyShapeType,
-  Item,
-  ItemRarity,
   ItemType,
+  LocalItem,
   WearableBodyShape,
   WearableCategory,
   WearableRepresentation
 } from './types'
 
 export class ItemFactory {
-  private item: Item | null = null
+  private item: LocalItem | null = null
   private newContent: Record<string, Blob> = {}
   private readonly NOT_INITIALIZED_ERROR = 'Item has not been initialized'
 
-  constructor(item?: Item) {
+  constructor(item?: LocalItem) {
     this.item = item ?? null
   }
 
@@ -120,9 +120,9 @@ export class ItemFactory {
    * @param property - The property of the item to be set.
    * @param value - The value of the property to be set.
    */
-  private setItemProperty<T extends keyof Item>(
+  private setItemProperty<T extends keyof LocalItem>(
     property: T,
-    value: Item[T]
+    value: LocalItem[T]
   ): ItemFactory {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
@@ -140,9 +140,9 @@ export class ItemFactory {
    * @param property - The property of the item to be set.
    * @param value - The value of the property to be set.
    */
-  private setItemDataProperty<T extends keyof Item['data']>(
+  private setItemDataProperty<T extends keyof LocalItem['data']>(
     property: T,
-    value: Item['data'][T]
+    value: LocalItem['data'][T]
   ): ItemFactory {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
@@ -161,7 +161,7 @@ export class ItemFactory {
   public newItem(
     id: string,
     name: string,
-    rarity: ItemRarity,
+    rarity: Rarity,
     category: WearableCategory,
     owner: string,
     collectionId?: string,
@@ -245,7 +245,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param rarity - The item's rarity.
    */
-  public withRarity(rarity: ItemRarity): ItemFactory {
+  public withRarity(rarity: Rarity): ItemFactory {
     return this.setItemProperty('rarity', rarity)
   }
 
@@ -255,7 +255,7 @@ export class ItemFactory {
    * @param collectionId - The item's collectionId.
    */
   public withCollectionId(collectionId: string): ItemFactory {
-    return this.setItemProperty('collectionId', collectionId)
+    return this.setItemProperty('collection_id', collectionId)
   }
 
   /**
@@ -264,7 +264,7 @@ export class ItemFactory {
    * @param owner - The item's owner.
    */
   public withOwner(owner: string): ItemFactory {
-    return this.setItemProperty('owner', owner)
+    return this.setItemProperty('eth_address', owner)
   }
 
   /**
@@ -306,7 +306,7 @@ export class ItemFactory {
     bodyShape: BodyShapeType,
     model: string,
     contents: Record<string, Blob>
-  ) {
+  ): ItemFactory {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }
@@ -353,7 +353,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param bodyShape - The body shape that will be used to identify the representation to remove.
    */
-  public withoutRepresentation(bodyShape: BodyShapeType) {
+  public withoutRepresentation(bodyShape: BodyShapeType): ItemFactory {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }

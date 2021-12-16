@@ -1,6 +1,7 @@
+import { Rarity } from '@dcl/schemas'
 import { capitalize } from '../test-utils/string'
 import { ItemFactory } from './ItemFactory'
-import { Item, ItemRarity, WearableCategory } from './types'
+import { LocalItem, WearableCategory } from './types'
 
 let itemFactory: ItemFactory
 
@@ -8,7 +9,7 @@ const createBasicItem = (itemFactory: ItemFactory): ItemFactory => {
   return itemFactory.newItem(
     'anId',
     'aName',
-    ItemRarity.COMMON,
+    Rarity.COMMON,
     WearableCategory.EYEBROWS,
     '0x00',
     'aCollectionId',
@@ -16,9 +17,9 @@ const createBasicItem = (itemFactory: ItemFactory): ItemFactory => {
   )
 }
 
-const testPropertyBuilder = <T extends keyof Item>(
+const testPropertyBuilder = <T extends keyof LocalItem>(
   property: T,
-  value: Item[T]
+  value: LocalItem[T]
 ) => {
   const capitalizedProperty = capitalize(property)
   let factory: ItemFactory
@@ -51,9 +52,9 @@ const testPropertyBuilder = <T extends keyof Item>(
   })
 }
 
-const testDataPropertyBuilder = <T extends keyof Item['data']>(
+const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
   property: T,
-  value: Item['data'][T]
+  value: LocalItem['data'][T]
 ) => {
   const capitalizedProperty = capitalize(property)
   let factory: ItemFactory
@@ -93,7 +94,7 @@ beforeEach(() => {
 })
 
 describe('when creating a new item', () => {
-  let item: Item
+  let item: LocalItem
 
   beforeEach(async () => {
     createBasicItem(itemFactory)
@@ -109,7 +110,7 @@ describe('when creating a new item', () => {
   })
 
   it('should have its rarity set', () => {
-    expect(item.rarity).toBe(ItemRarity.COMMON)
+    expect(item.rarity).toBe(Rarity.COMMON)
   })
 
   it('should have its category set', () => {
@@ -117,11 +118,11 @@ describe('when creating a new item', () => {
   })
 
   it('should have its owner set', () => {
-    expect(item.owner).toBe('0x00')
+    expect(item.eth_address).toBe('0x00')
   })
 
   it('should have its collection ID set', () => {
-    expect(item.collectionId).toBe('aCollectionId')
+    expect(item.collection_id).toBe('aCollectionId')
   })
 
   it('should have its description set', () => {
@@ -161,11 +162,11 @@ testPropertyBuilder('name', 'anotherName')
 
 testPropertyBuilder('description', 'anotherDescription')
 
-testPropertyBuilder('rarity', ItemRarity.UNIQUE)
+testPropertyBuilder('rarity', Rarity.UNIQUE)
 
-testPropertyBuilder('collectionId', 'anotherCollectionId')
+testPropertyBuilder('collection_id', 'anotherCollectionId')
 
-testPropertyBuilder('owner', '0x1111')
+testPropertyBuilder('eth_address', '0x1111')
 
 testDataPropertyBuilder('category', WearableCategory.HAT)
 
