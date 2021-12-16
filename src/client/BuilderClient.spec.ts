@@ -1,25 +1,26 @@
 import { ethers } from 'ethers'
 import nock from 'nock'
-import { FullItem, Item, ItemType, WearableCategory } from '../item/types'
+import {
+  ItemType,
+  LocalItem,
+  RemoteItem,
+  WearableCategory
+} from '../item/types'
 import { fakePrivateKey } from '../test-utils/crypto'
 import { BuilderClient } from './BuilderClient'
 import { ClientError } from './BuilderClient.errors'
 import { createIdentity } from './identity'
-import { toRemoteItem } from './transformers'
 import {
   addressRegex,
   publicKeyRegex,
   secondHeaderPayloadRegex
 } from './matchers'
-import { RemoteItem, UpsertableRemoteItem } from './types'
 
 nock.disableNetConnect()
 
 const testUrl = 'http://test-url'
-let item: Item
-let fullItem: FullItem
+let item: LocalItem
 let remoteItem: RemoteItem
-let upsertableRemoteItem: UpsertableRemoteItem
 let client: BuilderClient
 
 const FIRST_AUTH_HEADER = 'x-identity-auth-chain-0'
@@ -62,12 +63,17 @@ beforeEach(async () => {
   client = new BuilderClient(testUrl, identity)
 
   item = {
-    type: ItemType.WEARABLE,
-    owner: 'someOwner',
     id: 'anId',
     name: 'aName',
-    thumbnail: 'aThumbnail',
     description: 'aDescription',
+    eth_address: 'someOwner',
+    collection_id: null,
+    price: null,
+    urn: null,
+    rarity: null,
+    beneficiary: null,
+    type: ItemType.WEARABLE,
+    thumbnail: 'aThumbnail',
     metrics: {
       triangles: 0,
       materials: 0,
@@ -86,26 +92,17 @@ beforeEach(async () => {
       hides: [],
       tags: []
     },
-    contentHash: 'aContentHash'
+    content_hash: 'aContentHash'
   }
-  fullItem = {
-    ...item,
-    isPublished: false,
-    isApproved: false,
-    inCatalyst: false,
-    createdAt: date,
-    updatedAt: date,
-    totalSupply: 1000
-  }
-  upsertableRemoteItem = toRemoteItem(item)
   remoteItem = {
-    ...upsertableRemoteItem,
-    total_supply: 1000,
-    is_approved: false,
+    ...item,
     is_published: false,
+    is_approved: false,
     in_catalyst: false,
     created_at: date,
-    updated_at: date
+    updated_at: date,
+    blockchain_item_id: null,
+    total_supply: 1000
   }
 })
 
@@ -132,13 +129,11 @@ describe('when upserting an item', () => {
 
     describe('and the failure is represented with an ok as false and a 200 status code', () => {
       beforeEach(() => {
-        nock(testUrl)
-          .put(`/v1/items/${item.id}`, { item: upsertableRemoteItem })
-          .reply(200, {
-            error: errorMessage,
-            data: errorData,
-            ok: false
-          })
+        nock(testUrl).put(`/v1/items/${item.id}`, { item }).reply(200, {
+          error: errorMessage,
+          data: errorData,
+          ok: false
+        })
       })
 
       it("should throw a client error with the server's error message and data", () => {
@@ -150,13 +145,11 @@ describe('when upserting an item', () => {
 
     describe('and the failure is represented with an errored status code', () => {
       beforeEach(() => {
-        nock(testUrl)
-          .put(`/v1/items/${item.id}`, { item: upsertableRemoteItem })
-          .reply(409, {
-            error: errorMessage,
-            data: errorData,
-            ok: false
-          })
+        nock(testUrl).put(`/v1/items/${item.id}`, { item }).reply(409, {
+          error: errorMessage,
+          data: errorData,
+          ok: false
+        })
       })
 
       it("should throw a client error with the server's error message and data", () => {
@@ -219,12 +212,12 @@ describe('when upserting an item', () => {
   describe('and the request to insert/update the item succeeds', () => {
     let nockedUpsert: nock.Scope
     let nockedFileUpload: nock.Scope
-    let result: FullItem
+    let result: RemoteItem
 
     beforeEach(() => {
-      upsertableRemoteItem = toRemoteItem(item)
+      // upsertableRemoteItem = toRemoteItem(item)
       nockedUpsert = nock(testUrl)
-        .put(`/v1/items/${item.id}`, { item: upsertableRemoteItem })
+        .put(`/v1/items/${item.id}`, { item })
         .matchHeader(FIRST_AUTH_HEADER, firstHeaderValueMatcher)
         .matchHeader(SECOND_AUTH_HEADER, secondHeaderValueMatcher)
         .matchHeader(
@@ -260,7 +253,7 @@ describe('when upserting an item', () => {
       })
 
       it('should have returned the full item', () => {
-        expect(result).toEqual(fullItem)
+        expect(result).toEqual(remoteItem)
       })
     })
 
@@ -280,7 +273,7 @@ describe('when upserting an item', () => {
       })
 
       it('should have returned the full item', () => {
-        expect(result).toEqual(fullItem)
+        expect(result).toEqual(remoteItem)
       })
     })
   })

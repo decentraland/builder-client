@@ -33,6 +33,7 @@ export type LocalItem = Omit<
   | 'created_at'
   | 'updated_at'
   | 'total_supply'
+  | 'blockchain_item_id'
 >
 
 export enum ItemType {
