@@ -1,0 +1,179 @@
+import JSZip from 'jszip'
+import { basename } from 'path'
+import { URL } from 'url'
+import { FileTooBigError } from '../client/BuilderClient.errors'
+import { THUMBNAIL_PATH } from '../item/constants'
+import { ModelMetrics, WearableCategory } from '../item/types'
+import { getModelData } from '../model/model.ts.bak'
+import { ASSET_MANIFEST, MAX_FILE_SIZE } from './constants'
+import { WrongExtensionError } from './files.errors'
+import { AssetJSON } from './types'
+
+export function getExtension(fileName: string) {
+  const matches = fileName.match(/\.[0-9a-z]+$/i)
+  const extension = matches ? matches[0] : null
+  return extension
+}
+
+export function toMB(bytes: number) {
+  return bytes / 1024 / 1024
+}
+
+export function isImageFile(fileName: string) {
+  return fileName.toLowerCase().endsWith('.png')
+}
+
+// Handles an upload with the asset json file.
+export async function handleItemFile(
+  fileName: string,
+  file: ArrayBuffer
+): Promise<{
+  thumbnail: string
+  model: string
+  metrics: ModelMetrics
+  contents: Record<string, Blob>
+  assetJson: AssetJSON
+}> {
+  const extension = getExtension(fileName)
+  if (!extension) {
+    throw new WrongExtensionError(fileName)
+  }
+
+  const handler =
+    extension === '.zip' ? handleZippedModelFiles : handleModelFile
+  const [thumbnail, model, metrics, contents, assetJson] = await handler(file)
+
+  return {
+    thumbnail,
+    model,
+    contents,
+    assetJson,
+    metrics
+  }
+}
+
+/**
+ * Unzip files and procceses the model files.
+ * One of the models will be taken into consideration if multiple models are uploaded.
+ *
+ * @param file - The ZIP file.
+ */
+async function handleZippedModelFiles(fileName: string, file: ArrayBuffer) {
+  const zip: JSZip = await JSZip.loadAsync(file)
+  const fileNames: string[] = []
+
+  zip.forEach((filePath) => {
+    if (!basename(filePath).startsWith('.')) {
+      fileNames.push(filePath)
+    }
+  })
+
+  // asset.json contains data to populate parts of the state
+  const assetJsonPath = fileNames.find(
+    (path) => basename(path) === ASSET_MANIFEST
+  )
+  let assetJson: AssetJSON | undefined
+
+  if (assetJsonPath) {
+    const assetRaw = zip.file(assetJsonPath)
+    if (!assetRaw) {
+      // TODO: throw custom error
+      throw new Error('Could not find asset.json in zip file')
+    }
+    const content = await assetRaw.async('text')
+    assetJson = JSON.parse(content)
+  }
+
+  const modelPath = fileNames.find(isModelPath)
+
+  const files = await Promise.all(
+    fileNames
+      .map((fileName) => zip.file(fileName))
+      .filter((file) => !!file)
+      .map(async (file) => {
+        const blob = await file!.async('blob')
+
+        if (blob.size > MAX_FILE_SIZE) {
+          throw new FileTooBigError()
+        }
+
+        return {
+          name: file!.name,
+          blob
+        }
+      })
+  )
+
+  const contents = files.reduce<Record<string, Blob>>((contents, file) => {
+    contents[file.name] = file.blob
+    return contents
+  }, {})
+
+  if (!modelPath) {
+    throw new MissingModelFileError()
+  }
+
+  const result = await processModel(modelPath, contents)
+
+  return [...result, assetJson] as const
+}
+
+/**
+ * Processes a model file.
+ *
+ * @param file - The model file.
+ */
+async function handleModelFile(fileName: string, file: ArrayBuffer) {
+  // TODO: is bytelength enough?
+  if (file.byteLength > MAX_FILE_SIZE) {
+    throw new FileTooBigError()
+  }
+
+  const modelPath = fileName
+  const contents = {
+    [modelPath]: file
+  }
+
+  return processModel(modelPath, contents)
+}
+
+async function processModel(
+  model: string,
+  category: WearableCategory,
+  contents: Record<string, Blob>
+): Promise<[string, string, ModelMetrics, Record<string, Blob>]> {
+  let thumbnail = ''
+  let metrics: ModelMetrics
+
+  if (isImageFile(model)) {
+    metrics = {
+      triangles: 100,
+      materials: 1,
+      textures: 1,
+      meshes: 1,
+      bodies: 1,
+      entities: 1
+    }
+
+    thumbnail = await this.convertImageIntoWearableThumbnail(
+      contents[THUMBNAIL_PATH] || contents[model],
+      category
+    )
+  } else {
+    const url = URL.createObjectURL(contents[model])
+    const { image, info } = await getModelData(url, {
+      width: 512,
+      height: 512,
+      extension: getExtension(model) || undefined
+    })
+    URL.revokeObjectURL(url)
+
+    // for some reason the renderer reports 2x the amount of textures for wearble items
+    info.textures = Math.round(info.textures / 2)
+
+    thumbnail = image
+    metrics = info
+  }
+
+  return [thumbnail, model, metrics, contents]
+}
