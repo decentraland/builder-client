@@ -1,11 +1,9 @@
 import axios, { AxiosInstance } from 'axios'
 import FormData from 'form-data'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
-import { FullItem, Item } from '../item/types'
-import { fromRemoteItem } from './transformers'
+import { RemoteItem, LocalItem } from '../item/types'
 import { ClientError } from './BuilderClient.errors'
-import { toRemoteItem } from './transformers'
-import { RemoteItem, ServerResponse } from './types'
+import { ServerResponse } from './types'
 
 export class BuilderClient {
   private axios: AxiosInstance
@@ -68,9 +66,9 @@ export class BuilderClient {
    * @param newContent - The content to be added or updated in the item. This content must be contained in the items contents.
    */
   async upsertItem(
-    item: Item,
+    item: LocalItem,
     newContent: Record<string, Blob | Buffer>
-  ): Promise<FullItem> {
+  ): Promise<RemoteItem> {
     const contentIsContainedInItem = Object.keys(newContent).every((key) =>
       Object.prototype.hasOwnProperty.call(item.contents, key)
     )
@@ -82,7 +80,7 @@ export class BuilderClient {
       const upsertResponse = await this.axios.put<
         ServerResponse & { data: RemoteItem }
       >(`/v1/items/${item.id}`, {
-        item: toRemoteItem(item)
+        item
       })
 
       if (Object.keys(newContent).length > 0) {
@@ -94,7 +92,7 @@ export class BuilderClient {
         await this.axios.post(`/v1/items/${item.id}/files`, formData)
       }
 
-      return fromRemoteItem(upsertResponse.data.data)
+      return upsertResponse.data.data
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new ClientError(

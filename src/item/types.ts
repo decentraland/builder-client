@@ -1,47 +1,43 @@
-type BaseItem = {
+import { BodyShape, Rarity } from '@dcl/schemas'
+
+export type RemoteItem = {
   id: string // uuid
   name: string
-  thumbnail: string
   description: string
-  rarity?: ItemRarity
-  metrics: ModelMetrics
-}
-
-export type Item = BaseItem & {
+  thumbnail: string
+  eth_address: string
+  collection_id: string | null
+  blockchain_item_id: string | null
+  total_supply: number | null
+  price: string | null
+  urn: string | null
+  beneficiary: string | null
+  rarity: Rarity | null
   type: ItemType
-  owner: string
-  collectionId?: string
-  tokenId?: string
-  price?: string
-  urn?: string
-  beneficiary?: string
-  contents: Record<string, string>
-  contentHash: string | null
   data: WearableData
+  metrics: ModelMetrics
+  contents: Record<string, string>
+  content_hash: string | null
+  is_published: boolean
+  is_approved: boolean
+  in_catalyst: boolean
+  created_at: number
+  updated_at: number
 }
 
-// Should this be called full item or ResponseItem?
-export type FullItem = Item & {
-  isPublished: boolean
-  isApproved: boolean
-  inCatalyst: boolean
-  createdAt: number
-  updatedAt: number
-  totalSupply?: number
-}
+export type LocalItem = Omit<
+  RemoteItem,
+  | 'is_published'
+  | 'is_approved'
+  | 'in_catalyst'
+  | 'created_at'
+  | 'updated_at'
+  | 'total_supply'
+  | 'blockchain_item_id'
+>
 
 export enum ItemType {
   WEARABLE = 'wearable'
-}
-
-export enum ItemRarity {
-  UNIQUE = 'unique',
-  MYTHIC = 'mythic',
-  LEGENDARY = 'legendary',
-  EPIC = 'epic',
-  RARE = 'rare',
-  UNCOMMON = 'uncommon',
-  COMMON = 'common'
 }
 
 export enum WearableCategory {
@@ -53,6 +49,7 @@ export enum WearableCategory {
   FEET = 'feet',
   HAIR = 'hair',
   HAT = 'hat',
+  // HEAD is not part of DCL schemas
   HEAD = 'head',
   HELMET = 'helmet',
   LOWER_BODY = 'lower_body',
@@ -64,6 +61,7 @@ export enum WearableCategory {
 }
 
 export enum BodyShapeType {
+  // DCL Schemas doesn't have both
   BOTH = 'both',
   MALE = 'male',
   FEMALE = 'female'
@@ -72,11 +70,6 @@ export enum BodyShapeType {
 export enum WearableBodyShape {
   MALE = 'urn:decentraland:off-chain:base-avatars:BaseMale',
   FEMALE = 'urn:decentraland:off-chain:base-avatars:BaseFemale'
-}
-
-export enum WearableBodyShapeType {
-  MALE = 'BaseMale',
-  FEMALE = 'BaseFemale'
 }
 
 export type ModelMetrics = {
@@ -97,7 +90,7 @@ export type WearableData = {
 }
 
 export type WearableRepresentation = {
-  bodyShapes: WearableBodyShape[]
+  bodyShapes: BodyShape[]
   mainFile: string
   contents: string[]
   overrideReplaces: WearableCategory[]
