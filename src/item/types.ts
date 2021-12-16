@@ -1,4 +1,4 @@
-import { BodyShape, Rarity } from '@dcl/schemas'
+import { Rarity } from '@dcl/schemas'
 
 export type RemoteItem = {
   id: string // uuid
@@ -90,7 +90,7 @@ export type WearableData = {
 }
 
 export type WearableRepresentation = {
-  bodyShapes: BodyShape[]
+  bodyShapes: WearableBodyShape[]
   mainFile: string
   contents: string[]
   overrideReplaces: WearableCategory[]
