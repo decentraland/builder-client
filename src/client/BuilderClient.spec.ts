@@ -66,12 +66,9 @@ beforeEach(async () => {
     id: 'anId',
     name: 'aName',
     description: 'aDescription',
-    eth_address: 'someOwner',
     collection_id: null,
-    price: null,
     urn: null,
     rarity: null,
-    beneficiary: null,
     type: ItemType.WEARABLE,
     thumbnail: 'aThumbnail',
     metrics: {
@@ -102,6 +99,9 @@ beforeEach(async () => {
     created_at: date,
     updated_at: date,
     blockchain_item_id: null,
+    price: null,
+    eth_address: '0x00',
+    beneficiary: null,
     total_supply: 1000
   }
 })

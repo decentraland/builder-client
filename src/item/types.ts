@@ -34,6 +34,9 @@ export type LocalItem = Omit<
   | 'updated_at'
   | 'total_supply'
   | 'blockchain_item_id'
+  | 'eth_address'
+  | 'price'
+  | 'beneficiary'
 >
 
 export enum ItemType {
