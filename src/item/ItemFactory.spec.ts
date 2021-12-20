@@ -49,7 +49,7 @@ const testPropertyBuilder = <T extends keyof LocalItem>(
 
       it(`should build an item with the updated ${property}`, () => {
         factory[`with${camelCasedProperty}`](value)
-        return expect(factory.create()).resolves.toEqual(
+        return expect(factory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({ [property]: value })
           })
@@ -86,7 +86,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
 
       it('should build an item with the updated id', () => {
         factory[`with${camelCasedProperty}`](value)
-        return expect(factory.create()).resolves.toEqual(
+        return expect(factory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               data: expect.objectContaining({ [property]: value })
@@ -160,7 +160,7 @@ describe('when creating a new item', () => {
 
   beforeEach(async () => {
     createBasicItem(itemFactory)
-    item = (await itemFactory.create()).item
+    item = (await itemFactory.build()).item
   })
 
   it('should have its ID set', () => {
@@ -286,7 +286,7 @@ describe('when adding a representation to an item', () => {
             contents,
             anotherMetrics
           )
-          const createdItem = await itemFactory.create()
+          const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
           item = createdItem.item
         })
@@ -351,7 +351,7 @@ describe('when adding a representation to an item', () => {
             contents,
             metrics
           )
-          const createdItem = await itemFactory.create()
+          const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
           item = createdItem.item
         })
@@ -445,7 +445,7 @@ describe('when adding a representation to an item', () => {
             contents,
             anotherMetrics
           )
-          const createdItem = await itemFactory.create()
+          const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
           item = createdItem.item
         })
@@ -486,7 +486,7 @@ describe('when adding a representation to an item', () => {
             contents,
             metrics
           )
-          const createdItem = await itemFactory.create()
+          const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
           item = createdItem.item
         })
@@ -573,7 +573,7 @@ describe('when adding a representation to an item', () => {
             contents,
             metrics
           )
-          const createdItem = await itemFactory.create()
+          const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
           item = createdItem.item
         })
@@ -626,7 +626,7 @@ describe('when removing a representation', () => {
       })
 
       it('should not do anything', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               data: expect.objectContaining({ representations: [] })
@@ -651,7 +651,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove all representations', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               data: expect.objectContaining({ representations: [] })
@@ -661,7 +661,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove all contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               contents: {}
@@ -671,7 +671,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove all new contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent: {}
           })
@@ -694,7 +694,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove the female representations', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               data: expect.objectContaining({
@@ -706,7 +706,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove the female contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               contents: maleHashedContent
@@ -716,7 +716,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove the female new contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent: {
               [prefixedMaleModel]: contents[modelPath],
@@ -742,7 +742,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove the female representations', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               data: expect.objectContaining({
@@ -754,7 +754,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove the female contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               contents: femaleHashedContent
@@ -764,7 +764,7 @@ describe('when removing a representation', () => {
       })
 
       it('should remove the female new contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent: {
               [prefixedFemaleModel]: contents[modelPath],
@@ -809,7 +809,7 @@ describe("when setting the item's thumbnail", () => {
       })
 
       it('should have set the new thumbnail in the contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               contents: expect.objectContaining({
@@ -821,7 +821,7 @@ describe("when setting the item's thumbnail", () => {
       })
 
       it('should have set the new thumbnail in the new contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent: expect.objectContaining({
               [THUMBNAIL_PATH]: newThumbnail
@@ -837,7 +837,7 @@ describe("when setting the item's thumbnail", () => {
       })
 
       it('should have set the new thumbnail in the contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
               contents: expect.objectContaining({
@@ -849,7 +849,7 @@ describe("when setting the item's thumbnail", () => {
       })
 
       it('should have set the new thumbnail in the new contents', () => {
-        return expect(itemFactory.create()).resolves.toEqual(
+        return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent: expect.objectContaining({
               [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]

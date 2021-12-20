@@ -431,7 +431,7 @@ export class ItemFactory {
     return this
   }
 
-  async create(): Promise<BuiltItem> {
+  async build(): Promise<BuiltItem> {
     if (!this.item) {
       throw new Error('The item must be set before creating it')
     }
