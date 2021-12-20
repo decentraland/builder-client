@@ -3,7 +3,10 @@ import { BodyShapeType } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { HashedContent, RawContent, SortedContent } from './types'
 
-// TODO: compute hashes could be extracted to a common library
+/**
+ * Computes the hashes of RawContents.
+ * @param contents - The raw contents of an item.
+ */
 export async function computeHashes(
   contents: RawContent
 ): Promise<HashedContent> {
@@ -26,14 +29,23 @@ async function calculateBufferHash(buffer: Uint8Array): Promise<string> {
   return Hashing.calculateIPFSHash(buffer)
 }
 
+/**
+ * Creates a content file to later perform a hash on it.
+ * @param path - The path of the content file.
+ * @param content - The content of the file.
+ */
 async function makeContentFile(
   path: string,
-  content: string | Uint8Array
+  content: string | Uint8Array | Blob
 ): Promise<{ name: string; content: Uint8Array }> {
   if (typeof content === 'string') {
-    // This shouldn't work in the browser
+    // This must be polyfilled in the browser
     const buffer = Buffer.from(content)
     return { name: path, content: buffer }
+  } else if (globalThis.Blob && content instanceof globalThis.Blob) {
+    // Blob can only be used in the browser
+    const buffer = await content.arrayBuffer()
+    return { name: path, content: new Uint8Array(buffer) }
   } else if (content instanceof Uint8Array) {
     return { name: path, content }
   }
@@ -42,6 +54,11 @@ async function makeContentFile(
   )
 }
 
+/**
+ * Prefixes a content name using the body shape.
+ * @param bodyShape - The body shaped of the content.
+ * @param contentKey - The name of the content.
+ */
 export function prefixContentName(
   bodyShape: BodyShapeType,
   contentKey: string
@@ -53,7 +70,6 @@ export function prefixContentName(
  * Sorts the content into "male", "female" and "all" taking into consideration the body shape.
  * All contains the item thumbnail and both male and female representations according to the shape.
  * If the body representation is male, "female" will be an empty object and viceversa.
- *
  * @param bodyShape - The body shaped used to sort the content.
  * @param contents - The contents to be sorted.
  */
@@ -82,7 +98,6 @@ export function sortContent(
  * Creates a new contents record with the names of the contents blobs record prefixed.
  * The names need to be prefixed so they won't collide with other
  * pre-uploaded models. The name of the content is the name of the uploaded file.
- *
  * @param bodyShape - The body shaped used to prefix the content names.
  * @param contents - The contents which keys are going to be prefixed.
  */

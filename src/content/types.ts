@@ -1,4 +1,4 @@
-export type Content = Uint8Array
+export type Content = Uint8Array | Blob
 
 export type SortedContent = {
   male: Record<string, Content>
