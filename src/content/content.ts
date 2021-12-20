@@ -15,7 +15,7 @@ export async function computeHashes(
     filePaths.map(async (path) => {
       const blob = contents[path]
       const file = await makeContentFile(path, blob)
-      return calculateBufferHash(file.content)
+      return Hashing.calculateIPFSHash(file.content)
     })
   )
 
@@ -23,10 +23,6 @@ export async function computeHashes(
     hashes[path] = fileHashes[index]
     return hashes
   }, {})
-}
-
-async function calculateBufferHash(buffer: Uint8Array): Promise<string> {
-  return Hashing.calculateIPFSHash(buffer)
 }
 
 /**
@@ -50,7 +46,7 @@ async function makeContentFile(
     return { name: path, content }
   }
   throw new Error(
-    'Unable to create ContentFile: content must be a string, or a Uint8Array'
+    'Unable to create ContentFile: content must be a string, a Blob or a Uint8Array'
   )
 }
 
