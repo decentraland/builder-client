@@ -1,33 +1,14 @@
 import { Hashing } from 'dcl-catalyst-commons'
-import toBuffer from 'blob-to-buffer'
-// import { Blob } from 'buffer'
 import { BodyShapeType } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { HashedContent, RawContent, SortedContent } from './types'
 
-export const FILE_NAME_BLACKLIST = [
-  '.dclignore',
-  'Dockerfile',
-  'builder.json',
-  'src/game.ts'
-]
-
-/**
- * Sums the sizes of an array of blobs.
- *
- * @param files - An array of blobs.
- */
-export function calculateFilesSize(files: Array<Blob>) {
-  return files.reduce((total, blob) => blob.size + total, 0)
-}
-
-// TODO: compute hashes must be extracted to a common library
-// Improves the speed of this computation by using promises
+// TODO: compute hashes could be extracted to a common library
 export async function computeHashes(
   contents: RawContent
 ): Promise<HashedContent> {
   const filePaths = Object.keys(contents)
-  const fileHashes = Promise.all(
+  const fileHashes = await Promise.all(
     filePaths.map(async (path) => {
       const blob = contents[path]
       const file = await makeContentFile(path, blob)
@@ -41,51 +22,24 @@ export async function computeHashes(
   }, {})
 }
 
-export async function calculateBufferHash(buffer: Uint8Array): Promise<string> {
+async function calculateBufferHash(buffer: Uint8Array): Promise<string> {
   return Hashing.calculateIPFSHash(buffer)
 }
 
-export async function makeContentFiles(
-  files: Record<string, string | Blob | Uint8Array>
-): Promise<Map<string, Buffer>> {
-  // const makeRequests = []
-  // for (const fileName of Object.keys(files)) {
-  //   if (FILE_NAME_BLACKLIST.includes(fileName)) continue
-  //   makeRequests.push(makeContentFile(fileName, files[fileName]))
-  // }
-  const contentFiles = await Promise.all(
-    Object.keys(files)
-      .filter((fileName) => !FILE_NAME_BLACKLIST.includes(fileName))
-      .map((fileName) => makeContentFile(fileName, files[fileName]))
-  )
-
-  // const contentFiles = await Promise.all(makeRequests)
-  return new Map(contentFiles.map(({ name, content }) => [name, content]))
-}
-
-export function makeContentFile(
+async function makeContentFile(
   path: string,
-  content: string | Blob | Uint8Array
+  content: string | Uint8Array
 ): Promise<{ name: string; content: Uint8Array }> {
-  return new Promise((resolve, reject) => {
-    if (typeof content === 'string') {
-      const buffer = Buffer.from(content)
-      resolve({ name: path, content: buffer })
-      // TODO: See what to do with the blob here
-    } else if (content instanceof Blob) {
-      // TODO: fix this any
-      toBuffer(content, (err: Error, buffer: Uint8Array) => {
-        if (err) reject(err)
-        resolve({ name: path, content: buffer })
-      })
-    } else {
-      reject(
-        new Error(
-          'Unable to create ContentFile: content must be a string or a Blob'
-        )
-      )
-    }
-  })
+  if (typeof content === 'string') {
+    // This shouldn't work in the browser
+    const buffer = Buffer.from(content)
+    return { name: path, content: buffer }
+  } else if (content instanceof Uint8Array) {
+    return { name: path, content }
+  }
+  throw new Error(
+    'Unable to create ContentFile: content must be a string, or a Uint8Array'
+  )
 }
 
 export function prefixContentName(
@@ -132,7 +86,7 @@ export function sortContent(
  * @param bodyShape - The body shaped used to prefix the content names.
  * @param contents - The contents which keys are going to be prefixed.
  */
-export function prefixContents(
+function prefixContents(
   bodyShape: BodyShapeType,
   contents: RawContent
 ): RawContent {

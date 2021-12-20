@@ -1,4 +1,5 @@
-import { Rarity } from '@dcl/schemas'
+import { Rarity, WearableRepresentation } from '@dcl/schemas'
+import { RawContent } from '../content/types'
 
 export type RemoteItem = {
   id: string // uuid
@@ -92,10 +93,7 @@ export type WearableData = {
   tags: string[]
 }
 
-export type WearableRepresentation = {
-  bodyShapes: WearableBodyShape[]
-  mainFile: string
-  contents: string[]
-  overrideReplaces: WearableCategory[]
-  overrideHides: WearableCategory[]
+export type BuiltItem = {
+  item: LocalItem
+  newContent: RawContent
 }

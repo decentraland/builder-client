@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import FormData from 'form-data'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
+import { Content } from '../content/types'
 import { RemoteItem, LocalItem } from '../item/types'
 import { ClientError } from './BuilderClient.errors'
 import { ServerResponse } from './types'
@@ -67,7 +68,7 @@ export class BuilderClient {
    */
   async upsertItem(
     item: LocalItem,
-    newContent: Record<string, Blob | Buffer>
+    newContent: Record<string, Content>
   ): Promise<RemoteItem> {
     const contentIsContainedInItem = Object.keys(newContent).every((key) =>
       Object.prototype.hasOwnProperty.call(item.contents, key)

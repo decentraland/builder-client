@@ -1,23 +1,24 @@
-import { Rarity } from '@dcl/schemas'
+import { Rarity, WearableRepresentation } from '@dcl/schemas'
 import {
   computeHashes,
   prefixContentName,
   sortContent
 } from '../content/content'
-import { SortedContent } from '../content/types'
+import { Content, RawContent, SortedContent } from '../content/types'
 import { THUMBNAIL_PATH } from './constants'
 import {
   BodyShapeType,
+  BuiltItem,
   ItemType,
   LocalItem,
+  ModelMetrics,
   WearableBodyShape,
-  WearableCategory,
-  WearableRepresentation
+  WearableCategory
 } from './types'
 
 export class ItemFactory {
   private item: LocalItem | null = null
-  private newContent: Record<string, Blob> = {}
+  private newContent: RawContent = {}
   private readonly NOT_INITIALIZED_ERROR = 'Item has not been initialized'
 
   constructor(item?: LocalItem) {
@@ -113,6 +114,41 @@ export class ItemFactory {
         accum[key] = contents[key]
         return accum
       }, {} as Record<string, any>)
+  }
+
+  /**
+   * Checks if the item has representations.
+   * It requires the item to be defined first.
+   */
+  private itemHasRepresentations(): boolean {
+    if (!this.item) {
+      throw new Error(this.NOT_INITIALIZED_ERROR)
+    }
+
+    return this.item.data.representations.length > 0
+  }
+
+  /**
+   * Gets the sorted contents based on a given body shape.
+   * @param bodyShape - The body shape to get the contents of.
+   * @param contents - The full list of sorted contents.
+   */
+  private getBodyShapeSortedContents(
+    bodyShape: BodyShapeType,
+    contents: SortedContent
+  ): RawContent {
+    switch (bodyShape) {
+      case BodyShapeType.MALE:
+        return contents.male
+      case BodyShapeType.FEMALE:
+        return contents.female
+      case BodyShapeType.BOTH:
+        return contents.all
+      default:
+        throw new Error(
+          `The BodyShape ${bodyShape} couldn't get matched with the content`
+        )
+    }
   }
 
   /**
@@ -285,6 +321,25 @@ export class ItemFactory {
   }
 
   /**
+   * Sets or updates the item's thumbnail.
+   * It requires the item to be defined first.
+   * @param thumbnail - The item's thumbnail.
+   */
+  public withThumbnail(thumbnail: Content): ItemFactory {
+    if (!this.item) {
+      throw new Error(this.NOT_INITIALIZED_ERROR)
+    }
+
+    this.newContent = {
+      ...this.newContent,
+      [THUMBNAIL_PATH]: thumbnail
+    }
+    delete this.item.contents[THUMBNAIL_PATH]
+
+    return this
+  }
+
+  /**
    * Adds a new a representation and its contents to the item, taking into consideration the specified body shape.
    * If BOTH is used as the body shape, both representations, female and male will be added.
    * It requires the item to be defined first.
@@ -292,10 +347,11 @@ export class ItemFactory {
    * @param model - The name of the content's key that points to the model to be used to build the new representation.
    * @param contents - The contents of the representation to be used to build the new representation.
    */
-  public withRepresentationContent(
+  public withRepresentation(
     bodyShape: BodyShapeType,
     model: string,
-    contents: Record<string, Blob>
+    contents: Record<string, Uint8Array>,
+    metrics: ModelMetrics
   ): ItemFactory {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
@@ -315,8 +371,10 @@ export class ItemFactory {
 
     this.newContent = {
       ...this.newContent,
-      // TODO: these should be the sorted contents
-      ...contents
+      ...this.getBodyShapeSortedContents(bodyShape, sortedContents),
+      ...(this.itemHasRepresentations()
+        ? {}
+        : { [THUMBNAIL_PATH]: sortedContents.all[THUMBNAIL_PATH] })
     }
 
     this.item = {
@@ -325,21 +383,19 @@ export class ItemFactory {
         ...this.item.data,
         representations: [
           ...this.item.data.representations,
-          // TODO: we should take into consideration the sorting
           ...this.buildRepresentations(bodyShape, model, sortedContents)
-        ],
-        replaces: [...this.item.data.replaces],
-        hides: [...this.item.data.hides],
-        tags: [...this.item.data.tags]
-      }
-      // TODO: where will the metrics come from? Should we compute them at the end?
+        ]
+      },
+      metrics
     }
+
     return this
   }
 
   /**
    * Removes a representation and its contents from the item, taking into consideration the specified body shape.
    * If BOTH is used as the body shape, all the representations will be removed.
+   * This method will only remove the thumbnail if after removing the representation there are no representations left.
    * It requires the item to be defined first.
    * @param bodyShape - The body shape that will be used to identify the representation to remove.
    */
@@ -366,149 +422,29 @@ export class ItemFactory {
         ...this.removeContentsOfBodyShape(bodyShape, this.item.contents)
       }
     }
-    return this
-  }
 
-  /**
-   * Replaces a representation and its contents from the item, taking into consideration the specified body shape.
-   * If BOTH is used as the body shape, all representations will be replaced with one for both male and female.
-   * It requires the item to be defined first.
-   * @param bodyShape - The body shape that will be used to identify the representation to replace.
-   * @param model - The name of the content's key that points to the model to be used to replace the one with the specified body shape.
-   * @param contents - The contents of the representation to be used to replace the one with the specified body shape.
-   */
-  public replacingRepresentation(
-    bodyShape: BodyShapeType,
-    model: string,
-    contents: Record<string, Blob>
-  ): ItemFactory {
-    if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
-    }
-    // TODO: Is it needed to sort by all? I don't think so,
-    const sortedContents = sortContent(bodyShape, contents)
-
-    this.newContent = {
-      ...this.removeContentsOfBodyShape(bodyShape, this.newContent),
-      // TODO: these should be the sorted contents
-      ...contents
-    }
-
-    this.item = {
-      ...this.item,
-      data: {
-        ...this.item.data,
-        representations: [
-          ...this.item.data.representations.filter(
-            (representation) =>
-              !this.representsBodyShape(bodyShape, representation)
-          ),
-          // TODO: Take into consideration the sorting for the model name
-          ...this.buildRepresentations(bodyShape, model, sortedContents)
-        ],
-        replaces: [...this.item.data.replaces],
-        hides: [...this.item.data.hides],
-        tags: [...this.item.data.tags]
-      },
-      // TODO: where will the metrics come from? Should we compute them at the end?
-      // metrics,
-      contents: {
-        ...this.removeContentsOfBodyShape(bodyShape, this.item.contents)
-      }
+    if (!this.itemHasRepresentations()) {
+      delete this.item.contents[THUMBNAIL_PATH]
+      delete this.newContent[THUMBNAIL_PATH]
     }
 
     return this
   }
 
-  async create() {
+  async create(): Promise<BuiltItem> {
     if (!this.item) {
       throw new Error('The item must be set before creating it')
     }
 
-    // Compute hashes at the end or receive them computed?
     return {
-      ...this.item,
-      contents: {
-        ...this.item.contents,
-        ...(await computeHashes(this.newContent))
-      }
+      item: {
+        ...this.item,
+        contents: {
+          ...this.item.contents,
+          ...(await computeHashes(this.newContent))
+        }
+      },
+      newContent: this.newContent
     }
   }
-
-  // Creating a new item from a zip that contains an assetJson.
-  // The assetJSON file should be enhanced to support multiple models.
-  // fromFile(fileName: string, file: ArrayBuffer): ItemFactory {
-  //   const loadFile = await this.handleFile(file)
-  //   const { thumbnail, model, metrics, contents, assetJson } = loadFile
-
-  //   this.newItem(
-  //     assetJson.id,
-  //     assetJson.name,
-  //     'collectionID',
-  //     assetJson.rarity,
-  //     assetJson.category,
-  //     assetJson.description
-  //   )
-
-  //   assetJson.representations.forEach((representation: any) => {
-  //     // Each representation should have its contents.
-  //     this.withRepresentation(bodyShape, model, contents)
-  //   })
-
-  //   return this
-  // }
-
-  // async withRepresentationFile(
-  //   bodyShape: BodyShapeType,
-  //   fileName: string,
-  //   file: ArrayBuffer
-  // ) {
-  //   const loadFile = await handleItemFile(fileName, file)
-  //   const { model, contents } = loadFile
-  //   return this.withRepresentationContent(bodyShape, model, contents)
-  // }
 }
-
-// Item object
-
-// Item Factory
-// 1. Start the creation of a new item
-// 2. Add representation
-// 3. Create item
-// From ZIP file
-
-// API
-// - Upsert Item
-// - Create collection ?
-// - Publish collection ?
-
-// Tasks:
-// - Build the item factory
-//   - Add the simple create item function and test it -> 1
-//   - Add the with representation and without representation functions and test them -> 2
-//   - Add the replacingRepresentation function and test it -> 1
-//   - Write the file handling functions (the thumbnail and file processing too) and test them -> 2
-//   - Add the create and setter functions (withId, withName) and test them -> 1
-// 1/2 days
-
-// Builder API
-// - Add the upsert item function and test it -> 2
-// - Use the Factory and the API in the UI -> 3
-// 2/3 days moving using it to the UI
-
-// Others
-// - Create a new enhanced asset json file from which to load everything into (representations & stuff) -> 2/3
-// X - Add a check for the the name and the description in the builder server -> 1
-// X - Move the created and updated at to the builder -> 1
-// - Remove the properties that come from the catalyst -> 1
-// - Create an endpoint to ask for the content file header (investigate a possible redirection) to get the file sizes -> 2 (maybe not)
-
-// const itemFactory = new ItemFactory()
-// const newContent = itemFactory.getNewContent()
-
-// const item = await (new ItemFactory().fromFile(file).create())
-// await BuilderAPI.upsertItem(item, itemFactory)
-
-// new ItemFactory().newItem(...).withRepresentation().withRepresentation()
-
-// new ItemFactory(item).withoutRepresentation().withRepresentation().create()
