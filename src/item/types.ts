@@ -97,3 +97,5 @@ export type BuiltItem<T extends Content> = {
   item: LocalItem
   newContent: RawContent<T>
 }
+
+export { Rarity, WearableRepresentation }

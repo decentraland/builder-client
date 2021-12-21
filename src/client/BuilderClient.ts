@@ -10,7 +10,11 @@ export class BuilderClient {
   private axios: AxiosInstance
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
 
-  constructor(url: string, private identity: AuthIdentity) {
+  constructor(
+    url: string,
+    private identity: AuthIdentity,
+    private address: string
+  ) {
     this.axios = axios.create({
       baseURL: url
     })
@@ -81,7 +85,7 @@ export class BuilderClient {
       const upsertResponse = await this.axios.put<
         ServerResponse & { data: RemoteItem }
       >(`/v1/items/${item.id}`, {
-        item
+        item: { ...item, eth_address: this.address }
       })
 
       if (Object.keys(newContent).length > 0) {
