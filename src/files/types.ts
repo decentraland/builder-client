@@ -1,10 +1,11 @@
-import { ItemRarity, WearableBodyShape, WearableCategory } from '../item/types'
+import { Rarity } from '@dcl/schemas'
+import { WearableBodyShape, WearableCategory } from '../item/types'
 
 export type AssetJSON = {
   name: string
   description: string
   category: WearableCategory
-  rarity: ItemRarity
+  rarity: Rarity
   thumbnail: string
   representations: {
     bodyShape: WearableBodyShape
