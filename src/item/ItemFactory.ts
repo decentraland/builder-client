@@ -16,9 +16,9 @@ import {
   WearableCategory
 } from './types'
 
-export class ItemFactory {
+export class ItemFactory<X extends Content> {
   private item: LocalItem | null = null
-  private newContent: RawContent = {}
+  private newContent: RawContent<X> = {}
   private readonly NOT_INITIALIZED_ERROR = 'Item has not been initialized'
 
   constructor(item?: LocalItem) {
@@ -44,7 +44,7 @@ export class ItemFactory {
   private buildRepresentations(
     bodyShape: BodyShapeType,
     model: string,
-    contents: SortedContent
+    contents: SortedContent<X>
   ): WearableRepresentation[] {
     const representations: WearableRepresentation[] = []
 
@@ -135,8 +135,8 @@ export class ItemFactory {
    */
   private getBodyShapeSortedContents(
     bodyShape: BodyShapeType,
-    contents: SortedContent
-  ): RawContent {
+    contents: SortedContent<X>
+  ): RawContent<X> {
     switch (bodyShape) {
       case BodyShapeType.MALE:
         return contents.male
@@ -159,7 +159,7 @@ export class ItemFactory {
   private setItemProperty<T extends keyof LocalItem>(
     property: T,
     value: LocalItem[T]
-  ): ItemFactory {
+  ): ItemFactory<X> {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }
@@ -179,7 +179,7 @@ export class ItemFactory {
   private setItemDataProperty<T extends keyof LocalItem['data']>(
     property: T,
     value: LocalItem['data'][T]
-  ): ItemFactory {
+  ): ItemFactory<X> {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }
@@ -244,7 +244,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param id - The item's id.
    */
-  public withId(id: string): ItemFactory {
+  public withId(id: string): ItemFactory<X> {
     return this.setItemProperty('id', id)
   }
 
@@ -253,7 +253,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param name - The item's name.
    */
-  public withName(name: string): ItemFactory {
+  public withName(name: string): ItemFactory<X> {
     return this.setItemProperty('name', name)
   }
 
@@ -262,7 +262,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param description - The item's description.
    */
-  public withDescription(description: string): ItemFactory {
+  public withDescription(description: string): ItemFactory<X> {
     return this.setItemProperty('description', description)
   }
 
@@ -271,7 +271,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param replaces - The item's replaces property.
    */
-  public withReplaces(replaces: WearableCategory[]): ItemFactory {
+  public withReplaces(replaces: WearableCategory[]): ItemFactory<X> {
     return this.setItemDataProperty('replaces', replaces)
   }
 
@@ -280,7 +280,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param rarity - The item's rarity.
    */
-  public withRarity(rarity: Rarity): ItemFactory {
+  public withRarity(rarity: Rarity): ItemFactory<X> {
     return this.setItemProperty('rarity', rarity)
   }
 
@@ -289,7 +289,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param collectionId - The item's collectionId.
    */
-  public withCollectionId(collectionId: string): ItemFactory {
+  public withCollectionId(collectionId: string): ItemFactory<X> {
     return this.setItemProperty('collection_id', collectionId)
   }
 
@@ -298,7 +298,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param category - The item's category.
    */
-  public withCategory(category: WearableCategory): ItemFactory {
+  public withCategory(category: WearableCategory): ItemFactory<X> {
     return this.setItemDataProperty('category', category)
   }
 
@@ -307,7 +307,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param hides - The item's hides property.
    */
-  public withHides(hides: WearableCategory[]): ItemFactory {
+  public withHides(hides: WearableCategory[]): ItemFactory<X> {
     return this.setItemDataProperty('hides', hides)
   }
 
@@ -316,7 +316,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param tags - The item's tags property.
    */
-  public withTags(tags: string[]): ItemFactory {
+  public withTags(tags: string[]): ItemFactory<X> {
     return this.setItemDataProperty('tags', tags)
   }
 
@@ -325,7 +325,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param thumbnail - The item's thumbnail.
    */
-  public withThumbnail(thumbnail: Content): ItemFactory {
+  public withThumbnail(thumbnail: X): ItemFactory<X> {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }
@@ -350,9 +350,9 @@ export class ItemFactory {
   public withRepresentation(
     bodyShape: BodyShapeType,
     model: string,
-    contents: Record<string, Uint8Array>,
+    contents: RawContent<X>,
     metrics: ModelMetrics
-  ): ItemFactory {
+  ): ItemFactory<X> {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }
@@ -367,7 +367,7 @@ export class ItemFactory {
       )
     }
 
-    const sortedContents = sortContent(bodyShape, contents)
+    const sortedContents = sortContent<X>(bodyShape, contents)
 
     this.newContent = {
       ...this.newContent,
@@ -399,7 +399,7 @@ export class ItemFactory {
    * It requires the item to be defined first.
    * @param bodyShape - The body shape that will be used to identify the representation to remove.
    */
-  public withoutRepresentation(bodyShape: BodyShapeType): ItemFactory {
+  public withoutRepresentation(bodyShape: BodyShapeType): ItemFactory<X> {
     if (!this.item) {
       throw new Error(this.NOT_INITIALIZED_ERROR)
     }
@@ -431,7 +431,7 @@ export class ItemFactory {
     return this
   }
 
-  async build(): Promise<BuiltItem> {
+  async build(): Promise<BuiltItem<X>> {
     if (!this.item) {
       throw new Error('The item must be set before creating it')
     }

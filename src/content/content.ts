@@ -1,14 +1,14 @@
 import { Hashing } from 'dcl-catalyst-commons'
 import { BodyShapeType } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
-import { HashedContent, RawContent, SortedContent } from './types'
+import { Content, HashedContent, RawContent, SortedContent } from './types'
 
 /**
  * Computes the hashes of RawContents.
  * @param contents - The raw contents of an item.
  */
-export async function computeHashes(
-  contents: RawContent
+export async function computeHashes<T extends Content>(
+  contents: RawContent<T>
 ): Promise<HashedContent> {
   const filePaths = Object.keys(contents)
   const fileHashes = await Promise.all(
@@ -69,10 +69,10 @@ export function prefixContentName(
  * @param bodyShape - The body shaped used to sort the content.
  * @param contents - The contents to be sorted.
  */
-export function sortContent(
+export function sortContent<T extends Blob | Uint8Array>(
   bodyShape: BodyShapeType,
-  contents: RawContent
-): SortedContent {
+  contents: RawContent<T>
+): SortedContent<T> {
   const male =
     bodyShape === BodyShapeType.BOTH || bodyShape === BodyShapeType.MALE
       ? prefixContents(BodyShapeType.MALE, contents)
@@ -97,12 +97,12 @@ export function sortContent(
  * @param bodyShape - The body shaped used to prefix the content names.
  * @param contents - The contents which keys are going to be prefixed.
  */
-function prefixContents(
+function prefixContents<T extends Content>(
   bodyShape: BodyShapeType,
-  contents: RawContent
-): RawContent {
+  contents: RawContent<T>
+): RawContent<T> {
   return Object.keys(contents).reduce(
-    (newContents: RawContent, key: string) => {
+    (newContents: RawContent<T>, key: string) => {
       // Do not include the thumbnail in each of the body shapes
       if (key === THUMBNAIL_PATH) {
         return newContents

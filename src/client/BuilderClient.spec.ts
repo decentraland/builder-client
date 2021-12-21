@@ -164,7 +164,7 @@ describe('when upserting an item', () => {
   describe('and the request to upload the item files fails', () => {
     const errorMessage = 'An error occurred trying to upload item files'
     let errorData: Record<string, any>
-    let content: RawContent
+    let content: RawContent<Uint8Array>
 
     beforeEach(() => {
       nock(testUrl).put(`/v1/items/${item.id}`).reply(200, {

@@ -4,7 +4,7 @@ import { computeHashes, prefixContentName, sortContent } from './content'
 import { RawContent } from './types'
 
 describe('when computing the hashes of raw content', () => {
-  let content: RawContent
+  let content: RawContent<Uint8Array>
   let hashes: Record<string, string>
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('when prefixing the content name', () => {
 })
 
 describe('when sorting the contents', () => {
-  let content: RawContent
+  let content: RawContent<Uint8Array>
   beforeEach(() => {
     content = {
       aContent: Buffer.from('something'),
