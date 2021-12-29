@@ -69,8 +69,8 @@ export class BuilderClient {
     item: LocalItem,
     newContent: Record<string, Blob | Buffer>
   ): Promise<RemoteItem> {
-    const contentIsContainedInItem = Object.keys(newContent).every((key) =>
-      Object.prototype.hasOwnProperty.call(item.contents, key)
+    const contentIsContainedInItem = Object.keys(newContent).every(
+      (key) => key in item.contents
     )
     if (!contentIsContainedInItem) {
       throw new Error('The new content is not contained in the item contents')
