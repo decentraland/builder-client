@@ -30,10 +30,10 @@ or by using a JsonRpcProvider:
 const provider = new ethers.providers.JsonRpcProvider()
 ```
 
-To use the `BuilderClient`, just instantiate the class with the builder-server url and the identity:
+To use the `BuilderClient`, just instantiate the class with the builder-server url, the identity and the signer's address:
 
 ```typescript
-const client = new BuilderClient('https://httpdump.io', identity)
+const client = new BuilderClient('https://httpdump.io', identity, address)
 ```
 
 ## Using the Item Factory
@@ -100,10 +100,9 @@ or deleted from the item using the `withoutRepresentation` method:
 ```typescript
 const itemFactory = new ItemFactory(oldItem)
 itemFactory.withoutRepresentation(BodyShapeType.FEMALE)
-  })
 ```
 
-The metrics must used in the `withRepresentation` method must be computed by the library's user.
+The metrics used in the `withRepresentation` method must be computed by the library's user.
 These metrics are used to display information about the model in the Builder's UI. They're important mostly to curators.
 
 When defining the representation's content, the `contents` field must contain the model and the thumbnail.
@@ -137,5 +136,5 @@ const builtItem = await itemFactory
     }
   })
   .build()
-client.upsertItem(builtItem.item, builtItem.newContent)
+await client.upsertItem(builtItem.item, builtItem.newContent)
 ```
