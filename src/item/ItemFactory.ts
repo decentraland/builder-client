@@ -25,175 +25,6 @@ export class ItemFactory<X extends Content> {
     this.item = item ?? null
   }
 
-  /**
-   * Check that the given text won't break the item's metadata when used.
-   * @param text - The text to verify that won't break the item's metadata.
-   */
-  private isMetadataTextValid(text: string): boolean {
-    const invalidCharacters = [':']
-    const invalidCharactersRegex = new RegExp(invalidCharacters.join('|'))
-    return text.search(invalidCharactersRegex) === -1
-  }
-
-  /**
-   * Builds an item's representation.
-   * @param bodyShape - The body shape of the representation to build.
-   * @param model - The name of the content's key that points to the model.
-   * @param contents - The sorted contents of the representation to build.
-   */
-  private buildRepresentations(
-    bodyShape: BodyShapeType,
-    model: string,
-    contents: SortedContent<X>
-  ): WearableRepresentation[] {
-    const representations: WearableRepresentation[] = []
-
-    // Add male representation
-    if (bodyShape === BodyShapeType.MALE || bodyShape === BodyShapeType.BOTH) {
-      representations.push({
-        bodyShapes: [WearableBodyShape.MALE],
-        mainFile: prefixContentName(BodyShapeType.MALE, model),
-        contents: Object.keys(contents.male),
-        overrideHides: [],
-        overrideReplaces: []
-      })
-    }
-
-    // Add female representation
-    if (
-      bodyShape === BodyShapeType.FEMALE ||
-      bodyShape === BodyShapeType.BOTH
-    ) {
-      representations.push({
-        bodyShapes: [WearableBodyShape.FEMALE],
-        mainFile: prefixContentName(BodyShapeType.FEMALE, model),
-        contents: Object.keys(contents.female),
-        overrideHides: [],
-        overrideReplaces: []
-      })
-    }
-
-    return representations
-  }
-
-  /**
-   * Checks if an item's representation would fit a specific body shape.
-   * @param bodyShape - The body shape to check for.
-   * @param representation - The representation to see if fits the body shape.
-   */
-  private representsBodyShape(
-    bodyShape: BodyShapeType,
-    representation: WearableRepresentation
-  ): boolean {
-    return (
-      bodyShape === BodyShapeType.BOTH ||
-      (bodyShape === BodyShapeType.MALE
-        ? WearableBodyShape.MALE === representation.bodyShapes[0]
-        : WearableBodyShape.FEMALE === representation.bodyShapes[0])
-    )
-  }
-
-  /**
-   * Builds a new record of contents without the contents of the specified body shape.
-   * @param bodyShape - The body shape of the contents to be left out.
-   * @param contents - The contents to be filtered taking into consideration the specified body shape.
-   */
-  private removeContentsOfBodyShape(
-    bodyShape: BodyShapeType,
-    contents: Record<string, any>
-  ): Record<string, any> {
-    return Object.keys(contents)
-      .filter(
-        (key) =>
-          !(
-            bodyShape === BodyShapeType.BOTH ||
-            key.startsWith(bodyShape.toString())
-          )
-      )
-      .reduce((accum, key) => {
-        accum[key] = contents[key]
-        return accum
-      }, {} as Record<string, any>)
-  }
-
-  /**
-   * Checks if the item has representations.
-   * It requires the item to be defined first.
-   */
-  private itemHasRepresentations(): boolean {
-    if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
-    }
-
-    return this.item.data.representations.length > 0
-  }
-
-  /**
-   * Gets the sorted contents based on a given body shape.
-   * @param bodyShape - The body shape to get the contents of.
-   * @param contents - The full list of sorted contents.
-   */
-  private getBodyShapeSortedContents(
-    bodyShape: BodyShapeType,
-    contents: SortedContent<X>
-  ): RawContent<X> {
-    switch (bodyShape) {
-      case BodyShapeType.MALE:
-        return contents.male
-      case BodyShapeType.FEMALE:
-        return contents.female
-      case BodyShapeType.BOTH:
-        return contents.all
-      default:
-        throw new Error(
-          `The BodyShape ${bodyShape} couldn't get matched with the content`
-        )
-    }
-  }
-
-  /**
-   * Sets an item's property by checking first if the item is defined.
-   * @param property - The property of the item to be set.
-   * @param value - The value of the property to be set.
-   */
-  private setItemProperty<T extends keyof LocalItem>(
-    property: T,
-    value: LocalItem[T]
-  ): ItemFactory<X> {
-    if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
-    }
-
-    this.item = {
-      ...this.item,
-      [property]: value
-    }
-    return this
-  }
-
-  /**
-   * Sets an item's property in the data section by checking first if the item is defined.
-   * @param property - The property of the item to be set.
-   * @param value - The value of the property to be set.
-   */
-  private setItemDataProperty<T extends keyof LocalItem['data']>(
-    property: T,
-    value: LocalItem['data'][T]
-  ): ItemFactory<X> {
-    if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
-    }
-
-    this.item = {
-      ...this.item,
-      data: {
-        ...this.item.data,
-        [property]: value
-      }
-    }
-    return this
-  }
-
   public newItem(
     id: string,
     name: string,
@@ -446,5 +277,174 @@ export class ItemFactory<X extends Content> {
       },
       newContent: this.newContent
     }
+  }
+
+  /**
+   * Check that the given text won't break the item's metadata when used.
+   * @param text - The text to verify that won't break the item's metadata.
+   */
+  private isMetadataTextValid(text: string): boolean {
+    const invalidCharacters = [':']
+    const invalidCharactersRegex = new RegExp(invalidCharacters.join('|'))
+    return text.search(invalidCharactersRegex) === -1
+  }
+
+  /**
+   * Builds an item's representation.
+   * @param bodyShape - The body shape of the representation to build.
+   * @param model - The name of the content's key that points to the model.
+   * @param contents - The sorted contents of the representation to build.
+   */
+  private buildRepresentations(
+    bodyShape: BodyShapeType,
+    model: string,
+    contents: SortedContent<X>
+  ): WearableRepresentation[] {
+    const representations: WearableRepresentation[] = []
+
+    // Add male representation
+    if (bodyShape === BodyShapeType.MALE || bodyShape === BodyShapeType.BOTH) {
+      representations.push({
+        bodyShapes: [WearableBodyShape.MALE],
+        mainFile: prefixContentName(BodyShapeType.MALE, model),
+        contents: Object.keys(contents.male),
+        overrideHides: [],
+        overrideReplaces: []
+      })
+    }
+
+    // Add female representation
+    if (
+      bodyShape === BodyShapeType.FEMALE ||
+      bodyShape === BodyShapeType.BOTH
+    ) {
+      representations.push({
+        bodyShapes: [WearableBodyShape.FEMALE],
+        mainFile: prefixContentName(BodyShapeType.FEMALE, model),
+        contents: Object.keys(contents.female),
+        overrideHides: [],
+        overrideReplaces: []
+      })
+    }
+
+    return representations
+  }
+
+  /**
+   * Checks if an item's representation would fit a specific body shape.
+   * @param bodyShape - The body shape to check for.
+   * @param representation - The representation to see if fits the body shape.
+   */
+  private representsBodyShape(
+    bodyShape: BodyShapeType,
+    representation: WearableRepresentation
+  ): boolean {
+    return (
+      bodyShape === BodyShapeType.BOTH ||
+      (bodyShape === BodyShapeType.MALE
+        ? WearableBodyShape.MALE === representation.bodyShapes[0]
+        : WearableBodyShape.FEMALE === representation.bodyShapes[0])
+    )
+  }
+
+  /**
+   * Builds a new record of contents without the contents of the specified body shape.
+   * @param bodyShape - The body shape of the contents to be left out.
+   * @param contents - The contents to be filtered taking into consideration the specified body shape.
+   */
+  private removeContentsOfBodyShape(
+    bodyShape: BodyShapeType,
+    contents: Record<string, any>
+  ): Record<string, any> {
+    return Object.keys(contents)
+      .filter(
+        (key) =>
+          !(
+            bodyShape === BodyShapeType.BOTH ||
+            key.startsWith(bodyShape.toString())
+          )
+      )
+      .reduce((accum, key) => {
+        accum[key] = contents[key]
+        return accum
+      }, {} as Record<string, any>)
+  }
+
+  /**
+   * Checks if the item has representations.
+   * It requires the item to be defined first.
+   */
+  private itemHasRepresentations(): boolean {
+    if (!this.item) {
+      throw new Error(this.NOT_INITIALIZED_ERROR)
+    }
+
+    return this.item.data.representations.length > 0
+  }
+
+  /**
+   * Gets the sorted contents based on a given body shape.
+   * @param bodyShape - The body shape to get the contents of.
+   * @param contents - The full list of sorted contents.
+   */
+  private getBodyShapeSortedContents(
+    bodyShape: BodyShapeType,
+    contents: SortedContent<X>
+  ): RawContent<X> {
+    switch (bodyShape) {
+      case BodyShapeType.MALE:
+        return contents.male
+      case BodyShapeType.FEMALE:
+        return contents.female
+      case BodyShapeType.BOTH:
+        return contents.all
+      default:
+        throw new Error(
+          `The BodyShape ${bodyShape} couldn't get matched with the content`
+        )
+    }
+  }
+
+  /**
+   * Sets an item's property by checking first if the item is defined.
+   * @param property - The property of the item to be set.
+   * @param value - The value of the property to be set.
+   */
+  private setItemProperty<T extends keyof LocalItem>(
+    property: T,
+    value: LocalItem[T]
+  ): ItemFactory<X> {
+    if (!this.item) {
+      throw new Error(this.NOT_INITIALIZED_ERROR)
+    }
+
+    this.item = {
+      ...this.item,
+      [property]: value
+    }
+    return this
+  }
+
+  /**
+   * Sets an item's property in the data section by checking first if the item is defined.
+   * @param property - The property of the item to be set.
+   * @param value - The value of the property to be set.
+   */
+  private setItemDataProperty<T extends keyof LocalItem['data']>(
+    property: T,
+    value: LocalItem['data'][T]
+  ): ItemFactory<X> {
+    if (!this.item) {
+      throw new Error(this.NOT_INITIALIZED_ERROR)
+    }
+
+    this.item = {
+      ...this.item,
+      data: {
+        ...this.item.data,
+        [property]: value
+      }
+    }
+    return this
   }
 }
