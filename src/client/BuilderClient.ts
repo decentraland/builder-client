@@ -77,11 +77,12 @@ export class BuilderClient {
     }
 
     try {
-      const upsertResponse = await this.axios.put<
-        ServerResponse & { data: RemoteItem }
-      >(`/v1/items/${item.id}`, {
-        item
-      })
+      const upsertResponse = await this.axios.put<ServerResponse<RemoteItem>>(
+        `/v1/items/${item.id}`,
+        {
+          item
+        }
+      )
 
       if (Object.keys(newContent).length > 0) {
         const formData = new FormData()
