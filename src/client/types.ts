@@ -1,5 +1,5 @@
-export type ServerResponse = {
-  data: any
+export type ServerResponse<T = any> = {
+  data: T
   ok: boolean
   error?: string
 }

@@ -74,19 +74,20 @@ export class BuilderClient {
     item: LocalItem,
     newContent: Record<string, Content>
   ): Promise<RemoteItem> {
-    const contentIsContainedInItem = Object.keys(newContent).every((key) =>
-      Object.prototype.hasOwnProperty.call(item.contents, key)
+    const contentIsContainedInItem = Object.keys(newContent).every(
+      (key) => key in item.contents
     )
     if (!contentIsContainedInItem) {
       throw new Error('The new content is not contained in the item contents')
     }
 
     try {
-      const upsertResponse = await this.axios.put<
-        ServerResponse & { data: RemoteItem }
-      >(`/v1/items/${item.id}`, {
-        item: { ...item, eth_address: this.address }
-      })
+      const upsertResponse = await this.axios.put<ServerResponse<RemoteItem>>(
+        `/v1/items/${item.id}`,
+        {
+          item: { ...item, eth_address: this.address }
+        }
+      )
 
       if (Object.keys(newContent).length > 0) {
         const formData = new FormData()

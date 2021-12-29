@@ -7,7 +7,15 @@
 
 ## Using the Builder client
 
-Using the builder client requires an identity to be created. The library provides a function `createIdentity` that uses a `Signer` from `ethers`, but any other implementation can be created to craft such identity.
+Using the builder client requires an `AuthIdentity` to be created.
+
+An `AuthIdentity` is an object containing:
+
+- An ephemeral identity, that is, an address and a private and public key generated randomly.
+- An expiration date, used to expire any signed messages.
+- An AuthChain, which is a list of authorization objects used to validate the signed messages.
+
+The library provides a function `createIdentity` that uses a `Signer` from `ethers`, but any other implementation can be created to craft such identity.
 
 Creating the identity using the `createIdentity` can be easily done in NodeJS by instantiating an ethers wallet using a private key:
 
