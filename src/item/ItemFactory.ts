@@ -6,6 +6,7 @@ import {
 } from '../content/content'
 import { Content, RawContent, SortedContent } from '../content/types'
 import { THUMBNAIL_PATH } from './constants'
+import { ItemNotInitializedError } from './ItemFactory.errors'
 import {
   BodyShapeType,
   BuiltItem,
@@ -17,13 +18,9 @@ import {
 } from './types'
 
 export class ItemFactory<X extends Content> {
-  private item: LocalItem | null = null
   private newContent: RawContent<X> = {}
-  private readonly NOT_INITIALIZED_ERROR = 'Item has not been initialized'
 
-  constructor(item?: LocalItem) {
-    this.item = item ?? null
-  }
+  constructor(private item: LocalItem | null = null) {}
 
   public newItem(
     id: string,
@@ -158,7 +155,7 @@ export class ItemFactory<X extends Content> {
    */
   public withThumbnail(thumbnail: X): ItemFactory<X> {
     if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
+      throw new ItemNotInitializedError()
     }
 
     this.newContent = {
@@ -185,7 +182,7 @@ export class ItemFactory<X extends Content> {
     metrics: ModelMetrics
   ): ItemFactory<X> {
     if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
+      throw new ItemNotInitializedError()
     }
 
     const representationAlreadyExists = this.item.data.representations.some(
@@ -232,7 +229,7 @@ export class ItemFactory<X extends Content> {
    */
   public withoutRepresentation(bodyShape: BodyShapeType): ItemFactory<X> {
     if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
+      throw new ItemNotInitializedError()
     }
 
     this.newContent = this.removeContentsOfBodyShape(bodyShape, this.newContent)
@@ -376,7 +373,7 @@ export class ItemFactory<X extends Content> {
    */
   private itemHasRepresentations(): boolean {
     if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
+      throw new ItemNotInitializedError()
     }
 
     return this.item.data.representations.length > 0
@@ -415,7 +412,7 @@ export class ItemFactory<X extends Content> {
     value: LocalItem[T]
   ): ItemFactory<X> {
     if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
+      throw new ItemNotInitializedError()
     }
 
     this.item = {
@@ -435,7 +432,7 @@ export class ItemFactory<X extends Content> {
     value: LocalItem['data'][T]
   ): ItemFactory<X> {
     if (!this.item) {
-      throw new Error(this.NOT_INITIALIZED_ERROR)
+      throw new ItemNotInitializedError()
     }
 
     this.item = {
