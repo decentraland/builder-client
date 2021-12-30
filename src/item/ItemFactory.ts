@@ -349,10 +349,10 @@ export class ItemFactory<X extends Content> {
    * @param bodyShape - The body shape of the contents to be left out.
    * @param contents - The contents to be filtered taking into consideration the specified body shape.
    */
-  private removeContentsOfBodyShape(
+  private removeContentsOfBodyShape<J extends X | string>(
     bodyShape: BodyShapeType,
-    contents: Record<string, any>
-  ): Record<string, any> {
+    contents: Record<string, J>
+  ): Record<string, J> {
     return Object.keys(contents)
       .filter(
         (key) =>
@@ -362,7 +362,7 @@ export class ItemFactory<X extends Content> {
       .reduce((accum, key) => {
         accum[key] = contents[key]
         return accum
-      }, {} as Record<string, any>)
+      }, {} as Record<string, J>)
   }
 
   /**

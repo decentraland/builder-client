@@ -38,7 +38,7 @@ export class BuilderClient {
     this.axios.interceptors.response.use((response) => {
       if (response.data && response.data.ok === false) {
         throw new ClientError(
-          response.data.error!,
+          response.data.error,
           response.status,
           response.data.data
         )

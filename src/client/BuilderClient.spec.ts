@@ -172,7 +172,7 @@ describe('when upserting an item', () => {
 
   describe('and the request to upload the item files fails', () => {
     const errorMessage = 'An error occurred trying to upload item files'
-    let errorData: Record<string, any>
+    let errorData: Record<string, unknown>
     let content: RawContent<Uint8Array>
 
     beforeEach(() => {
