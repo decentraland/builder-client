@@ -356,10 +356,8 @@ export class ItemFactory<X extends Content> {
     return Object.keys(contents)
       .filter(
         (key) =>
-          !(
-            bodyShape === BodyShapeType.BOTH ||
-            key.startsWith(bodyShape.toString())
-          )
+          bodyShape !== BodyShapeType.BOTH &&
+          !key.startsWith(bodyShape.toString())
       )
       .reduce((accum, key) => {
         accum[key] = contents[key]
