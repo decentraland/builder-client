@@ -1,4 +1,4 @@
-export type ServerResponse<T = any> = {
+export type ServerResponse<T> = {
   data: T
   ok: boolean
   error?: string
