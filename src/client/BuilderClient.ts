@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import FormData from 'form-data'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
+import { Content } from '../content/types'
 import { RemoteItem, LocalItem } from '../item/types'
 import { ClientError } from './BuilderClient.errors'
 import { ServerResponse } from './types'
@@ -9,7 +10,11 @@ export class BuilderClient {
   private axios: AxiosInstance
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
 
-  constructor(url: string, private identity: AuthIdentity) {
+  constructor(
+    url: string,
+    private identity: AuthIdentity,
+    private address: string
+  ) {
     this.axios = axios.create({
       baseURL: url
     })
@@ -67,7 +72,7 @@ export class BuilderClient {
    */
   async upsertItem(
     item: LocalItem,
-    newContent: Record<string, Blob | Buffer>
+    newContent: Record<string, Content>
   ): Promise<RemoteItem> {
     const contentIsContainedInItem = Object.keys(newContent).every(
       (key) => key in item.contents
@@ -80,7 +85,7 @@ export class BuilderClient {
       const upsertResponse = await this.axios.put<ServerResponse<RemoteItem>>(
         `/v1/items/${item.id}`,
         {
-          item
+          item: { ...item, eth_address: this.address }
         }
       )
 
