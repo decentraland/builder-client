@@ -10,7 +10,11 @@ export class BuilderClient {
   private axios: AxiosInstance
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
 
-  constructor(url: string, private identity: AuthIdentity) {
+  constructor(
+    url: string,
+    private identity: AuthIdentity,
+    private address: string
+  ) {
     this.axios = axios.create({
       baseURL: url
     })
@@ -34,7 +38,7 @@ export class BuilderClient {
     this.axios.interceptors.response.use((response) => {
       if (response.data && response.data.ok === false) {
         throw new ClientError(
-          response.data.error!,
+          response.data.error,
           response.status,
           response.data.data
         )
@@ -70,19 +74,20 @@ export class BuilderClient {
     item: LocalItem,
     newContent: Record<string, Content>
   ): Promise<RemoteItem> {
-    const contentIsContainedInItem = Object.keys(newContent).every((key) =>
-      Object.prototype.hasOwnProperty.call(item.contents, key)
+    const contentIsContainedInItem = Object.keys(newContent).every(
+      (key) => key in item.contents
     )
     if (!contentIsContainedInItem) {
       throw new Error('The new content is not contained in the item contents')
     }
 
     try {
-      const upsertResponse = await this.axios.put<
-        ServerResponse & { data: RemoteItem }
-      >(`/v1/items/${item.id}`, {
-        item
-      })
+      const upsertResponse = await this.axios.put<ServerResponse<RemoteItem>>(
+        `/v1/items/${item.id}`,
+        {
+          item: { ...item, eth_address: this.address }
+        }
+      )
 
       if (Object.keys(newContent).length > 0) {
         const formData = new FormData()

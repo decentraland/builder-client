@@ -1,10 +1,10 @@
 export type Content = Uint8Array | Blob
 
-export type SortedContent = {
-  male: Record<string, Content>
-  female: Record<string, Content>
-  all: Record<string, Content>
+export type SortedContent<T extends Content> = {
+  male: Record<string, T>
+  female: Record<string, T>
+  all: Record<string, T>
 }
 
 export type HashedContent = Record<string, string>
-export type RawContent = Record<string, Content>
+export type RawContent<T extends Content> = Record<string, T>

@@ -20,6 +20,7 @@ import {
 nock.disableNetConnect()
 
 const testUrl = 'http://test-url'
+const address = 'anAddress'
 let item: LocalItem
 let remoteItem: RemoteItem
 let client: BuilderClient
@@ -61,7 +62,7 @@ beforeEach(async () => {
   const wallet = new ethers.Wallet(fakePrivateKey)
   const identity = await createIdentity(wallet, 1000)
   const date = Date.now()
-  client = new BuilderClient(testUrl, identity)
+  client = new BuilderClient(testUrl, identity, address)
 
   item = {
     id: 'anId',
@@ -130,11 +131,15 @@ describe('when upserting an item', () => {
 
     describe('and the failure is represented with an ok as false and a 200 status code', () => {
       beforeEach(() => {
-        nock(testUrl).put(`/v1/items/${item.id}`, { item }).reply(200, {
-          error: errorMessage,
-          data: errorData,
-          ok: false
-        })
+        nock(testUrl)
+          .put(`/v1/items/${item.id}`, {
+            item: { ...item, eth_address: address }
+          })
+          .reply(200, {
+            error: errorMessage,
+            data: errorData,
+            ok: false
+          })
       })
 
       it("should throw a client error with the server's error message and data", () => {
@@ -146,11 +151,15 @@ describe('when upserting an item', () => {
 
     describe('and the failure is represented with an errored status code', () => {
       beforeEach(() => {
-        nock(testUrl).put(`/v1/items/${item.id}`, { item }).reply(409, {
-          error: errorMessage,
-          data: errorData,
-          ok: false
-        })
+        nock(testUrl)
+          .put(`/v1/items/${item.id}`, {
+            item: { ...item, eth_address: address }
+          })
+          .reply(409, {
+            error: errorMessage,
+            data: errorData,
+            ok: false
+          })
       })
 
       it("should throw a client error with the server's error message and data", () => {
@@ -163,8 +172,8 @@ describe('when upserting an item', () => {
 
   describe('and the request to upload the item files fails', () => {
     const errorMessage = 'An error occurred trying to upload item files'
-    let errorData: Record<string, any>
-    let content: RawContent
+    let errorData: Record<string, unknown>
+    let content: RawContent<Uint8Array>
 
     beforeEach(() => {
       nock(testUrl).put(`/v1/items/${item.id}`).reply(200, {
@@ -216,9 +225,10 @@ describe('when upserting an item', () => {
     let result: RemoteItem
 
     beforeEach(() => {
-      // upsertableRemoteItem = toRemoteItem(item)
       nockedUpsert = nock(testUrl)
-        .put(`/v1/items/${item.id}`, { item })
+        .put(`/v1/items/${item.id}`, {
+          item: { ...item, eth_address: address }
+        })
         .matchHeader(FIRST_AUTH_HEADER, firstHeaderValueMatcher)
         .matchHeader(SECOND_AUTH_HEADER, secondHeaderValueMatcher)
         .matchHeader(

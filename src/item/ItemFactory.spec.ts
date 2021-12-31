@@ -11,7 +11,9 @@ import {
   WearableCategory
 } from './types'
 
-const createBasicItem = (itemFactory: ItemFactory): ItemFactory => {
+const createBasicItem = (
+  itemFactory: ItemFactory<Uint8Array>
+): ItemFactory<Uint8Array> => {
   return itemFactory.newItem(
     'anId',
     'aName',
@@ -27,7 +29,7 @@ const testPropertyBuilder = <T extends keyof LocalItem>(
   value: LocalItem[T]
 ) => {
   const camelCasedProperty = toCamelCase(property)
-  let factory: ItemFactory
+  let factory: ItemFactory<Uint8Array>
 
   describe(`when updating the item's ${property}`, () => {
     beforeEach(() => {
@@ -64,7 +66,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
   value: LocalItem['data'][T]
 ) => {
   const camelCasedProperty = toCamelCase(property)
-  let factory: ItemFactory
+  let factory: ItemFactory<Uint8Array>
 
   describe(`when updating the item's ${property}`, () => {
     beforeEach(() => {
@@ -99,7 +101,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
 }
 
 const modelPath = 'model.glb'
-let itemFactory: ItemFactory
+let itemFactory: ItemFactory<Uint8Array>
 let item: LocalItem
 let newContent: Record<string, Uint8Array>
 let prefixedMaleModel: string
