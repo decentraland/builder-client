@@ -30,7 +30,6 @@ jobs:
       - name: Run prettifier
         run: npm run check:prettier
       - name: Publish
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: menduz/oddish-action@master
         with:
           access: public
