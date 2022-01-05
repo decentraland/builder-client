@@ -16,14 +16,14 @@ import {
 const createBasicItem = (
   itemFactory: ItemFactory<Uint8Array>
 ): ItemFactory<Uint8Array> => {
-  return itemFactory.newItem(
-    'anId',
-    'aName',
-    Rarity.COMMON,
-    WearableCategory.EYEBROWS,
-    'aCollectionId',
-    'aDescription'
-  )
+  return itemFactory.newItem({
+    id: 'anId',
+    name: 'aName',
+    rarity: Rarity.COMMON,
+    category: WearableCategory.EYEBROWS,
+    collection_id: 'aCollectionId',
+    description: 'aDescription'
+  })
 }
 
 const testPropertyBuilder = <T extends keyof LocalItem>(

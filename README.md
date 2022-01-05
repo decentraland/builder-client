@@ -154,7 +154,7 @@ that contains the information of the asset file.
 
 An asset file is a JSON file that contains the item's information and it has the following shape:
 
-```json
+```typescript
 {
   // The item's id
   "id": "f12313b4-a76b-4c9e-a2a3-ab460f59bd67",

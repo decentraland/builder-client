@@ -9,6 +9,7 @@ import { AssetJSON } from '../files/types'
 import { DEFAULT_METRICS, THUMBNAIL_PATH } from './constants'
 import { ItemNotInitializedError } from './ItemFactory.errors'
 import {
+  BasicItem,
   BodyShapeType,
   BuiltItem,
   ItemType,
@@ -25,21 +26,16 @@ export class ItemFactory<X extends Content> {
 
   /**
    * Instantiates a new item with the base properties.
-   * @param id - The item's id.
-   * @param name - The item's name.
-   * @param rarity - The item's rarity.
-   * @param category - The item's category.
-   * @param collectionId - The id of the collection the item belongs to.
-   * @param description - The description of the item.
+   * @param BasicItem - The set of properties that, without a representation, defines an item.
    */
-  public newItem(
-    id: string,
-    name: string,
-    rarity: Rarity,
-    category: WearableCategory,
-    collectionId?: string,
-    description?: string
-  ) {
+  public newItem({
+    id,
+    name,
+    rarity,
+    category,
+    collection_id,
+    description
+  }: BasicItem) {
     if (
       !this.isMetadataTextValid(name) ||
       (description && !this.isMetadataTextValid(description))
@@ -53,7 +49,7 @@ export class ItemFactory<X extends Content> {
       description: description || '',
       thumbnail: THUMBNAIL_PATH,
       type: ItemType.WEARABLE,
-      collection_id: collectionId ?? null,
+      collection_id: collection_id ?? null,
       content_hash: null,
       rarity,
       urn: null,
@@ -76,14 +72,14 @@ export class ItemFactory<X extends Content> {
    * @param contents - The item's content.
    */
   public fromAsset(asset: AssetJSON, content: RawContent<X>): ItemFactory<X> {
-    this.newItem(
-      asset.id,
-      asset.name,
-      asset.rarity,
-      asset.category,
-      asset.collectionId,
-      asset.description
-    )
+    this.newItem({
+      id: asset.id,
+      name: asset.name,
+      rarity: asset.rarity,
+      category: asset.category,
+      collection_id: asset.collectionId ?? null,
+      description: asset.description ?? null
+    })
 
     if (content[THUMBNAIL_PATH]) {
       this.withThumbnail(content[THUMBNAIL_PATH])
