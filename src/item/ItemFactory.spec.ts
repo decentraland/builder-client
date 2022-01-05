@@ -1,10 +1,12 @@
 import { Rarity, WearableRepresentation } from '@dcl/schemas'
 import { prefixContentName } from '../content/content'
+import { AssetJSON } from '../files/types'
 import { toCamelCase } from '../test-utils/string'
 import { THUMBNAIL_PATH } from './constants'
 import { ItemFactory } from './ItemFactory'
 import {
   BodyShapeType,
+  ItemType,
   LocalItem,
   ModelMetrics,
   WearableBodyShape,
@@ -14,14 +16,14 @@ import {
 const createBasicItem = (
   itemFactory: ItemFactory<Uint8Array>
 ): ItemFactory<Uint8Array> => {
-  return itemFactory.newItem(
-    'anId',
-    'aName',
-    Rarity.COMMON,
-    WearableCategory.EYEBROWS,
-    'aCollectionId',
-    'aDescription'
-  )
+  return itemFactory.newItem({
+    id: 'anId',
+    name: 'aName',
+    rarity: Rarity.COMMON,
+    category: WearableCategory.EYEBROWS,
+    collection_id: 'aCollectionId',
+    description: 'aDescription'
+  })
 }
 
 const testPropertyBuilder = <T extends keyof LocalItem>(
@@ -859,6 +861,72 @@ describe("when setting the item's thumbnail", () => {
           })
         )
       })
+    })
+  })
+})
+
+describe('when creating a new item from an asset object', () => {
+  let asset: AssetJSON
+
+  beforeEach(async () => {
+    asset = {
+      id: 'f12313b4-a76b-4c9e-a2a3-ab460f59bd67',
+      name: 'test',
+      category: WearableCategory.EYEBROWS,
+      rarity: Rarity.COMMON,
+      collectionId: '7c3af3a0-9ea9-4cc7-a137-dc1f1f6c0871',
+      description: 'a description',
+      hides: [WearableCategory.FEET],
+      replaces: [WearableCategory.HAIR],
+      tags: ['tag1', 'tag2'],
+      representations: [
+        {
+          bodyShape: BodyShapeType.MALE,
+          mainFile: modelPath,
+          contents: [modelPath, THUMBNAIL_PATH],
+          overrideHides: [WearableCategory.EYES],
+          overrideReplaces: [WearableCategory.FACIAL_HAIR],
+          metrics
+        }
+      ]
+    }
+    itemFactory.fromAsset(asset, contents)
+  })
+
+  it('should create the built item configured with the values from the asset object and the new content with the provided content', () => {
+    return expect(itemFactory.build()).resolves.toEqual({
+      item: {
+        id: asset.id,
+        name: asset.name,
+        type: ItemType.WEARABLE,
+        thumbnail: THUMBNAIL_PATH,
+        collection_id: asset.collectionId,
+        urn: null,
+        data: {
+          category: asset.category,
+          hides: asset.hides,
+          replaces: asset.replaces,
+          tags: asset.tags,
+          representations: [
+            {
+              bodyShapes: [WearableBodyShape.MALE],
+              contents: [prefixedMaleModel],
+              mainFile: prefixedMaleModel,
+              overrideHides: [WearableCategory.EYES],
+              overrideReplaces: [WearableCategory.FACIAL_HAIR]
+            }
+          ]
+        },
+        rarity: asset.rarity,
+        description: asset.description,
+        metrics: asset.representations[0].metrics,
+        contents: maleHashedContent,
+        content_hash: null
+      } as LocalItem,
+      newContent: {
+        [prefixedMaleModel]: contents[modelPath],
+        [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
+      }
     })
   })
 })
