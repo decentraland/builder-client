@@ -28,6 +28,8 @@ jobs:
         run: npm run check:prettier
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: npx semantic-release
+        uses: menduz/oddish-action@master
+        with:
+          access: public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
