@@ -108,6 +108,111 @@ These metrics are used to display information about the model in the Builder's U
 When defining the representation's content, the `contents` field must contain the model and the thumbnail.
 The library's user is responsible for providing a thumbnail. The thumbnail can be also be changed / set using the `withThumbnail` method.
 
+### Loading items from files
+
+This library provides a function `loadItem` that can be used to load an item from a file. The function accepts two types of files:
+
+1. A zip file that contains only the item's contents.
+2. A model file, that contains only the item's model.
+3. A zip file that contains the item's contents and the asset file `asset.json` describing the item's information.
+
+For the 1st and 2nd cases, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`,
+that is content ready to be used with the ItemFactory, and the property `mainModel` that defines the main model file of the contents.
+
+After loading the file, the `LoadedItem` object can be used to create an item using the `ItemFactory`:
+
+```typescript
+// Loads a ZIP file without the asset file or a model file
+const loadedItem = await loadItem('model-without-asset.zip')
+const itemFactory = new ItemFactory()
+itemFactory.newItem(
+  'anId',
+  'aName',
+  Rarity.COMMON,
+  WearableCategory.EYEBROWS,
+  'aCollectionId',
+  'aDescription'
+).withRepresentation(
+    bodyShape: BodyShapeType.MALE,
+    // Uses the main model from the loadedItem variable
+    model: loadedItem.mainModel,
+    // Uses the content from the loadedItem variable
+    contents: loadedItem.content,
+    metrics: {
+      triangles: 106,
+      materials: 107,
+      meshes: 108,
+      bodies: 109,
+      entities: 110,
+      textures: 111
+    }
+  })
+```
+
+For the 3rd case, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`, and it will also contain the asset property
+that contains the information of the asset file.
+
+An asset file is a JSON file that contains the item's information and it has the following shape:
+
+```json
+{
+  // The item's id
+  "id": "f12313b4-a76b-4c9e-a2a3-ab460f59bd67",
+  // The item's name
+  "name": "test",
+  // The item's WearableCategory
+  "category": "eyebrows",
+  // The item's Rarity
+  "rarity": "common",
+  // The item's collection id (optional)
+  "collectionId": "272233f5-e539-4202-b95c-aa68b0c8f190",
+  // The item's description (optional)
+  "description": "a description",
+  // The WearableCategories that the item hides (optional)
+  "hides": [],
+  // The WearableCategories that the item replaces (optional)
+  "replaces": [],
+  // The item's tags (optional)
+  "tags": ["special", "new", "eyebrows"],
+  // The item's representations (the item must have more than one representation)
+  "representations": [
+    {
+      // The body shapes that the representation will be used for (male/female/both)
+      "bodyShape": "male",
+      // The file path (path inside of the zipped file) to the main model of the representation
+      "mainFile": "aModelFile.glb",
+      // An array of file paths (paths inside the zipped file) to the files that the representation contains
+      "contents": ["aModelFile.glb", "aTextureFile.png", "thumbnail.png"],
+      // The representation's WearableCategories hides overrides
+      "overrideHides": [],
+      // The representation's WearableCategories replaces overrides
+      "overrideReplaces": [],
+      // The representation's metrics (optional, default metrics will be provided but it's recommended to include them)
+      "metrics": {
+        "triangles": 20,
+        "materials": 1,
+        "meshes": 10,
+        "bodies": 2,
+        "entities": 1,
+        "textures": 1
+      }
+    }
+  ]
+}
+```
+
+After loading the file zip file that contains an `asset.json` file, the `LoadedItem` object can be used to create an item using the `ItemFactory`:
+
+```typescript
+const loadedItem = await loadItem('model-with-asset.zip')
+const itemFactory = new ItemFactory()
+itemFactory.fromAsset(loadedItem.asset)
+```
+
+**To consider**
+
+The item's thumbnail must be set either manually, by using the factory's `withThumbnail` method or by including the file `thumbnail.png` in the item's contents.
+
 ### Building an item
 
 Building an item is the last step of the item's creation. The `build` method returns a `Promise` that resolves to an object containing the

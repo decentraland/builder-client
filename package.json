@@ -50,6 +50,7 @@
   "dependencies": {
     "@dcl/schemas": "^3.0.0",
     "ajv": "^8.8.2",
+    "ajv-formats": "^2.1.1",
     "axios": "^0.24.0",
     "dcl-catalyst-commons": "^7.1.3",
     "dcl-crypto": "^2.3.0",

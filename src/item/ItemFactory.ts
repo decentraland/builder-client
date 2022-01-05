@@ -5,7 +5,8 @@ import {
   sortContent
 } from '../content/content'
 import { Content, RawContent, SortedContent } from '../content/types'
-import { THUMBNAIL_PATH } from './constants'
+import { AssetJSON } from '../files/types'
+import { DEFAULT_METRICS, THUMBNAIL_PATH } from './constants'
 import { ItemNotInitializedError } from './ItemFactory.errors'
 import {
   BodyShapeType,
@@ -22,6 +23,15 @@ export class ItemFactory<X extends Content> {
 
   constructor(private item: LocalItem | null = null) {}
 
+  /**
+   * Instantiates a new item with the base properties.
+   * @param id - The item's id.
+   * @param name - The item's name.
+   * @param rarity - The item's rarity.
+   * @param category - The item's category.
+   * @param collectionId - The id of the collection the item belongs to.
+   * @param description - The description of the item.
+   */
   public newItem(
     id: string,
     name: string,
@@ -54,16 +64,54 @@ export class ItemFactory<X extends Content> {
         tags: [],
         representations: []
       },
-      metrics: {
-        triangles: 0,
-        materials: 0,
-        meshes: 0,
-        bodies: 0,
-        entities: 0,
-        textures: 0
-      },
+      metrics: DEFAULT_METRICS,
       contents: {}
     }
+    return this
+  }
+
+  /**
+   * Instantiates a new item with the base properties.
+   * @param asset - The AssetJSON object containing all the information about the item.
+   * @param contents - The item's content.
+   */
+  public fromAsset(asset: AssetJSON, content: RawContent<X>): ItemFactory<X> {
+    this.newItem(
+      asset.id,
+      asset.name,
+      asset.rarity,
+      asset.category,
+      asset.collectionId,
+      asset.description
+    )
+
+    if (content[THUMBNAIL_PATH]) {
+      this.withThumbnail(content[THUMBNAIL_PATH])
+    }
+
+    if (asset.replaces) {
+      this.withReplaces(asset.replaces)
+    }
+
+    if (asset.hides) {
+      this.withHides(asset.hides)
+    }
+
+    if (asset.tags) {
+      this.withTags(asset.tags)
+    }
+
+    asset.representations.forEach((representation) => {
+      this.withRepresentation(
+        representation.bodyShape,
+        representation.mainFile,
+        this.buildAssetRepresentationContents(content, representation.contents),
+        representation.metrics ?? DEFAULT_METRICS,
+        representation.overrideHides,
+        representation.overrideReplaces
+      )
+    })
+
     return this
   }
 
@@ -179,7 +227,9 @@ export class ItemFactory<X extends Content> {
     bodyShape: BodyShapeType,
     model: string,
     contents: RawContent<X>,
-    metrics: ModelMetrics
+    metrics: ModelMetrics,
+    overrideHides: WearableCategory[] = [],
+    overrideReplaces: WearableCategory[] = []
   ): ItemFactory<X> {
     if (!this.item) {
       throw new ItemNotInitializedError()
@@ -200,7 +250,7 @@ export class ItemFactory<X extends Content> {
     this.newContent = {
       ...this.newContent,
       ...this.getBodyShapeSortedContents(bodyShape, sortedContents),
-      ...(this.itemHasRepresentations()
+      ...(this.itemHasRepresentations() && sortedContents.all[THUMBNAIL_PATH]
         ? {}
         : { [THUMBNAIL_PATH]: sortedContents.all[THUMBNAIL_PATH] })
     }
@@ -211,7 +261,13 @@ export class ItemFactory<X extends Content> {
         ...this.item.data,
         representations: [
           ...this.item.data.representations,
-          ...this.buildRepresentations(bodyShape, model, sortedContents)
+          ...this.buildRepresentations(
+            bodyShape,
+            model,
+            sortedContents,
+            overrideHides,
+            overrideReplaces
+          )
         ]
       },
       metrics
@@ -295,7 +351,9 @@ export class ItemFactory<X extends Content> {
   private buildRepresentations(
     bodyShape: BodyShapeType,
     model: string,
-    contents: SortedContent<X>
+    contents: SortedContent<X>,
+    overrideHides: WearableCategory[],
+    overrideReplaces: WearableCategory[]
   ): WearableRepresentation[] {
     const representations: WearableRepresentation[] = []
 
@@ -305,8 +363,8 @@ export class ItemFactory<X extends Content> {
         bodyShapes: [WearableBodyShape.MALE],
         mainFile: prefixContentName(BodyShapeType.MALE, model),
         contents: Object.keys(contents.male),
-        overrideHides: [],
-        overrideReplaces: []
+        overrideHides,
+        overrideReplaces
       })
     }
 
@@ -319,8 +377,8 @@ export class ItemFactory<X extends Content> {
         bodyShapes: [WearableBodyShape.FEMALE],
         mainFile: prefixContentName(BodyShapeType.FEMALE, model),
         contents: Object.keys(contents.female),
-        overrideHides: [],
-        overrideReplaces: []
+        overrideHides,
+        overrideReplaces
       })
     }
 
@@ -441,5 +499,20 @@ export class ItemFactory<X extends Content> {
       }
     }
     return this
+  }
+
+  /**
+   * Builds a map of contents based on a list of content paths (keys of the map).
+   * @param rawContent - The map containing the content available for an item.
+   * @param contentPaths - The paths or keys of the rawContent map to build the new content map.
+   */
+  private buildAssetRepresentationContents(
+    rawContent: RawContent<X>,
+    contentPaths: string[]
+  ): RawContent<X> {
+    return contentPaths.reduce((accum, content) => {
+      accum[content] = rawContent[content]
+      return accum
+    }, {} as RawContent<X>)
   }
 }

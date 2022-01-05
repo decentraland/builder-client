@@ -1,10 +1,10 @@
-import { Rarity, WearableRepresentation } from '@dcl/schemas'
+import { Rarity, WearableCategory, WearableRepresentation } from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 
 export type RemoteItem = {
   id: string // uuid
   name: string
-  description: string
+  description: string | null
   thumbnail: string
   eth_address: string
   collection_id: string | null
@@ -44,26 +44,6 @@ export enum ItemType {
   WEARABLE = 'wearable'
 }
 
-export enum WearableCategory {
-  EARRING = 'earring',
-  EYEWEAR = 'eyewear',
-  EYEBROWS = 'eyebrows',
-  EYES = 'eyes',
-  FACIAL_HAIR = 'facial_hair',
-  FEET = 'feet',
-  HAIR = 'hair',
-  HAT = 'hat',
-  // HEAD is not part of DCL schemas
-  HEAD = 'head',
-  HELMET = 'helmet',
-  LOWER_BODY = 'lower_body',
-  MASK = 'mask',
-  MOUTH = 'mouth',
-  UPPER_BODY = 'upper_body',
-  TIARA = 'tiara',
-  TOP_HEAD = 'top_head'
-}
-
 export enum BodyShapeType {
   // DCL Schemas doesn't have both
   BOTH = 'both',
@@ -98,4 +78,4 @@ export type BuiltItem<T extends Content> = {
   newContent: RawContent<T>
 }
 
-export { Rarity, WearableRepresentation }
+export { Rarity, WearableCategory }
