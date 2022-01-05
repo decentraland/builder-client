@@ -26,8 +26,6 @@ jobs:
         run: npm run check:code
       - name: Run prettifier
         run: npm run check:prettier
-
-      - name: Publish
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: menduz/oddish-action@master
