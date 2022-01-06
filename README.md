@@ -48,14 +48,14 @@ If the factory was instantiated without an item, a new item can be created by us
 // Initializes the factory
 const itemFactory = new ItemFactory()
 // Creates a new item
-itemFactory.newItem(
-  'anId',
-  'aName',
-  Rarity.COMMON,
-  WearableCategory.EYEBROWS,
-  'aCollectionId',
-  'aDescription'
-)
+itemFactory.newItem({
+  id: 'anId'
+  name: 'aName',
+  rarity: Rarity.COMMON,
+  category: WearableCategory.EYEBROWS,
+  collection_id: 'aCollectionId',
+  description: 'aDescription',
+})
 ```
 
 ### Editing an item
@@ -125,14 +125,14 @@ After loading the file, the `LoadedItem` object can be used to create an item us
 // Loads a ZIP file without the asset file or a model file
 const loadedItem = await loadItem('model-without-asset.zip')
 const itemFactory = new ItemFactory()
-itemFactory.newItem(
-  'anId',
-  'aName',
-  Rarity.COMMON,
-  WearableCategory.EYEBROWS,
-  'aCollectionId',
-  'aDescription'
-).withRepresentation(
+itemFactory.newItem({
+  id: 'anId'
+  name: 'aName',
+  rarity: Rarity.COMMON,
+  category: WearableCategory.EYEBROWS,
+  collection_id: 'aCollectionId',
+  description: 'aDescription',
+}).withRepresentation(
     bodyShape: BodyShapeType.MALE,
     // Uses the main model from the loadedItem variable
     model: loadedItem.mainModel,
