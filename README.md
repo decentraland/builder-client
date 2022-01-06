@@ -54,7 +54,7 @@ itemFactory.newItem({
   rarity: Rarity.COMMON,
   category: WearableCategory.EYEBROWS,
   collection_id: 'aCollectionId',
-  description: 'aDescription',
+  description: 'aDescription'
 })
 ```
 
@@ -131,7 +131,7 @@ itemFactory.newItem({
   rarity: Rarity.COMMON,
   category: WearableCategory.EYEBROWS,
   collection_id: 'aCollectionId',
-  description: 'aDescription',
+  description: 'aDescription'
 }).withRepresentation(
     bodyShape: BodyShapeType.MALE,
     // Uses the main model from the loadedItem variable
