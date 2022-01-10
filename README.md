@@ -4,6 +4,7 @@
 
 [![NPM version](https://badge.fury.io/js/@dcl/builder-client.svg)](https://npmjs.org/package/@dcl/builder-client@latest)
 [![Install Size](https://packagephobia.now.sh/badge?p=@dcl/builder-client@latest)](https://packagephobia.now.sh/result?p=@dcl/builder-client@latest)
+[![Coverage Status](https://coveralls.io/repos/github/decentraland/builder-client/badge.svg?branch=main)](https://coveralls.io/github/decentraland/builder-client?branch=main)
 
 ## Using the Builder client
 
