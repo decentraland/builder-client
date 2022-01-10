@@ -2,7 +2,7 @@
 
 # Builder client
 
-[![NPM version](https://badge.fury.io/js/@dcl/builder-client.svg)](https://npmjs.org/package/@dcl/builder-client@latest)
+[![NPM version](https://badge.fury.io/js/@dcl%2Fbuilder-client.svg)](https://www.npmjs.com/package/@dcl/builder-client/v/latest)
 [![Install Size](https://packagephobia.now.sh/badge?p=@dcl/builder-client@latest)](https://packagephobia.now.sh/result?p=@dcl/builder-client@latest)
 
 ## Using the Builder client
