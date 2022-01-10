@@ -110,7 +110,7 @@ The library's user is responsible for providing a thumbnail. The thumbnail can b
 
 ### Loading items from files
 
-This library provides a function `loadItem` that can be used to load an item from a file. The function accepts two types of files:
+This library provides a function `loadItem` that can be used to load an item from a file. The function accepts three types of files:
 
 1. A zip file that contains only the item's contents.
 2. A model file, that contains only the item's model.
