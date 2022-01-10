@@ -24,7 +24,7 @@ jobs:
       - name: Build package
         run: npm run build
       - name: Run tests
-        run: npm run test
+        run: npm run test:coverage
       - name: Run linter
         run: npm run check:code
       - name: Run prettifier
