@@ -207,7 +207,7 @@ After loading the file zip file that contains an `asset.json` file, the `LoadedI
 ```typescript
 const loadedItem = await loadItem('model-with-asset.zip')
 const itemFactory = new ItemFactory()
-itemFactory.fromAsset(loadedItem.asset)
+itemFactory.fromAsset(loadedItem.asset, loadedItem.content)
 ```
 
 **To consider**
