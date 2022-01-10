@@ -12,6 +12,7 @@
   "homepage": "https://github.com/decentraland/builder-client#readme",
   "scripts": {
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "build": "npx tsc -p tsconfig.json",
     "check:prettier": "prettier -c './**/*.{js,ts,json,yml,md,tsx}'",
     "check:code": "eslint . --max-warnings=0",

@@ -29,6 +29,10 @@ jobs:
         run: npm run check:code
       - name: Run prettifier
         run: npm run check:prettier
+      - name: Report Coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish
         uses: menduz/oddish-action@master
         with:
