@@ -1,50 +1,34 @@
-import axios, { AxiosInstance } from 'axios'
 import FormData from 'form-data'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
 import { Content } from '../content/types'
 import { RemoteItem, LocalItem } from '../item/types'
 import { ClientError } from './BuilderClient.errors'
 import { ServerResponse } from './types'
+import crossFetch from 'cross-fetch'
 
 export class BuilderClient {
-  private axios: AxiosInstance
+  private fetch: (url: string, init?: RequestInit) => Promise<Response>
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
 
   constructor(
     url: string,
     private identity: AuthIdentity,
-    private address: string
+    private address: string,
+    externalFetch: typeof fetch = crossFetch
   ) {
-    this.axios = axios.create({
-      baseURL: url
-    })
+    this.fetch = (...args) => {
+      const path = args[0]
+      const method: string = args[1]?.method ?? args[0] ?? 'get'
+      const fullUrl = url + path
 
-    // Uses the interceptors API to add the auth headers to all requests
-    this.axios.interceptors.request.use((config) => {
-      if (!config.method || !config.url) {
-        return config
-      }
-
-      const headers = this.createAuthHeaders(
-        config.method,
-        config.url.replace(/\/v[0-9]/, '')
-      )
-      config.headers = { ...config.headers, ...headers }
-
-      return config
-    })
-
-    // Uses the interceptors API to throw when the builder server returns a 200 with a ok property set to false
-    this.axios.interceptors.response.use((response) => {
-      if (response.data && response.data.ok === false) {
-        throw new ClientError(
-          response.data.error,
-          response.status,
-          response.data.data
-        )
-      }
-      return response
-    })
+      return externalFetch(fullUrl, {
+        ...args[1],
+        headers: {
+          ...args[1]?.headers,
+          ...this.createAuthHeaders(method, path.replace(/\/v[0-9]/, ''))
+        }
+      })
+    }
   }
 
   /**
@@ -81,34 +65,57 @@ export class BuilderClient {
       throw new Error('The new content is not contained in the item contents')
     }
 
+    let upsertResponse: Response
+    let upsertResponseBody: ServerResponse<RemoteItem>
     try {
-      const upsertResponse = await this.axios.put<ServerResponse<RemoteItem>>(
-        `/v1/items/${item.id}`,
-        {
-          item: { ...item, eth_address: this.address }
-        }
+      upsertResponse = await this.fetch(`/v1/items/${item.id}`, {
+        body: JSON.stringify({ item: { ...item, eth_address: this.address } }),
+        method: 'put'
+      })
+      upsertResponseBody =
+        (await upsertResponse.json()) as ServerResponse<RemoteItem>
+    } catch (error) {
+      throw new ClientError(error.message, undefined, null)
+    }
+
+    if (!upsertResponse.ok || !upsertResponseBody.ok) {
+      throw new ClientError(
+        upsertResponseBody.error ?? 'Unknown error',
+        upsertResponse.status,
+        upsertResponseBody.data
       )
+    }
 
-      if (Object.keys(newContent).length > 0) {
-        const formData = new FormData()
-        for (const path in newContent) {
-          formData.append(item.contents[path], newContent[path])
-        }
-
-        await this.axios.post(`/v1/items/${item.id}/files`, formData)
+    if (Object.keys(newContent).length > 0) {
+      const formData = new FormData()
+      for (const path in newContent) {
+        formData.append(item.contents[path], newContent[path])
       }
 
-      return upsertResponse.data.data
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
+      let uploadResponse: Response
+
+      try {
+        uploadResponse = await this.fetch(`/v1/items/${item.id}/files`, {
+          body: formData as unknown as BodyInit,
+          method: 'post'
+        })
+      } catch (error) {
+        throw new ClientError(error.message, undefined, null)
+      }
+
+      const uploadResponseBody: ServerResponse<unknown> =
+        await uploadResponse.json()
+
+      if (!uploadResponse.ok || !uploadResponseBody.ok) {
         throw new ClientError(
-          error.response?.data.error,
-          error.response?.status,
-          error.response?.data.error.data
+          uploadResponseBody.error ?? 'Unknown error',
+          upsertResponse.status,
+          uploadResponseBody.data
         )
       }
-      throw error
     }
+
+    return upsertResponseBody.data
   }
 
   /**
@@ -116,21 +123,31 @@ export class BuilderClient {
    * @param contentIdentifier - The content hash.
    */
   async getContentSize(contentIdentifier: string): Promise<number> {
+    let contentsResponse: Response
     try {
-      const response = await this.axios.head(
-        `/v1/storage/contents/${contentIdentifier}`
+      contentsResponse = await this.fetch(
+        `/v1/storage/contents/${contentIdentifier}`,
+        { method: 'head' }
       )
-      return Number(response.headers['content-length'])
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new ClientError(
-          error.response?.data.error,
-          error.response?.status,
-          error.response?.data.error.data
-        )
-      } else {
-        throw error
-      }
+      throw new ClientError(
+        error.response?.data.error,
+        error.response?.status,
+        error.response?.data.error.data
+      )
     }
+
+    if (
+      !contentsResponse.ok ||
+      !contentsResponse.headers.has('content-length')
+    ) {
+      throw new ClientError(
+        'An error occurred trying to get the size of a content',
+        contentsResponse.status,
+        null
+      )
+    }
+
+    return Number(contentsResponse.headers.get('content-length'))
   }
 }
