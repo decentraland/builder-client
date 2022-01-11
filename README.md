@@ -4,6 +4,7 @@
 
 [![NPM version](https://badge.fury.io/js/@dcl%2Fbuilder-client.svg)](https://www.npmjs.com/package/@dcl/builder-client/v/latest)
 [![Install Size](https://packagephobia.now.sh/badge?p=@dcl/builder-client@latest)](https://packagephobia.now.sh/result?p=@dcl/builder-client@latest)
+[![Coverage Status](https://coveralls.io/repos/github/decentraland/builder-client/badge.svg?branch=main)](https://coveralls.io/github/decentraland/builder-client?branch=main)
 
 ## Using the Builder client
 
@@ -206,7 +207,7 @@ After loading the file zip file that contains an `asset.json` file, the `LoadedI
 ```typescript
 const loadedItem = await loadItem('model-with-asset.zip')
 const itemFactory = new ItemFactory()
-itemFactory.fromAsset(loadedItem.asset)
+itemFactory.fromAsset(loadedItem.asset, loadedItem.content)
 ```
 
 **To consider**
