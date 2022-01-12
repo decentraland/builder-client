@@ -1,13 +1,18 @@
 import FormData from 'form-data'
+import crossFetch from 'cross-fetch'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
 import { Content } from '../content/types'
+import { ThirdParty, ThirdPartyItemTier } from '../thirdParty'
 import { RemoteItem, LocalItem } from '../item/types'
 import { ClientError } from './BuilderClient.errors'
 import { ServerResponse } from './types'
-import crossFetch from 'cross-fetch'
+import { buildURLParams } from './http'
 
 export class BuilderClient {
-  private fetch: (url: string, init?: RequestInit) => Promise<Response>
+  private fetch: (
+    url: string,
+    init?: RequestInit & { params?: Record<string, string> }
+  ) => Promise<Response>
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
 
   constructor(
@@ -19,7 +24,10 @@ export class BuilderClient {
     this.fetch = (...args) => {
       const path = args[0]
       const method: string = args[1]?.method ?? args[0] ?? 'get'
-      const fullUrl = url + path
+      let fullUrl = url + path
+      if (args[1]?.params) {
+        fullUrl += buildURLParams(args[1]?.params)
+      }
 
       return externalFetch(fullUrl, {
         ...args[1],
@@ -149,5 +157,54 @@ export class BuilderClient {
     }
 
     return Number(contentsResponse.headers.get('content-length'))
+  }
+
+  async getThirdParties(manager?: string): Promise<ThirdParty[]> {
+    let thirdPartiesResponse: Response
+    try {
+      thirdPartiesResponse = await this.fetch(`/v1/thirdParties`, {
+        method: 'get',
+        params: manager ? { manager } : undefined
+      })
+    } catch (error) {
+      throw new ClientError(error.message, undefined, null)
+    }
+
+    const thirdPartiesResponseBody: ServerResponse<ThirdParty[]> =
+      await thirdPartiesResponse.json()
+
+    if (!thirdPartiesResponse.ok || !thirdPartiesResponseBody.ok) {
+      throw new ClientError(
+        thirdPartiesResponseBody.error ?? 'Unknown error',
+        thirdPartiesResponse.status,
+        thirdPartiesResponseBody.data
+      )
+    }
+
+    return thirdPartiesResponseBody.data
+  }
+
+  async getThirdPartyItemTiers(): Promise<ThirdPartyItemTier[]> {
+    let tiersResponse: Response
+
+    try {
+      tiersResponse = await this.fetch(`/v1/tiers/thirdParty`, {
+        method: 'get'
+      })
+    } catch (error) {
+      throw new ClientError(error.message, undefined, null)
+    }
+    const tiersResponseBody: ServerResponse<ThirdPartyItemTier[]> =
+      await tiersResponse.json()
+
+    if (!tiersResponse.ok || !tiersResponseBody.ok) {
+      throw new ClientError(
+        tiersResponseBody.error ?? 'Unknown error',
+        tiersResponse.status,
+        tiersResponseBody.data
+      )
+    }
+
+    return tiersResponseBody.data
   }
 }
