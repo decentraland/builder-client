@@ -235,6 +235,7 @@ describe('when upserting an item', () => {
           THIRD_AUTH_HEADER,
           thirdHeaderValueMatcher('put', `/items/${item.id}`)
         )
+        .matchHeader('content-type', 'application/json')
         .reply(200, {
           data: remoteItem,
           ok: true
@@ -244,6 +245,7 @@ describe('when upserting an item', () => {
           `/v1/items/${item.id}/files`,
           /form-data; name="QmaX5DcQkjtgfQK3foNhZLYVbUzVAU6m5Gh1GtjT4f6G3i"[^]*someContent\r\n/m
         )
+        .matchHeader('content-type', /^multipart\/form-data;.+/)
         .reply(200, {
           data: {},
           ok: true

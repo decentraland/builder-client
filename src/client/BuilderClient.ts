@@ -69,6 +69,7 @@ export class BuilderClient {
     let upsertResponseBody: ServerResponse<RemoteItem>
     try {
       upsertResponse = await this.fetch(`/v1/items/${item.id}`, {
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ item: { ...item, eth_address: this.address } }),
         method: 'put'
       })
