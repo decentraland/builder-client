@@ -1,10 +1,10 @@
 import FormData from 'form-data'
+import crossFetch from 'cross-fetch'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
 import { Content } from '../content/types'
 import { RemoteItem, LocalItem } from '../item/types'
 import { ClientError } from './BuilderClient.errors'
 import { ServerResponse } from './types'
-import crossFetch from 'cross-fetch'
 
 export class BuilderClient {
   private fetch: (url: string, init?: RequestInit) => Promise<Response>
@@ -16,15 +16,14 @@ export class BuilderClient {
     private address: string,
     externalFetch: typeof fetch = crossFetch
   ) {
-    this.fetch = (...args) => {
-      const path = args[0]
-      const method: string = args[1]?.method ?? args[0] ?? 'get'
+    this.fetch = (path: string, init?: RequestInit) => {
+      const method: string = init?.method ?? path ?? 'get'
       const fullUrl = url + path
 
       return externalFetch(fullUrl, {
-        ...args[1],
+        ...init,
         headers: {
-          ...args[1]?.headers,
+          ...init?.headers,
           ...this.createAuthHeaders(method, path.replace(/\/v[0-9]/, ''))
         }
       })
@@ -131,11 +130,7 @@ export class BuilderClient {
         { method: 'head' }
       )
     } catch (error) {
-      throw new ClientError(
-        error.response?.data.error,
-        error.response?.status,
-        error.response?.data.error.data
-      )
+      throw new ClientError(error.message, undefined, null)
     }
 
     if (
