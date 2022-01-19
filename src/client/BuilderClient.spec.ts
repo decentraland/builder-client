@@ -235,6 +235,7 @@ describe('when upserting an item', () => {
           THIRD_AUTH_HEADER,
           thirdHeaderValueMatcher('put', `/items/${item.id}`)
         )
+        .matchHeader('content-type', 'application/json')
         .reply(200, {
           data: remoteItem,
           ok: true
@@ -244,6 +245,7 @@ describe('when upserting an item', () => {
           `/v1/items/${item.id}/files`,
           /form-data; name="QmaX5DcQkjtgfQK3foNhZLYVbUzVAU6m5Gh1GtjT4f6G3i"[^]*someContent\r\n/m
         )
+        .matchHeader('content-type', /^multipart\/form-data;.+/)
         .reply(200, {
           data: {},
           ok: true
@@ -297,7 +299,7 @@ describe('when getting the size of a content', () => {
     nockInterceptor = nock(testUrl).head(`/v1/storage/contents/${contentId}`)
   })
 
-  describe('and the request fails', () => {
+  describe('and the request fails with an errored status code', () => {
     let errorData: {
       id: string
     }
@@ -308,38 +310,17 @@ describe('when getting the size of a content', () => {
         id: contentId
       }
       errorMessage = 'An error occurred trying to get the size of a content'
-    })
-
-    describe('and the failure is represented with an errored status code', () => {
-      beforeEach(() => {
-        nockInterceptor.reply(200, {
-          ok: false,
-          error: errorMessage,
-          data: errorData
-        })
-      })
-
-      it("should throw a client error with the server's error message and data", () => {
-        return expect(client.getContentSize(contentId)).rejects.toThrow(
-          new ClientError(errorMessage, 200, errorData)
-        )
+      nockInterceptor.reply(500, {
+        ok: false,
+        error: errorMessage,
+        data: errorData
       })
     })
 
-    describe('and the failure is represented with an ok as false and a 200 status code', () => {
-      beforeEach(() => {
-        nockInterceptor.reply(500, {
-          ok: false,
-          error: errorMessage,
-          data: errorData
-        })
-      })
-
-      it("should throw a client error with the server's error message and data", () => {
-        return expect(client.getContentSize(contentId)).rejects.toThrow(
-          new ClientError(errorMessage, 500, errorData)
-        )
-      })
+    it("should throw a client error with the server's error message and data", () => {
+      return expect(client.getContentSize(contentId)).rejects.toThrow(
+        new ClientError(errorMessage, 500, errorData)
+      )
     })
   })
 
