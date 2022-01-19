@@ -4,7 +4,7 @@ import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
-import { TextDecoder } from 'util'
+import { TextDecoder as NodeTextDecoder } from 'util'
 import { ASSET_MANIFEST, MAX_FILE_SIZE } from './constants'
 import { AssetJSON, LoadedFile } from './types'
 import { AssetJSONSchema } from './schemas'
@@ -146,8 +146,10 @@ async function loadAssetJSON<T extends Content>(file: T): Promise<AssetJSON> {
   let content: string
   if (globalThis.Blob && file instanceof globalThis.Blob) {
     content = await (file as Blob).text()
-  } else {
+  } else if (globalThis.TextDecoder) {
     content = new TextDecoder('utf-8').decode(file as Uint8Array)
+  } else {
+    content = new NodeTextDecoder('utf-8').decode(file as Uint8Array)
   }
 
   const parsedContent = JSON.parse(content)
