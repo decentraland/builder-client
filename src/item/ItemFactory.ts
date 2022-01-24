@@ -34,7 +34,8 @@ export class ItemFactory<X extends Content> {
     rarity,
     category,
     collection_id,
-    description
+    description,
+    urn
   }: BasicItem) {
     if (
       !this.isMetadataTextValid(name) ||
@@ -52,7 +53,7 @@ export class ItemFactory<X extends Content> {
       collection_id: collection_id ?? null,
       content_hash: null,
       rarity,
-      urn: null,
+      urn: urn ?? null,
       data: {
         category,
         replaces: [],
@@ -78,7 +79,8 @@ export class ItemFactory<X extends Content> {
       rarity: asset.rarity,
       category: asset.category,
       collection_id: asset.collectionId ?? null,
-      description: asset.description ?? null
+      description: asset.description ?? null,
+      urn: asset.urn ?? null
     })
 
     if (content[THUMBNAIL_PATH]) {
@@ -190,6 +192,15 @@ export class ItemFactory<X extends Content> {
    */
   public withTags(tags: string[]): ItemFactory<X> {
     return this.setItemDataProperty('tags', tags)
+  }
+
+  /**
+   * Sets or updates the item's urn property.
+   * It requires the item to be defined first.
+   * @param urn - The item's urn property.
+   */
+  public withUrn(urn: string): ItemFactory<X> {
+    return this.setItemProperty('urn', urn)
   }
 
   /**

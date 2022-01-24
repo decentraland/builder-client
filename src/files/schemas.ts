@@ -34,6 +34,7 @@ export const AssetJSONSchema = {
     collectionId: { type: 'string', format: 'uuid' },
     name: { type: 'string' },
     description: { type: 'string' },
+    urn: { type: 'string' },
     rarity: Rarity.schema,
     category: WearableCategory.schema,
     hides: {

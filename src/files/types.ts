@@ -14,6 +14,7 @@ export type WearableRepresentation = {
 export type AssetJSON = {
   id: string
   name: string
+  urn?: string
   collectionId?: string
   description?: string
   category: WearableCategory

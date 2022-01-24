@@ -40,10 +40,8 @@ export type LocalItem = Omit<
   | 'beneficiary'
 >
 
-export type BasicItem = Pick<
-  LocalItem,
-  'id' | 'name' | 'rarity' | 'description' | 'collection_id'
-> &
+export type BasicItem = Pick<LocalItem, 'id' | 'name' | 'rarity'> &
+  Partial<Pick<LocalItem, 'description' | 'collection_id' | 'urn'>> &
   Pick<WearableData, 'category'>
 
 export enum ItemType {

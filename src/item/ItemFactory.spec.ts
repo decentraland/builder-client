@@ -22,7 +22,8 @@ const createBasicItem = (
     rarity: Rarity.COMMON,
     category: WearableCategory.EYEBROWS,
     collection_id: 'aCollectionId',
-    description: 'aDescription'
+    description: 'aDescription',
+    urn: null
   })
 }
 
@@ -934,6 +935,11 @@ describe('when creating a new item from an asset object', () => {
 testPropertyBuilder('id', 'anotherId')
 
 testPropertyBuilder('name', 'anotherName')
+
+testPropertyBuilder(
+  'urn',
+  'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id'
+)
 
 testPropertyBuilder('description', 'anotherDescription')
 
