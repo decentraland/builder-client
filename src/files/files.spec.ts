@@ -159,6 +159,7 @@ describe('when loading an item file', () => {
             name: 'test',
             category: WearableCategory.EYEBROWS,
             rarity: Rarity.COMMON,
+            urn: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
             representations: [
               {
                 bodyShape: BodyShapeType.MALE,
