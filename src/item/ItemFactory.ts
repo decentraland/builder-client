@@ -1,4 +1,5 @@
 import { Rarity, WearableRepresentation } from '@dcl/schemas'
+import { v4 as uuidV4 } from 'uuid'
 import {
   computeHashes,
   prefixContentName,
@@ -45,7 +46,7 @@ export class ItemFactory<X extends Content> {
     }
 
     this.item = {
-      id,
+      id: id ?? uuidV4(),
       name,
       description: description || '',
       thumbnail: THUMBNAIL_PATH,

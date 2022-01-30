@@ -1,11 +1,13 @@
 import { Rarity, WearableRepresentation } from '@dcl/schemas'
 import { prefixContentName } from '../content/content'
+import { Content } from '../content/types'
 import { AssetJSON } from '../files/types'
 import { toCamelCase } from '../test-utils/string'
 import { THUMBNAIL_PATH } from './constants'
 import { ItemFactory } from './ItemFactory'
 import {
   BodyShapeType,
+  BuiltItem,
   ItemType,
   LocalItem,
   ModelMetrics,
@@ -89,7 +91,7 @@ const testDataPropertyBuilder = <T extends keyof LocalItem['data']>(
         createBasicItem(factory)
       })
 
-      it('should build an item with the updated id', () => {
+      it(`should build an item with the updated ${property}`, () => {
         factory[`with${camelCasedProperty}`](value)
         return expect(factory.build()).resolves.toEqual(
           expect.objectContaining({
@@ -929,6 +931,33 @@ describe('when creating a new item from an asset object', () => {
         [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
       }
     })
+  })
+})
+
+describe('when building a new item and the id property is not specified', () => {
+  let builtItem: BuiltItem<Content>
+
+  beforeEach(async () => {
+    builtItem = await new ItemFactory()
+      .newItem({
+        name: 'aName',
+        rarity: Rarity.COMMON,
+        category: WearableCategory.EYEBROWS,
+        collection_id: 'aCollectionId',
+        description: 'aDescription',
+        urn: null
+      })
+      .build()
+  })
+
+  it('should generate a new uuid for the item', () => {
+    expect(builtItem.item).toEqual(
+      expect.objectContaining({
+        id: expect.stringMatching(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+        )
+      })
+    )
   })
 })
 
