@@ -9,13 +9,19 @@ import { ServerResponse } from './types'
 export class BuilderClient {
   private fetch: (url: string, init?: RequestInit) => Promise<Response>
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
+  private readonly getIdentity: () => AuthIdentity
+  private readonly getAddress: () => string
 
   constructor(
     url: string,
-    private identity: AuthIdentity,
-    private address: string,
+    identity: AuthIdentity | ((...args: unknown[]) => AuthIdentity),
+    address: string | ((...args: unknown[]) => string),
     externalFetch: typeof fetch = crossFetch
   ) {
+    this.getIdentity = () =>
+      identity instanceof Function ? identity() : identity
+    this.getAddress = () => (address instanceof Function ? address() : address)
+
     this.fetch = (path: string, init?: RequestInit) => {
       const method: string = init?.method ?? path ?? 'get'
       const fullUrl = url + path
@@ -39,9 +45,11 @@ export class BuilderClient {
     method: string,
     path: string
   ): Record<string, string> {
+    const identity = this.getIdentity()
+
     const headers: Record<string, string> = {}
     const endpoint = (method + ':' + path).toLowerCase()
-    const authChain = Authenticator.signPayload(this.identity, endpoint)
+    const authChain = Authenticator.signPayload(identity, endpoint)
     for (let i = 0; i < authChain.length; i++) {
       headers[this.AUTH_CHAIN_HEADER_PREFIX + i] = JSON.stringify(authChain[i])
     }
@@ -53,7 +61,7 @@ export class BuilderClient {
    * @param item - The item to insert or update.
    * @param newContent - The content to be added or updated in the item. This content must be contained in the items contents.
    */
-  async upsertItem(
+  public async upsertItem(
     item: LocalItem,
     newContent: Record<string, Content>
   ): Promise<RemoteItem> {
@@ -69,7 +77,9 @@ export class BuilderClient {
     try {
       upsertResponse = await this.fetch(`/v1/items/${item.id}`, {
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ item: { ...item, eth_address: this.address } }),
+        body: JSON.stringify({
+          item: { ...item, eth_address: this.getAddress() }
+        }),
         method: 'put'
       })
       upsertResponseBody =
@@ -122,7 +132,7 @@ export class BuilderClient {
    * Gets the content size of an already uploaded content file.
    * @param contentIdentifier - The content hash.
    */
-  async getContentSize(contentIdentifier: string): Promise<number> {
+  public async getContentSize(contentIdentifier: string): Promise<number> {
     let contentsResponse: Response
     try {
       contentsResponse = await this.fetch(
