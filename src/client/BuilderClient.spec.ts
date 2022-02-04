@@ -252,41 +252,99 @@ describe('when upserting an item', () => {
         })
     })
 
-    describe('and there are no item contents to update', () => {
+    describe('and the builder client is constructed with a function to get the identity and the address', () => {
       beforeEach(async () => {
-        result = await client.upsertItem(item, {})
+        const wallet = new ethers.Wallet(fakePrivateKey)
+        const identity = await createIdentity(wallet, 1000)
+        client = new BuilderClient(
+          testUrl,
+          () => identity,
+          () => address
+        )
       })
 
-      it('should have performed the request to insert/update the item with the given item', () => {
-        expect(nockedUpsert.isDone()).toBe(true)
-      })
+      describe('and there are no item contents to update', () => {
+        beforeEach(async () => {
+          result = await client.upsertItem(item, {})
+        })
 
-      it('should not have performed the request to upload the item files', () => {
-        expect(nockedFileUpload.isDone()).toBe(false)
-      })
+        it('should have performed the request to insert/update the item with the given item', () => {
+          expect(nockedUpsert.isDone()).toBe(true)
+        })
 
-      it('should have returned the full item', () => {
-        expect(result).toEqual(remoteItem)
-      })
-    })
+        it('should not have performed the request to upload the item files', () => {
+          expect(nockedFileUpload.isDone()).toBe(false)
+        })
 
-    describe('and there are item contents to update', () => {
-      beforeEach(async () => {
-        result = await client.upsertItem(item, {
-          aFileContent: Buffer.from('someContent')
+        it('should have returned the full item', () => {
+          expect(result).toEqual(remoteItem)
         })
       })
 
-      it('should have performed the request to insert/update the item with the given item', () => {
-        expect(nockedUpsert.isDone()).toBe(true)
+      describe('and there are item contents to update', () => {
+        beforeEach(async () => {
+          result = await client.upsertItem(item, {
+            aFileContent: Buffer.from('someContent')
+          })
+        })
+
+        it('should have performed the request to insert/update the item with the given item', () => {
+          expect(nockedUpsert.isDone()).toBe(true)
+        })
+
+        it('should have performed the request to upload the item files', () => {
+          expect(nockedFileUpload.isDone()).toBe(true)
+        })
+
+        it('should have returned the full item', () => {
+          expect(result).toEqual(remoteItem)
+        })
+      })
+    })
+
+    describe('and the builder client is constructed with a constant for the identity and the address', () => {
+      beforeEach(async () => {
+        const wallet = new ethers.Wallet(fakePrivateKey)
+        const identity = await createIdentity(wallet, 1000)
+        client = new BuilderClient(testUrl, identity, address)
       })
 
-      it('should have performed the request to upload the item files', () => {
-        expect(nockedFileUpload.isDone()).toBe(true)
+      describe('and there are no item contents to update', () => {
+        beforeEach(async () => {
+          result = await client.upsertItem(item, {})
+        })
+
+        it('should have performed the request to insert/update the item with the given item', () => {
+          expect(nockedUpsert.isDone()).toBe(true)
+        })
+
+        it('should not have performed the request to upload the item files', () => {
+          expect(nockedFileUpload.isDone()).toBe(false)
+        })
+
+        it('should have returned the full item', () => {
+          expect(result).toEqual(remoteItem)
+        })
       })
 
-      it('should have returned the full item', () => {
-        expect(result).toEqual(remoteItem)
+      describe('and there are item contents to update', () => {
+        beforeEach(async () => {
+          result = await client.upsertItem(item, {
+            aFileContent: Buffer.from('someContent')
+          })
+        })
+
+        it('should have performed the request to insert/update the item with the given item', () => {
+          expect(nockedUpsert.isDone()).toBe(true)
+        })
+
+        it('should have performed the request to upload the item files', () => {
+          expect(nockedFileUpload.isDone()).toBe(true)
+        })
+
+        it('should have returned the full item', () => {
+          expect(result).toEqual(remoteItem)
+        })
       })
     })
   })

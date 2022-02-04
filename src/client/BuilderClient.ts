@@ -12,8 +12,8 @@ export class BuilderClient {
 
   constructor(
     url: string,
-    private identity: AuthIdentity,
-    private address: string,
+    private identity: AuthIdentity | ((...args: unknown[]) => AuthIdentity),
+    private address: string | ((...args: unknown[]) => string),
     externalFetch: typeof fetch = crossFetch
   ) {
     this.fetch = (path: string, init?: RequestInit) => {
@@ -31,6 +31,20 @@ export class BuilderClient {
   }
 
   /**
+   * Returns AuthIdentity either from the constant variable or the method given in the constructor.
+   */
+  private getIdentity(): AuthIdentity {
+    return this.identity instanceof Function ? this.identity() : this.identity
+  }
+
+  /**
+   * Returns an address either from the constant variable or the method given in the constructor.
+   */
+  private getAddress(): string {
+    return this.address instanceof Function ? this.address() : this.address
+  }
+
+  /**
    * Creates the authorization headers for the given method and path.
    * @param method - The HTTP method.
    * @param path - The HTTP request path.
@@ -39,9 +53,11 @@ export class BuilderClient {
     method: string,
     path: string
   ): Record<string, string> {
+    const identity = this.getIdentity()
+
     const headers: Record<string, string> = {}
     const endpoint = (method + ':' + path).toLowerCase()
-    const authChain = Authenticator.signPayload(this.identity, endpoint)
+    const authChain = Authenticator.signPayload(identity, endpoint)
     for (let i = 0; i < authChain.length; i++) {
       headers[this.AUTH_CHAIN_HEADER_PREFIX + i] = JSON.stringify(authChain[i])
     }
@@ -53,7 +69,7 @@ export class BuilderClient {
    * @param item - The item to insert or update.
    * @param newContent - The content to be added or updated in the item. This content must be contained in the items contents.
    */
-  async upsertItem(
+  public async upsertItem(
     item: LocalItem,
     newContent: Record<string, Content>
   ): Promise<RemoteItem> {
@@ -69,7 +85,9 @@ export class BuilderClient {
     try {
       upsertResponse = await this.fetch(`/v1/items/${item.id}`, {
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ item: { ...item, eth_address: this.address } }),
+        body: JSON.stringify({
+          item: { ...item, eth_address: this.getAddress() }
+        }),
         method: 'put'
       })
       upsertResponseBody =
@@ -122,7 +140,7 @@ export class BuilderClient {
    * Gets the content size of an already uploaded content file.
    * @param contentIdentifier - The content hash.
    */
-  async getContentSize(contentIdentifier: string): Promise<number> {
+  public async getContentSize(contentIdentifier: string): Promise<number> {
     let contentsResponse: Response
     try {
       contentsResponse = await this.fetch(
