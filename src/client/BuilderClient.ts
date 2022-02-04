@@ -9,13 +9,19 @@ import { ServerResponse } from './types'
 export class BuilderClient {
   private fetch: (url: string, init?: RequestInit) => Promise<Response>
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
+  private readonly getIdentity: () => AuthIdentity
+  private readonly getAddress: () => string
 
   constructor(
     url: string,
-    private identity: AuthIdentity | ((...args: unknown[]) => AuthIdentity),
-    private address: string | ((...args: unknown[]) => string),
+    identity: AuthIdentity | ((...args: unknown[]) => AuthIdentity),
+    address: string | ((...args: unknown[]) => string),
     externalFetch: typeof fetch = crossFetch
   ) {
+    this.getIdentity = () =>
+      identity instanceof Function ? identity() : identity
+    this.getAddress = () => (address instanceof Function ? address() : address)
+
     this.fetch = (path: string, init?: RequestInit) => {
       const method: string = init?.method ?? path ?? 'get'
       const fullUrl = url + path
@@ -28,20 +34,6 @@ export class BuilderClient {
         }
       })
     }
-  }
-
-  /**
-   * Returns AuthIdentity either from the constant variable or the method given in the constructor.
-   */
-  private getIdentity(): AuthIdentity {
-    return this.identity instanceof Function ? this.identity() : this.identity
-  }
-
-  /**
-   * Returns an address either from the constant variable or the method given in the constructor.
-   */
-  private getAddress(): string {
-    return this.address instanceof Function ? this.address() : this.address
   }
 
   /**
