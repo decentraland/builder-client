@@ -1,8 +1,8 @@
 import FormData from 'form-data'
 import crossFetch from 'cross-fetch'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
-import { Content } from '../content/types'
 import { RemoteItem, LocalItem } from '../item/types'
+import { Content } from '../content/types'
 import { ClientError } from './BuilderClient.errors'
 import { ServerResponse } from './types'
 
@@ -99,6 +99,13 @@ export class BuilderClient {
     if (Object.keys(newContent).length > 0) {
       const formData = new FormData()
       for (const path in newContent) {
+        if (newContent[path] instanceof Uint8Array) {
+          formData.append(
+            item.contents[path],
+            (newContent[path] as Uint8Array).buffer
+          )
+        }
+
         formData.append(item.contents[path], newContent[path])
       }
 

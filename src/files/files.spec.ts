@@ -52,7 +52,7 @@ describe('when loading an item file', () => {
 
   describe('and the file is a zip model file', () => {
     let zipFile: JSZip
-    let zipFileContent: Uint8Array
+    let zipFileContent: Uint8Array | ArrayBuffer
     let thumbnailContent: Uint8Array
 
     beforeEach(() => {
@@ -72,9 +72,9 @@ describe('when loading an item file', () => {
         })
 
         it('should throw an error signaling that the asset file is invalid', () => {
-          return expect(
-            loadFile<Uint8Array>(fileName, zipFileContent)
-          ).rejects.toThrow(new InvalidAssetFileError())
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new InvalidAssetFileError()
+          )
         })
       })
 
@@ -103,9 +103,7 @@ describe('when loading an item file', () => {
         })
 
         it("should throw an error signaling that the main file isn't included in the representation contents", () => {
-          return expect(
-            loadFile<Uint8Array>(fileName, zipFileContent)
-          ).rejects.toThrow(
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
             new ModelInRepresentationNotFoundError('some-unkown-file.glb')
           )
         })
@@ -135,9 +133,9 @@ describe('when loading an item file', () => {
         })
 
         it('should throw an error signaling that the file in the representation contents was not found', () => {
-          return expect(
-            loadFile<Uint8Array>(fileName, zipFileContent)
-          ).rejects.toThrow(new FileNotFoundError('some-unkown-file.glb'))
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new FileNotFoundError('some-unkown-file.glb')
+          )
         })
       })
 
@@ -173,21 +171,43 @@ describe('when loading an item file', () => {
           zipFile.file(ASSET_MANIFEST, JSON.stringify(assetFileContent))
           zipFile.file(modelFile, modelFileContent)
           zipFile.file(textureFile, textureFileContent)
-          zipFileContent = await zipFile.generateAsync({
-            type: 'uint8array'
+        })
+
+        describe('and the zip file is in the Uint8Array format', () => {
+          beforeEach(async () => {
+            zipFileContent = await zipFile.generateAsync({
+              type: 'uint8array'
+            })
+          })
+
+          it('should build the LoadedFile with the zipped contents and the asset file with the same buffer format as the zip', () => {
+            return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+              content: {
+                [modelFile]: modelFileContent,
+                [textureFile]: textureFileContent,
+                [THUMBNAIL_PATH]: thumbnailContent
+              },
+              asset: assetFileContent
+            })
           })
         })
 
-        it('should build the LoadedFile with the zipped contents and the asset file', () => {
-          return expect(
-            loadFile<Uint8Array>(fileName, zipFileContent)
-          ).resolves.toEqual({
-            content: {
-              [modelFile]: modelFileContent,
-              [textureFile]: textureFileContent,
-              [THUMBNAIL_PATH]: thumbnailContent
-            },
-            asset: assetFileContent
+        describe('and the zip file is in the ArrayBuffer format', () => {
+          beforeEach(async () => {
+            zipFileContent = await zipFile.generateAsync({
+              type: 'arraybuffer'
+            })
+          })
+
+          it('should build the LoadedFile with the zipped contents and the asset file with the same buffer format as the zip', () => {
+            return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+              content: {
+                [modelFile]: modelFileContent.buffer,
+                [textureFile]: textureFileContent.buffer,
+                [THUMBNAIL_PATH]: thumbnailContent.buffer
+              },
+              asset: assetFileContent
+            })
           })
         })
       })
@@ -204,9 +224,9 @@ describe('when loading an item file', () => {
       })
 
       it('should throw an error signaling that the file is too big', () => {
-        return expect(
-          loadFile<Uint8Array>(fileName, zipFileContent)
-        ).rejects.toThrow(new FileTooBigError(modelFile, MAX_FILE_SIZE + 1))
+        return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+          new FileTooBigError(modelFile, MAX_FILE_SIZE + 1)
+        )
       })
     })
 
@@ -223,9 +243,9 @@ describe('when loading an item file', () => {
         })
 
         it("should throw an error signaling that the zip doesn't contain a model file", () => {
-          return expect(
-            loadFile<Uint8Array>(fileName, zipFileContent)
-          ).rejects.toThrow(new ModelFileNotFoundError())
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new ModelFileNotFoundError()
+          )
         })
       })
 
@@ -237,9 +257,7 @@ describe('when loading an item file', () => {
         })
 
         it('should build the LoadedFile contents with the zipped files and the main model file path', () => {
-          return expect(
-            loadFile<Uint8Array>(fileName, zipFileContent)
-          ).resolves.toEqual({
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
             content: {
               [mainModel]: modelContent,
               [THUMBNAIL_PATH]: thumbnailContent
