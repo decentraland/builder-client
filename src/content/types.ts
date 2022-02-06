@@ -1,4 +1,4 @@
-export type Content = Uint8Array | Blob | ArrayBuffer
+export type Content = Uint8Array | Blob | ArrayBuffer | Buffer
 
 export type SortedContent<T extends Content> = {
   male: Record<string, T>

@@ -46,6 +46,20 @@ describe('when computing the hashes of raw content', () => {
       expect(hashes).toEqual(expectedHashes)
     })
   })
+
+  describe('when the content is in the Buffer format', () => {
+    beforeEach(async () => {
+      content = {
+        someThing: Buffer.from('aThing'),
+        someOtherThing: Buffer.from('someOtherThing')
+      }
+      hashes = await computeHashes(content)
+    })
+
+    it('should compute the hash of each Buffer', () => {
+      expect(hashes).toEqual(expectedHashes)
+    })
+  })
 })
 
 describe('when prefixing the content name', () => {

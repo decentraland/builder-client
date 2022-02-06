@@ -210,6 +210,25 @@ describe('when loading an item file', () => {
             })
           })
         })
+
+        describe('and the zip file is in the Buffer format', () => {
+          beforeEach(async () => {
+            zipFileContent = await zipFile.generateAsync({
+              type: 'nodebuffer'
+            })
+          })
+
+          it('should build the LoadedFile with the zipped contents and the asset file with the same buffer format as the zip', () => {
+            return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+              content: {
+                [modelFile]: Buffer.from(modelFileContent.buffer),
+                [textureFile]: Buffer.from(textureFileContent.buffer),
+                [THUMBNAIL_PATH]: Buffer.from(thumbnailContent.buffer)
+              },
+              asset: assetFileContent
+            })
+          })
+        })
       })
     })
 

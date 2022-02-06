@@ -75,13 +75,14 @@ async function handleZippedModelFiles<T extends Content>(
 
   const fileNames: string[] = []
   const promiseOfFileContents: Array<Promise<T>> = []
-
   let fileFormat: OutputType
   if (globalThis.Blob && zipFile instanceof globalThis.Blob) {
     fileFormat = 'blob'
+  } else if (Buffer.isBuffer(zipFile)) {
+    fileFormat = 'nodebuffer'
   } else if (zipFile instanceof Uint8Array) {
     fileFormat = 'uint8array'
-  } else {
+  } else if (zipFile instanceof ArrayBuffer) {
     fileFormat = 'arraybuffer'
   }
 

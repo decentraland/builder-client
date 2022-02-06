@@ -1,4 +1,5 @@
 import FormData from 'form-data'
+import { Buffer } from 'buffer'
 import crossFetch from 'cross-fetch'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
 import { RemoteItem, LocalItem } from '../item/types'
@@ -56,6 +57,30 @@ export class BuilderClient {
     return headers
   }
 
+  private convertToFormDataBuffer(data: Content): Blob | Buffer {
+    const blobExists = globalThis.Blob !== undefined
+    const bufferExists = Buffer !== undefined
+    if (
+      (blobExists && data instanceof globalThis.Blob) ||
+      (bufferExists && Buffer.isBuffer(data))
+    ) {
+      return data
+    }
+
+    if (
+      blobExists &&
+      (data instanceof Uint8Array || data instanceof ArrayBuffer)
+    ) {
+      return new Blob([data])
+    } else if (bufferExists && data instanceof Uint8Array) {
+      return Buffer.from(data.buffer)
+    } else if (bufferExists && data instanceof ArrayBuffer) {
+      return Buffer.from(data)
+    }
+
+    throw new Error('Unsupported content type')
+  }
+
   /**
    * Updates or inserts an item.
    * @param item - The item to insert or update.
@@ -99,14 +124,10 @@ export class BuilderClient {
     if (Object.keys(newContent).length > 0) {
       const formData = new FormData()
       for (const path in newContent) {
-        if (newContent[path] instanceof Uint8Array) {
-          formData.append(
-            item.contents[path],
-            (newContent[path] as Uint8Array).buffer
-          )
-        }
-
-        formData.append(item.contents[path], newContent[path])
+        formData.append(
+          item.contents[path],
+          this.convertToFormDataBuffer(newContent[path])
+        )
       }
 
       let uploadResponse: Response

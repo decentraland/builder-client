@@ -1,4 +1,5 @@
 import { Hashing } from 'dcl-catalyst-commons'
+import { Buffer } from 'buffer'
 import { BodyShapeType } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { Content, HashedContent, RawContent, SortedContent } from './types'
@@ -32,7 +33,7 @@ export async function computeHashes<T extends Content>(
  */
 async function makeContentFile(
   path: string,
-  content: string | Uint8Array | Blob | ArrayBuffer
+  content: string | Uint8Array | Blob | ArrayBuffer | Buffer
 ): Promise<{ name: string; content: Uint8Array }> {
   if (typeof content === 'string') {
     // This must be polyfilled in the browser
@@ -45,6 +46,8 @@ async function makeContentFile(
   } else if (content instanceof Uint8Array) {
     return { name: path, content }
   } else if (content instanceof ArrayBuffer) {
+    return { name: path, content: new Uint8Array(content) }
+  } else if (Buffer.isBuffer(content)) {
     return { name: path, content: new Uint8Array(content) }
   }
   throw new Error(
