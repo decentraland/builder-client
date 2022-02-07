@@ -518,9 +518,9 @@ export class ItemFactory<X extends Content> {
     rawContent: RawContent<X>,
     contentPaths: string[]
   ): RawContent<X> {
-    return contentPaths.reduce((accum, content) => {
-      accum[content] = rawContent[content]
-      return accum
+    return contentPaths.reduce((accumulator, content) => {
+      accumulator[content] = rawContent[content]
+      return accumulator
     }, {} as RawContent<X>)
   }
 }
