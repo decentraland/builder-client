@@ -1,4 +1,4 @@
-import JSZip from 'jszip'
+import JSZip, { OutputType } from 'jszip'
 import { basename } from 'path'
 import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
@@ -69,13 +69,22 @@ function isModelPath(fileName: string) {
  * @param zipFile - The ZIP file.
  */
 async function handleZippedModelFiles<T extends Content>(
-  zipFile: T,
-  asBlob = false
+  zipFile: T
 ): Promise<LoadedFile<T>> {
   const zip: JSZip = await JSZip.loadAsync(zipFile)
 
   const fileNames: string[] = []
   const promiseOfFileContents: Array<Promise<T>> = []
+  let fileFormat: OutputType
+  if (globalThis.Blob && zipFile instanceof globalThis.Blob) {
+    fileFormat = 'blob'
+  } else if (Buffer.isBuffer(zipFile)) {
+    fileFormat = 'nodebuffer'
+  } else if (zipFile instanceof Uint8Array) {
+    fileFormat = 'uint8array'
+  } else if (zipFile instanceof ArrayBuffer) {
+    fileFormat = 'arraybuffer'
+  }
 
   zip.forEach((filePath, file) => {
     if (
@@ -83,9 +92,7 @@ async function handleZippedModelFiles<T extends Content>(
       basename(filePath) !== ASSET_MANIFEST
     ) {
       fileNames.push(filePath)
-      promiseOfFileContents.push(
-        file.async(asBlob ? 'blob' : 'uint8array') as Promise<T>
-      )
+      promiseOfFileContents.push(file.async(fileFormat) as Promise<T>)
     }
   })
 
