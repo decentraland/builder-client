@@ -57,7 +57,7 @@ export class BuilderClient {
     return headers
   }
 
-  private convertToFormDataBuffer(data: Content): Blob | Buffer {
+  private convertToFormDataBinary(data: Content): Blob | Buffer {
     const blobExists = globalThis.Blob !== undefined
     const bufferExists = Buffer !== undefined
     if (
@@ -126,7 +126,7 @@ export class BuilderClient {
       for (const path in newContent) {
         formData.append(
           item.contents[path],
-          this.convertToFormDataBuffer(newContent[path])
+          this.convertToFormDataBinary(newContent[path])
         )
       }
 
