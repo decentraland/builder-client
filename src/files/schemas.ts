@@ -48,6 +48,6 @@ export const AssetJSONSchema = {
     tags: { type: 'array', items: { type: 'string' } },
     representations: { type: 'array', items: WearableRepresentationSchema }
   },
-  required: ['id', 'name', 'rarity', 'category', 'representations'],
+  required: ['name', 'rarity', 'category', 'representations'],
   additionalProperties: false
 }
