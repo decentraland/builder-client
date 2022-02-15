@@ -104,7 +104,8 @@ beforeEach(async () => {
     price: null,
     eth_address: '0x00',
     beneficiary: null,
-    total_supply: 1000
+    total_supply: 1000,
+    local_content_hash: 'someHash'
   }
 })
 

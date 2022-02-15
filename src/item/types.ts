@@ -19,6 +19,7 @@ export type RemoteItem = {
   metrics: ModelMetrics
   contents: Record<string, string>
   content_hash: string | null
+  local_content_hash: string | null
   is_published: boolean
   is_approved: boolean
   in_catalyst: boolean
@@ -38,6 +39,7 @@ export type LocalItem = Omit<
   | 'eth_address'
   | 'price'
   | 'beneficiary'
+  | 'local_content_hash'
 >
 
 export type BasicItem = Pick<LocalItem, 'name' | 'rarity'> &
