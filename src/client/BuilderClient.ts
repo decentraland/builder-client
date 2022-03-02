@@ -1,6 +1,7 @@
 import FormData from 'form-data'
 import { Buffer } from 'buffer'
 import crossFetch from 'cross-fetch'
+import * as nodeUrl from 'url'
 import { Authenticator, AuthIdentity } from 'dcl-crypto'
 import { RemoteItem, LocalItem } from '../item/types'
 import { Content } from '../content/types'
@@ -24,8 +25,10 @@ export class BuilderClient {
     this.getAddress = () => (address instanceof Function ? address() : address)
 
     this.fetch = (path: string, init?: RequestInit) => {
-      const method: string = init?.method ?? path ?? 'get'
-      const fullUrl = url + path
+      const URL = globalThis.URL ?? nodeUrl.URL
+
+      const method: string = init?.method ?? 'get'
+      const fullUrl = new URL(path, url).toString()
 
       return externalFetch(fullUrl, {
         ...init,
