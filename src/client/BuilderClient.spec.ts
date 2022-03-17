@@ -16,6 +16,7 @@ import {
   publicKeyRegex,
   secondHeaderPayloadRegex
 } from './matchers'
+import { GetNFTParams } from './types'
 
 nock.disableNetConnect()
 
@@ -402,7 +403,20 @@ describe('when getting a list of nfts', () => {
   let response: any
 
   beforeEach(() => {
-    response = { ok: true, data: { foo: 'bar' } }
+    // A real response from the request is unnecessary as the function directly returns
+    // the data it receives without any processing.
+    response = {
+      ok: true,
+      data: {
+        foo: 'bar'
+      }
+    }
+  })
+
+  it("should return the data of the request's response", async () => {
+    nock(testUrl).get('/v1/nfts').reply(200, response)
+    const nfts = await client.getNFTs()
+    expect(nfts).toEqual(response.data)
   })
 
   describe('when owner is provided', () => {
@@ -507,6 +521,87 @@ describe('when getting a list of nfts', () => {
         response = { ...response, ok: false, error: 'Some Error' }
         nock(testUrl).get('/v1/nfts').reply(200, response)
         await expect(client.getNFTs()).rejects.toEqual(
+          new ClientError(response.error, 200, null)
+        )
+      })
+    })
+  })
+})
+
+describe('when getting a single nft', () => {
+  let url: string
+  let response: any
+  let getNFTParams: GetNFTParams
+
+  beforeEach(() => {
+    url = '/v1/nfts/contractAddress/tokenId'
+    // A real response from the request is unnecessary as the function directly returns
+    // the data it receives without any processing.
+    response = {
+      ok: true,
+      data: {
+        foo: 'bar'
+      }
+    }
+    getNFTParams = {
+      contractAddress: 'contractAddress',
+      tokenId: 'tokenId'
+    }
+  })
+
+  it("should return the data of the request's response", async () => {
+    nock(testUrl).get(url).reply(200, response)
+    const data = await client.getNFT(getNFTParams)
+    expect(data).toEqual(response.data)
+  })
+
+  describe('when the request fails without a response', () => {
+    it('should throw a client error with the message of the error', async () => {
+      await expect(client.getNFT(getNFTParams)).rejects.toEqual(
+        new ClientError(
+          'request to http://test-url/v1/nfts/contractAddress/tokenId failed, reason: Nock: Disallowed net connect for "test-url:80/v1/nfts/contractAddress/tokenId"',
+          undefined,
+          null
+        )
+      )
+    })
+  })
+
+  describe('when the fetch fails with a response', () => {
+    describe('when the fetch response is not ok', () => {
+      it('should throw a client error', async () => {
+        nock(testUrl).get(url).reply(500, response)
+        await expect(client.getNFT(getNFTParams)).rejects.toEqual(
+          new ClientError('Unknown error', 500, null)
+        )
+      })
+    })
+
+    describe('when the response data has ok = false', () => {
+      it('should throw a client error', async () => {
+        response = { ...response, ok: false }
+        nock(testUrl).get(url).reply(200, response)
+        await expect(client.getNFT(getNFTParams)).rejects.toEqual(
+          new ClientError('Unknown error', 200, null)
+        )
+      })
+    })
+
+    describe('when the response data has no error message', () => {
+      it('should throw a client error with Unknown Message', async () => {
+        response = { ...response, ok: false }
+        nock(testUrl).get(url).reply(200, response)
+        await expect(client.getNFT(getNFTParams)).rejects.toEqual(
+          new ClientError('Unknown error', 200, null)
+        )
+      })
+    })
+
+    describe('when the response data has an error message', () => {
+      it('should throw a client error with Unknown Message', async () => {
+        response = { ...response, ok: false, error: 'Some Error' }
+        nock(testUrl).get(url).reply(200, response)
+        await expect(client.getNFT(getNFTParams)).rejects.toEqual(
           new ClientError(response.error, 200, null)
         )
       })
