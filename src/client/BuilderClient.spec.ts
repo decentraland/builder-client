@@ -397,3 +397,119 @@ describe('when getting the size of a content', () => {
     })
   })
 })
+
+describe('when getting a list of nfts', () => {
+  let response: any
+
+  beforeEach(() => {
+    response = { ok: true, data: { foo: 'bar' } }
+  })
+
+  describe('when owner is provided', () => {
+    it('should add owner query param to the request url', async () => {
+      nock(testUrl).get('/v1/nfts?owner=owner').reply(200, response)
+      const nfts = await client.getNFTs({ owner: 'owner' })
+      expect(nfts).toEqual(response.data)
+    })
+  })
+
+  describe('when first is provided', () => {
+    it('should add first query param to the request url', async () => {
+      nock(testUrl).get('/v1/nfts?first=1').reply(200, response)
+      const nfts = await client.getNFTs({ first: 1 })
+      expect(nfts).toEqual(response.data)
+    })
+  })
+
+  describe('when skip is provided', () => {
+    it('should add skip query param to the request url', async () => {
+      nock(testUrl).get('/v1/nfts?skip=1').reply(200, response)
+      const nfts = await client.getNFTs({ skip: 1 })
+      expect(nfts).toEqual(response.data)
+    })
+  })
+
+  describe('when cursor is provided', () => {
+    it('should add cursor query param to the request url', async () => {
+      nock(testUrl).get('/v1/nfts?cursor=cursor').reply(200, response)
+      const nfts = await client.getNFTs({ cursor: 'cursor' })
+      expect(nfts).toEqual(response.data)
+    })
+  })
+
+  describe('when all params are provided', () => {
+    it('should add all query params to the request url', async () => {
+      nock(testUrl)
+        .get('/v1/nfts?owner=owner&first=1&skip=1&cursor=cursor')
+        .reply(200, response)
+      const nfts = await client.getNFTs({
+        owner: 'owner',
+        first: 1,
+        skip: 1,
+        cursor: 'cursor'
+      })
+      expect(nfts).toEqual(response.data)
+    })
+  })
+
+  describe('when no params are provided', () => {
+    it('should add no query params at all', async () => {
+      nock(testUrl).get('/v1/nfts').reply(200, response)
+      const nfts = await client.getNFTs()
+      expect(nfts).toEqual(response.data)
+    })
+  })
+
+  describe('when the request fails without a response', () => {
+    it('should throw a client error with the message of the error', async () => {
+      await expect(client.getNFTs()).rejects.toEqual(
+        new ClientError(
+          'request to http://test-url/v1/nfts failed, reason: Nock: Disallowed net connect for "test-url:80/v1/nfts"',
+          undefined,
+          null
+        )
+      )
+    })
+  })
+
+  describe('when the fetch fails with a response', () => {
+    describe('when the fetch response is not ok', () => {
+      it('should throw a client error', async () => {
+        nock(testUrl).get('/v1/nfts').reply(500, response)
+        await expect(client.getNFTs()).rejects.toEqual(
+          new ClientError('Unknown error', 500, null)
+        )
+      })
+    })
+
+    describe('when the response data has ok = false', () => {
+      it('should throw a client error', async () => {
+        response = { ...response, ok: false }
+        nock(testUrl).get('/v1/nfts').reply(200, response)
+        await expect(client.getNFTs()).rejects.toEqual(
+          new ClientError('Unknown error', 200, null)
+        )
+      })
+    })
+
+    describe('when the response data has no error message', () => {
+      it('should throw a client error with Unknown Message', async () => {
+        response = { ...response, ok: false }
+        nock(testUrl).get('/v1/nfts').reply(200, response)
+        await expect(client.getNFTs()).rejects.toEqual(
+          new ClientError('Unknown error', 200, null)
+        )
+      })
+    })
+
+    describe('when the response data has an error message', () => {
+      it('should throw a client error with Unknown Message', async () => {
+        response = { ...response, ok: false, error: 'Some Error' }
+        nock(testUrl).get('/v1/nfts').reply(200, response)
+        await expect(client.getNFTs()).rejects.toEqual(
+          new ClientError(response.error, 200, null)
+        )
+      })
+    })
+  })
+})

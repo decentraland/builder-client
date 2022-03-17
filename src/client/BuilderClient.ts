@@ -196,7 +196,7 @@ export class BuilderClient {
     first,
     skip,
     cursor
-  }: GetNFTsParams): Promise<GetNFTsResponse> {
+  }: GetNFTsParams = {}): Promise<GetNFTsResponse> {
     const params: string[] = []
 
     let url = '/v1/nfts'
