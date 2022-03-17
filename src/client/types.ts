@@ -12,12 +12,38 @@ export type ServerResponse<T> = {
 
 export type NFT = {
   tokenId: string
+  imageUrl: string
+  backgroundColor: string
   name: string
-  thumbnail: string
+  externalLink: string
+  owner: {
+    user: {
+      username: string
+    }
+    profileImageUrl: string
+    address: string
+    config: string
+  }
   contract: {
     name: string
-    address: string
+    symbol: string
+    imageUrl: string
+    description: string
+    externalLink: string
   }
+  traits: {
+    type: string
+    value: string | number
+    displayType: string
+  }[]
+  lastSale: {
+    eventType: string
+    totalPrice: string
+    quantity: string
+    paymentToken: {
+      symbol: string
+    }
+  } | null
 }
 
 export type GetNFTsParams = {
