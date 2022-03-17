@@ -16,7 +16,7 @@ import {
   publicKeyRegex,
   secondHeaderPayloadRegex
 } from './matchers'
-import { GetNFTParams } from './types'
+import { GetNFTParams, GetNFTsResponse, NFT, ServerResponse } from './types'
 
 nock.disableNetConnect()
 
@@ -58,6 +58,8 @@ const thirdHeaderValueMatcher =
       publicKeyRegex.test(parsedValue.signature)
     )
   }
+
+let mockNFT: NFT
 
 beforeEach(async () => {
   const wallet = new ethers.Wallet(fakePrivateKey)
@@ -107,6 +109,44 @@ beforeEach(async () => {
     beneficiary: null,
     total_supply: 1000,
     local_content_hash: 'someHash'
+  }
+
+  mockNFT = {
+    backgroundColor: 'background_color',
+    contract: {
+      description: 'description',
+      externalLink: 'external_link',
+      imageUrl: 'image_url',
+      name: 'name',
+      symbol: 'symbol'
+    },
+    externalLink: 'external_link',
+    imageUrl: 'image_url',
+    lastSale: {
+      eventType: 'event_type',
+      paymentToken: {
+        symbol: 'symbol'
+      },
+      quantity: 'quantity',
+      totalPrice: 'total_price'
+    },
+    name: 'name',
+    owner: {
+      address: 'address',
+      config: 'config',
+      profileImageUrl: 'profile_image_url',
+      user: {
+        username: 'username'
+      }
+    },
+    tokenId: 'token_id',
+    traits: [
+      {
+        displayType: 'display_type',
+        type: 'trait_type',
+        value: 'value'
+      }
+    ]
   }
 })
 
@@ -400,7 +440,7 @@ describe('when getting the size of a content', () => {
 })
 
 describe('when getting a list of nfts', () => {
-  let response: any
+  let response: ServerResponse<GetNFTsResponse>
 
   beforeEach(() => {
     // A real response from the request is unnecessary as the function directly returns
@@ -408,7 +448,9 @@ describe('when getting a list of nfts', () => {
     response = {
       ok: true,
       data: {
-        foo: 'bar'
+        next: 'next',
+        previous: 'previous',
+        nfts: [mockNFT]
       }
     }
   })
@@ -521,7 +563,7 @@ describe('when getting a list of nfts', () => {
         response = { ...response, ok: false, error: 'Some Error' }
         nock(testUrl).get('/v1/nfts').reply(200, response)
         await expect(client.getNFTs()).rejects.toEqual(
-          new ClientError(response.error, 200, null)
+          new ClientError(response.error!, 200, null)
         )
       })
     })
@@ -530,7 +572,7 @@ describe('when getting a list of nfts', () => {
 
 describe('when getting a single nft', () => {
   let url: string
-  let response: any
+  let response: ServerResponse<NFT>
   let getNFTParams: GetNFTParams
 
   beforeEach(() => {
@@ -539,9 +581,7 @@ describe('when getting a single nft', () => {
     // the data it receives without any processing.
     response = {
       ok: true,
-      data: {
-        foo: 'bar'
-      }
+      data: mockNFT
     }
     getNFTParams = {
       contractAddress: 'contractAddress',
@@ -602,7 +642,7 @@ describe('when getting a single nft', () => {
         response = { ...response, ok: false, error: 'Some Error' }
         nock(testUrl).get(url).reply(200, response)
         await expect(client.getNFT(getNFTParams)).rejects.toEqual(
-          new ClientError(response.error, 200, null)
+          new ClientError(response.error!, 200, null)
         )
       })
     })
