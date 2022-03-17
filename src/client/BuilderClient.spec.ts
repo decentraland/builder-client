@@ -443,8 +443,6 @@ describe('when getting a list of nfts', () => {
   let response: ServerResponse<GetNFTsResponse>
 
   beforeEach(() => {
-    // A real response from the request is unnecessary as the function directly returns
-    // the data it receives without any processing.
     response = {
       ok: true,
       data: {
@@ -560,10 +558,11 @@ describe('when getting a list of nfts', () => {
 
     describe('when the response data has an error message', () => {
       it('should throw a client error with Unknown Message', async () => {
-        response = { ...response, ok: false, error: 'Some Error' }
+        const error = 'Some Error'
+        response = { ...response, ok: false, error }
         nock(testUrl).get('/v1/nfts').reply(200, response)
         await expect(client.getNFTs()).rejects.toEqual(
-          new ClientError(response.error!, 200, null)
+          new ClientError(error, 200, null)
         )
       })
     })
@@ -577,8 +576,6 @@ describe('when getting a single nft', () => {
 
   beforeEach(() => {
     url = '/v1/nfts/contractAddress/tokenId'
-    // A real response from the request is unnecessary as the function directly returns
-    // the data it receives without any processing.
     response = {
       ok: true,
       data: mockNFT
@@ -639,10 +636,11 @@ describe('when getting a single nft', () => {
 
     describe('when the response data has an error message', () => {
       it('should throw a client error with Unknown Message', async () => {
-        response = { ...response, ok: false, error: 'Some Error' }
+        const error = 'Some Error'
+        response = { ...response, ok: false, error }
         nock(testUrl).get(url).reply(200, response)
         await expect(client.getNFT(getNFTParams)).rejects.toEqual(
-          new ClientError(response.error!, 200, null)
+          new ClientError(error, 200, null)
         )
       })
     })
