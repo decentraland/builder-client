@@ -10,42 +10,70 @@ export type ServerResponse<T> = {
  * TODO: Find a way to abstract these types someplace else to avoid this nasty repetition
  */
 
+// NFT Entity
 export type NFT = {
   tokenId: string
+  backgroundColor: string | null
   imageUrl: string
-  backgroundColor: string
-  name: string
-  externalLink: string
-  owner: {
-    user: {
-      username: string
-    }
-    profileImageUrl: string
-    address: string
-    config: string
-  }
-  contract: {
-    name: string
-    symbol: string
-    imageUrl: string
-    description: string
-    externalLink: string
-  }
-  traits: {
-    type: string
-    value: string | number
-    displayType: string
-  }[]
-  lastSale: {
-    eventType: string
-    totalPrice: string
-    quantity: string
-    paymentToken: {
-      symbol: string
-    }
-  } | null
+  imagePreviewUrl: string
+  imageThumbnailUrl: string
+  imageOriginalUrl: string | null
+  name: string | null
+  description: string | null
+  externalLink: string | null
+  owner: NFTAccount
+  contract: NFTContract
+  traits: NFTTrait[]
+  lastSale: NFTLastSale | null
+  sellOrders: NFTOrder[] | null
+  orders: NFTOrder[] | null
+  topOwnerships: NFTOwnership[] | null
 }
 
+type NFTAccount = {
+  user: { username: string } | null
+  profileImageUrl: string
+  address: string
+  config: string
+}
+
+type NFTContract = {
+  name: string
+  symbol: string
+  imageUrl: string | null
+  description: string
+  externalLink: string | null
+}
+
+type NFTTrait = {
+  type: string
+  value: string | number
+  displayType: string | null
+}
+
+type NFTLastSale = {
+  eventType: string
+  totalPrice: string
+  quantity: string
+  paymentToken: NFTToken
+}
+
+type NFTOrder = {
+  maker: NFTAccount
+  currentPrice: string
+  paymentTokenContract: NFTToken
+}
+
+type NFTOwnership = {
+  owner: NFTAccount
+  quantity: string
+}
+
+type NFTToken = {
+  symbol: string
+}
+
+// Service types
 export type GetNFTsParams = {
   owner?: string
   first?: number
