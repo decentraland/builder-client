@@ -133,11 +133,39 @@ beforeEach(async () => {
     imageUrl: 'image_url',
     lastSale: {
       eventType: 'event_type',
-      paymentToken: {
-        symbol: 'symbol'
-      },
+      eventTimestamp: 'event_timestamp',
+      totalPrice: 'total_price',
       quantity: 'quantity',
-      totalPrice: 'total_price'
+      paymentToken: {
+        id: 100,
+        symbol: 'symbol',
+        address: 'address',
+        imageUrl: 'image_url',
+        name: 'name',
+        decimals: 18,
+        ethPrice: 'eth_price',
+        usdPrice: 'usd_price'
+      },
+      transaction: {
+        id: 100,
+        fromAccount: {
+          address: 'address',
+          config: 'config',
+          profileImageUrl: 'profile_img_url',
+          user: {
+            username: 'username'
+          }
+        },
+        toAccount: {
+          address: 'address',
+          config: 'config',
+          profileImageUrl: 'profile_img_url',
+          user: {
+            username: 'username'
+          }
+        },
+        transactionHash: 'transaction_hash'
+      }
     },
     name: 'name',
     orders: [
@@ -152,7 +180,14 @@ beforeEach(async () => {
         },
         currentPrice: 'current_price',
         paymentTokenContract: {
-          symbol: 'symbol'
+          id: 100,
+          symbol: 'symbol',
+          address: 'address',
+          imageUrl: 'image_url',
+          name: 'name',
+          decimals: 18,
+          ethPrice: 'eth_price',
+          usdPrice: 'usd_price'
         }
       }
     ],
@@ -176,7 +211,14 @@ beforeEach(async () => {
         },
         currentPrice: 'current_price',
         paymentTokenContract: {
-          symbol: 'symbol'
+          id: 100,
+          symbol: 'symbol',
+          address: 'address',
+          imageUrl: 'image_url',
+          name: 'name',
+          decimals: 18,
+          ethPrice: 'eth_price',
+          usdPrice: 'usd_price'
         }
       }
     ],

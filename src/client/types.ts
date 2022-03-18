@@ -20,7 +20,7 @@ export type NFT = {
   owner: NFTAccount
   contract: NFTContract
   traits: NFTTrait[]
-  lastSale: NFTLastSale | null
+  lastSale: NFTSale | null
   sellOrders: NFTOrder[] | null
   orders: NFTOrder[] | null
   topOwnerships: NFTOwnership[] | null
@@ -52,11 +52,13 @@ export type NFTTrait = {
   displayType: string | null
 }
 
-export type NFTLastSale = {
+export type NFTSale = {
   eventType: string
+  eventTimestamp: string
   totalPrice: string
   quantity: string
   paymentToken: NFTToken
+  transaction: NFTTransaction
 }
 
 export type NFTOrder = {
@@ -71,10 +73,23 @@ export type NFTOwnership = {
 }
 
 export type NFTToken = {
+  id: number
   symbol: string
+  address: string
+  imageUrl: string
+  name: string
+  decimals: number
+  ethPrice: string
+  usdPrice: string
 }
 
-// Service types
+export type NFTTransaction = {
+  id: number
+  fromAccount: NFTAccount
+  toAccount: NFTAccount
+  transactionHash: string
+}
+
 export type GetNFTsParams = {
   owner?: string
   first?: number
