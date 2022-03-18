@@ -4,19 +4,15 @@ export type ServerResponse<T> = {
   error?: string
 }
 
-/**
- * NFT types required by the client
- * They have been copied from the builder server.
- * TODO: Find a way to abstract these types someplace else to avoid this nasty repetition
- */
+// START - Builder Server NFT
+// TODO: Abstract these types someplace else to avoid repetition
 
-// NFT Entity
 export type NFT = {
   tokenId: string
   backgroundColor: string | null
   imageUrl: string
-  imagePreviewUrl: string
-  imageThumbnailUrl: string
+  imagePreviewUrl: string | null
+  imageThumbnailUrl: string | null
   imageOriginalUrl: string | null
   name: string | null
   description: string | null
@@ -30,46 +26,51 @@ export type NFT = {
   topOwnerships: NFTOwnership[] | null
 }
 
-type NFTAccount = {
+export type NFTAccount = {
   user: { username: string } | null
   profileImageUrl: string
   address: string
   config: string
 }
 
-type NFTContract = {
+export type NFTContract = {
+  address: string
+  createdDate: string
   name: string
+  nftVersion: string | null
+  schemaName: string
   symbol: string
-  imageUrl: string | null
+  totalSupply: string | null
   description: string
   externalLink: string | null
+  imageUrl: string | null
 }
 
-type NFTTrait = {
+export type NFTTrait = {
   type: string
   value: string | number
   displayType: string | null
 }
 
-type NFTLastSale = {
+export type NFTLastSale = {
   eventType: string
   totalPrice: string
   quantity: string
   paymentToken: NFTToken
 }
 
-type NFTOrder = {
+export type NFTOrder = {
   maker: NFTAccount
   currentPrice: string
   paymentTokenContract: NFTToken
 }
 
-type NFTOwnership = {
+export type NFTOwnership = {
   owner: NFTAccount
   quantity: string
 }
 
-type NFTToken = {
+export type NFTToken = {
   symbol: string
 }
 
@@ -91,3 +92,5 @@ export type GetNFTParams = {
   contractAddress: string
   tokenId: string
 }
+
+// END - Builder Server NFT

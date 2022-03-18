@@ -114,11 +114,16 @@ beforeEach(async () => {
   mockNFT = {
     backgroundColor: 'background_color',
     contract: {
+      address: 'address',
+      createdDate: 'created_date',
+      name: 'name',
+      nftVersion: 'nft_version',
+      schemaName: 'schema_name',
+      symbol: 'symbol',
+      totalSupply: 'total_supply',
       description: 'description',
       externalLink: 'external_link',
-      imageUrl: 'image_url',
-      name: 'name',
-      symbol: 'symbol'
+      imageUrl: 'image_url'
     },
     description: 'description',
     externalLink: 'external_link',
