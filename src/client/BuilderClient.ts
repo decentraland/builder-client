@@ -5,7 +5,13 @@ import { Authenticator, AuthIdentity } from 'dcl-crypto'
 import { RemoteItem, LocalItem } from '../item/types'
 import { Content } from '../content/types'
 import { ClientError } from './BuilderClient.errors'
-import { ServerResponse } from './types'
+import {
+  GetNFTParams,
+  GetNFTsParams,
+  GetNFTsResponse,
+  NFT,
+  ServerResponse
+} from './types'
 
 export class BuilderClient {
   private fetch: (url: string, init?: RequestInit) => Promise<Response>
@@ -183,5 +189,70 @@ export class BuilderClient {
     }
 
     return Number(contentsResponse.headers.get('content-length'))
+  }
+
+  public async getNFTs({
+    owner,
+    first,
+    skip,
+    cursor
+  }: GetNFTsParams = {}): Promise<GetNFTsResponse> {
+    const params: string[] = []
+
+    let url = '/v1/nfts'
+
+    if (owner) {
+      params.push(`owner=${owner}`)
+    }
+
+    if (first) {
+      params.push(`first=${first}`)
+    }
+
+    if (skip) {
+      params.push(`skip=${skip}`)
+    }
+
+    if (cursor) {
+      params.push(`cursor=${cursor}`)
+    }
+
+    if (params.length > 0) {
+      url = `${url}?${params.join('&')}`
+    }
+
+    let res: Response
+
+    try {
+      res = await this.fetch(url)
+    } catch (e) {
+      throw new ClientError(e.message, undefined, null)
+    }
+
+    const body: ServerResponse<GetNFTsResponse> = await res.json()
+
+    if (!res.ok || !body.ok) {
+      throw new ClientError(body.error || 'Unknown error', res.status, null)
+    }
+
+    return body.data
+  }
+
+  public async getNFT({ contractAddress, tokenId }: GetNFTParams) {
+    let res: Response
+
+    try {
+      res = await this.fetch(`/v1/nfts/${contractAddress}/${tokenId}`)
+    } catch (e) {
+      throw new ClientError(e.message, undefined, null)
+    }
+
+    const body: ServerResponse<NFT> = await res.json()
+
+    if (!res.ok || !body.ok) {
+      throw new ClientError(body.error || 'Unknown error', res.status, null)
+    }
+
+    return body.data
   }
 }
