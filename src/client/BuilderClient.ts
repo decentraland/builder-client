@@ -242,7 +242,7 @@ export class BuilderClient {
     let res: Response
 
     try {
-      res = res = await this.fetch(`/v1/nfts/${contractAddress}/${tokenId}`)
+      res = await this.fetch(`/v1/nfts/${contractAddress}/${tokenId}`)
     } catch (e) {
       throw new ClientError(e.message, undefined, null)
     }
