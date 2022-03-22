@@ -1,4 +1,4 @@
-import { Hashing } from 'dcl-catalyst-commons'
+import { hashV1 } from '@dcl/hashing'
 import { Buffer } from 'buffer'
 import { BodyShapeType } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
@@ -16,7 +16,7 @@ export async function computeHashes<T extends Content>(
     filePaths.map(async (path) => {
       const blob = contents[path]
       const file = await makeContentFile(path, blob)
-      return Hashing.calculateIPFSHash(file.content)
+      return hashV1(file.content)
     })
   )
 
