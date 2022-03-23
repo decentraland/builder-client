@@ -4,8 +4,8 @@
 
 <!-- Please check one of by placing an x in the box. -->
 
-* [ ] 🐛 This is a bug report.
-* [ ] 📈 This is a feature request.
+- [ ] 🐛 This is a bug report.
+- [ ] 📈 This is a feature request.
 
 ## 📝 Details
 
