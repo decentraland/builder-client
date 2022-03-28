@@ -80,20 +80,19 @@ Representations can be added using the `withRepresentation`: or `withoutRepresen
 
 ```typescript
 const itemFactory = new ItemFactory(oldItem)
-itemFactory
-  .withRepresentation(
-      bodyShape: BodyShapeType.MALE,
-      model: 'a_model.glb',
-      contents: { 'a_model.glb': modelContent, [THUMBNAIL_PATH]: thumbnailContent },
-      metrics: {
-        triangles: 106,
-        materials: 107,
-        meshes: 108,
-        bodies: 109,
-        entities: 110,
-        textures: 111
-      }
-  })
+itemFactory.withRepresentation(
+  BodyShapeType.MALE,
+  'a_model.glb',
+  { 'a_model.glb': modelContent, [THUMBNAIL_PATH]: thumbnailContent },
+  {
+    triangles: 106,
+    materials: 107,
+    meshes: 108,
+    bodies: 109,
+    entities: 110,
+    textures: 111
+  }
+)
 ```
 
 or deleted from the item using the `withoutRepresentation` method:
@@ -134,12 +133,12 @@ itemFactory.newItem({
   collection_id: 'aCollectionId',
   description: 'aDescription'
 }).withRepresentation(
-    bodyShape: BodyShapeType.MALE,
+    BodyShapeType.MALE,
     // Uses the main model from the loadedItem variable
-    model: loadedItem.mainModel,
+    loadedItem.mainModel,
     // Uses the content from the loadedItem variable
-    contents: loadedItem.content,
-    metrics: {
+    loadedItem.content,
+    {
       triangles: 106,
       materials: 107,
       meshes: 108,
@@ -147,7 +146,7 @@ itemFactory.newItem({
       entities: 110,
       textures: 111
     }
-  })
+  )
 ```
 
 For the 3rd case, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`, and it will also contain the asset property
@@ -229,10 +228,10 @@ const builtItem = await itemFactory
   .withCollectionId('aCollectionId')
   .withDescription('aDescription')
   .withRepresentation(
-    bodyShape: BodyShapeType.MALE,
-    model: 'a_model.glb',
-    contents: { 'a_model.glb': modelContent, [THUMBNAIL_PATH]: thumbnailContent },
-    metrics: {
+    BodyShapeType.MALE,
+    'a_model.glb',
+    { 'a_model.glb': modelContent, [THUMBNAIL_PATH]: thumbnailContent },
+    {
       triangles: 106,
       materials: 107,
       meshes: 108,
@@ -240,7 +239,7 @@ const builtItem = await itemFactory
       entities: 110,
       textures: 111
     }
-  })
+  )
   .build()
 await client.upsertItem(builtItem.item, builtItem.newContent)
 ```

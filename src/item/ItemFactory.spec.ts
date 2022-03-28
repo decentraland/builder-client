@@ -3,7 +3,7 @@ import { prefixContentName } from '../content/content'
 import { Content } from '../content/types'
 import { AssetJSON } from '../files/types'
 import { toCamelCase } from '../test-utils/string'
-import { THUMBNAIL_PATH } from './constants'
+import { IMAGE_PATH, THUMBNAIL_PATH } from './constants'
 import { ItemFactory } from './ItemFactory'
 import {
   BodyShapeType,
@@ -860,6 +860,89 @@ describe("when setting the item's thumbnail", () => {
           expect.objectContaining({
             newContent: expect.objectContaining({
               [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
+            })
+          })
+        )
+      })
+    })
+  })
+})
+
+describe("when setting the item's image", () => {
+  let newImage: Uint8Array
+
+  beforeEach(() => {
+    newImage = new Uint8Array([11, 12, 13])
+  })
+
+  describe('and the item was not initialized', () => {
+    it('should throw an error signaling that the item has not been initialized', () => {
+      expect(() =>
+        itemFactory.withoutRepresentation(BodyShapeType.MALE)
+      ).toThrow('Item has not been initialized')
+    })
+  })
+
+  describe('and the item is already initialized', () => {
+    beforeEach(() => {
+      createBasicItem(itemFactory)
+    })
+
+    describe('and the item already contained a image', () => {
+      let newImageHash: string
+
+      beforeEach(() => {
+        newImageHash =
+          'bafkreigj4dzk52sis4yszi77peaijhoo5pmbvdww33byqkku62u2apv5e4'
+        itemFactory.withImage(newImage)
+      })
+
+      it('should have set the new image in the contents', () => {
+        return expect(itemFactory.build()).resolves.toEqual(
+          expect.objectContaining({
+            item: expect.objectContaining({
+              contents: expect.objectContaining({
+                [IMAGE_PATH]: newImageHash
+              })
+            })
+          })
+        )
+      })
+
+      it('should have set the new image in the new contents', () => {
+        return expect(itemFactory.build()).resolves.toEqual(
+          expect.objectContaining({
+            newContent: expect.objectContaining({
+              [IMAGE_PATH]: newImage
+            })
+          })
+        )
+      })
+    })
+
+    describe("and the item didn't contain a image", () => {
+      beforeEach(() => {
+        itemFactory.withImage(newImage)
+      })
+
+      it('should have set the new image in the contents', () => {
+        return expect(itemFactory.build()).resolves.toEqual(
+          expect.objectContaining({
+            item: expect.objectContaining({
+              contents: expect.objectContaining({
+                [IMAGE_PATH]:
+                  'bafkreigj4dzk52sis4yszi77peaijhoo5pmbvdww33byqkku62u2apv5e4'
+              })
+            })
+          })
+        )
+      })
+
+      it('should have set the new image in the new contents', () => {
+        return expect(itemFactory.build()).resolves.toEqual(
+          expect.objectContaining({
+            newContent: expect.objectContaining({
+              [IMAGE_PATH]: newImage
             })
           })
         )
