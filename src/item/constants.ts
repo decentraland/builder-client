@@ -1,4 +1,5 @@
 export const THUMBNAIL_PATH = 'thumbnail.png'
+export const IMAGE_PATH = 'image.png'
 export const DEFAULT_METRICS = {
   triangles: 0,
   materials: 0,

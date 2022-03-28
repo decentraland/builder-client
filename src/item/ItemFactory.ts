@@ -7,7 +7,7 @@ import {
 } from '../content/content'
 import { Content, RawContent, SortedContent } from '../content/types'
 import { AssetJSON } from '../files/types'
-import { DEFAULT_METRICS, THUMBNAIL_PATH } from './constants'
+import { DEFAULT_METRICS, IMAGE_PATH, THUMBNAIL_PATH } from './constants'
 import { ItemNotInitializedError } from './ItemFactory.errors'
 import {
   BasicItem,
@@ -219,6 +219,27 @@ export class ItemFactory<X extends Content> {
       [THUMBNAIL_PATH]: thumbnail
     }
     delete this.item.contents[THUMBNAIL_PATH]
+
+    return this
+  }
+
+  /**
+   * Sets or updates the item's image.
+   * The image will be used at the deployment process
+   * to be uploaded to the catalyst.
+   * It requires the item to be defined first.
+   * @param thumbnail - The item's thumbnail.
+   */
+  public withImage(image: X): ItemFactory<X> {
+    if (!this.item) {
+      throw new ItemNotInitializedError()
+    }
+
+    this.newContent = {
+      ...this.newContent,
+      [IMAGE_PATH]: image
+    }
+    delete this.item.contents[IMAGE_PATH]
 
     return this
   }
