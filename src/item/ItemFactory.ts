@@ -224,9 +224,9 @@ export class ItemFactory<X extends Content> {
   }
 
   /**
-   * Sets or updates the item's contents.
+   * Sets or updates the item's content.
    * It requires the item to be defined first.
-   * @param contents - The item's new contents
+   * @param content - The item's new content
    */
   public withContent(content: Record<string, X>): ItemFactory<X> {
     if (!this.item) {
