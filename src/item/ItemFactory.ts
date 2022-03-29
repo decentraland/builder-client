@@ -224,6 +224,27 @@ export class ItemFactory<X extends Content> {
   }
 
   /**
+   * Sets or updates the item's contents.
+   * It requires the item to be defined first.
+   * @param contents - The item's new contents
+   */
+  public withContent(content: Record<string, X>): ItemFactory<X> {
+    if (!this.item) {
+      throw new ItemNotInitializedError()
+    }
+
+    this.newContent = {
+      ...this.newContent,
+      ...content
+    }
+    for (const key in content) {
+      delete this.item.contents[key]
+    }
+
+    return this
+  }
+
+  /**
    * Sets or updates the item's image.
    * The image will be used at the deployment process
    * to be uploaded to the catalyst.
