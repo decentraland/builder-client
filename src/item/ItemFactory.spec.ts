@@ -909,12 +909,12 @@ describe("when setting the item's contents", () => {
       })
     })
 
-    describe("and the item didn't contain a image", () => {
+    describe("and the item didn't contain contents", () => {
       beforeEach(() => {
         itemFactory.withContent(newContent)
       })
 
-      it('should have set the new image in the contents', () => {
+      it('should have set the new content', () => {
         return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent
