@@ -868,6 +868,63 @@ describe("when setting the item's thumbnail", () => {
   })
 })
 
+describe("when setting the item's contents", () => {
+  beforeEach(() => {
+    newContent = {
+      'some key': new Uint8Array([1, 2, 3]),
+      'some other key': new Uint8Array([11, 12, 13])
+    }
+  })
+
+  describe('and the item was not initialized', () => {
+    it('should throw an error signaling that the item has not been initialized', () => {
+      expect(() => itemFactory.withContent(newContent)).toThrow(
+        'Item has not been initialized'
+      )
+    })
+  })
+
+  describe('and the item is already initialized', () => {
+    beforeEach(() => {
+      createBasicItem(itemFactory)
+    })
+
+    describe('and the item already contained contents', () => {
+      beforeEach(() => {
+        itemFactory
+          .withRepresentation(BodyShapeType.MALE, modelPath, contents, metrics)
+          .withContent(newContent)
+      })
+
+      it('should have merged the original contents with the new one', () => {
+        return expect(itemFactory.build()).resolves.toEqual(
+          expect.objectContaining({
+            newContent: {
+              [prefixedMaleModel]: contents[modelPath],
+              [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH],
+              ...newContent
+            }
+          })
+        )
+      })
+    })
+
+    describe("and the item didn't contain a image", () => {
+      beforeEach(() => {
+        itemFactory.withContent(newContent)
+      })
+
+      it('should have set the new image in the contents', () => {
+        return expect(itemFactory.build()).resolves.toEqual(
+          expect.objectContaining({
+            newContent
+          })
+        )
+      })
+    })
+  })
+})
+
 describe("when setting the item's image", () => {
   let newImage: Uint8Array
 
@@ -877,9 +934,9 @@ describe("when setting the item's image", () => {
 
   describe('and the item was not initialized', () => {
     it('should throw an error signaling that the item has not been initialized', () => {
-      expect(() =>
-        itemFactory.withoutRepresentation(BodyShapeType.MALE)
-      ).toThrow('Item has not been initialized')
+      expect(() => itemFactory.withImage(newImage)).toThrow(
+        'Item has not been initialized'
+      )
     })
   })
 

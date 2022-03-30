@@ -132,7 +132,8 @@ export class BuilderClient {
       for (const path in newContent) {
         formData.append(
           item.contents[path],
-          this.convertToFormDataBinary(newContent[path])
+          this.convertToFormDataBinary(newContent[path]),
+          path
         )
       }
 
@@ -153,7 +154,7 @@ export class BuilderClient {
       if (!uploadResponse.ok || !uploadResponseBody.ok) {
         throw new ClientError(
           uploadResponseBody.error ?? 'Unknown error',
-          upsertResponse.status,
+          uploadResponse.status,
           uploadResponseBody.data
         )
       }
