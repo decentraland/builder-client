@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@dcl/hashing": "^1.1.0",
-    "@dcl/schemas": "^3.0.0",
+    "@dcl/schemas": "^4.2.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "cross-fetch": "^3.1.4",
