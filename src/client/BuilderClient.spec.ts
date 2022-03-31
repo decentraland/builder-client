@@ -108,7 +108,8 @@ beforeEach(async () => {
     eth_address: '0x00',
     beneficiary: null,
     total_supply: 1000,
-    local_content_hash: 'someHash'
+    local_content_hash: 'someHash',
+    catalyst_content_hash: 'someOtherHash'
   }
 
   mockNFT = {

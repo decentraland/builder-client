@@ -20,6 +20,7 @@ export type RemoteItem = {
   contents: Record<string, string>
   content_hash: string | null
   local_content_hash: string | null
+  catalyst_content_hash: string | null
   is_published: boolean
   is_approved: boolean
   in_catalyst: boolean
@@ -40,6 +41,7 @@ export type LocalItem = Omit<
   | 'price'
   | 'beneficiary'
   | 'local_content_hash'
+  | 'catalyst_content_hash'
 >
 
 export type BasicItem = Pick<LocalItem, 'name' | 'rarity'> &
