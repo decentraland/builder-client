@@ -195,7 +195,7 @@ export class BuilderClient {
 
   /**
    * The ID of the third party to retrieve.
-   * @param thirdPartyId - The content hash.
+   * @param thirdPartyId - The third party id (urn:decentraland:mumbai:collections-thirdparty:third-part-name).
    */
   public async getThirdParty(thirdPartyId: string): Promise<ThirdParty> {
     let thirdPartyResponse: Response
