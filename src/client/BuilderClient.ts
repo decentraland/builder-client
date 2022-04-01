@@ -10,7 +10,8 @@ import {
   GetNFTsParams,
   GetNFTsResponse,
   NFT,
-  ServerResponse
+  ServerResponse,
+  ThirdParty
 } from './types'
 
 export class BuilderClient {
@@ -192,6 +193,63 @@ export class BuilderClient {
     return Number(contentsResponse.headers.get('content-length'))
   }
 
+  /**
+   * The ID of the third party to retrieve.
+   * @param thirdPartyId - The content hash.
+   */
+  public async getThirdParty(thirdPartyId: string): Promise<ThirdParty> {
+    let thirdPartyResponse: Response
+    let thirdPartyResponseBody: ServerResponse<ThirdParty>
+
+    try {
+      thirdPartyResponse = await this.fetch(`/v1/thirdParties/${thirdPartyId}`)
+    } catch (error) {
+      throw new ClientError(error.message, undefined, null)
+    }
+
+    if (!thirdPartyResponse.ok) {
+      throw new ClientError(
+        'Unexpected response status',
+        thirdPartyResponse.status,
+        null
+      )
+    }
+
+    const responseContentType = thirdPartyResponse.headers.get('content-type')
+
+    if (
+      !responseContentType ||
+      !responseContentType.includes('application/json')
+    ) {
+      throw new ClientError(
+        'Unexpected content-type in response',
+        thirdPartyResponse.status,
+        null
+      )
+    }
+
+    try {
+      thirdPartyResponseBody =
+        (await thirdPartyResponse.json()) as ServerResponse<ThirdParty>
+    } catch (error) {
+      throw new ClientError(error.message, thirdPartyResponse.status, null)
+    }
+
+    if (!thirdPartyResponseBody.ok) {
+      throw new ClientError(
+        thirdPartyResponseBody.error ?? 'Unknown error',
+        thirdPartyResponse.status,
+        thirdPartyResponseBody.data
+      )
+    }
+
+    return thirdPartyResponseBody.data
+  }
+
+  /**
+   * Gets the external NFTs owned by the user.
+   * @param options - A set of options to query the NFTs.
+   */
   public async getNFTs({
     owner,
     first,
