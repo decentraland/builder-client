@@ -817,7 +817,6 @@ describe('when getting a third party', () => {
           totalItems: '0'
         }
       }
-      console.log(nock.pendingMocks)
       nock(testUrl).get(url).reply(200, response)
     })
 
