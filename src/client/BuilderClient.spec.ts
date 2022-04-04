@@ -16,7 +16,13 @@ import {
   publicKeyRegex,
   secondHeaderPayloadRegex
 } from './matchers'
-import { GetNFTParams, GetNFTsResponse, NFT, ServerResponse } from './types'
+import {
+  GetNFTParams,
+  GetNFTsResponse,
+  NFT,
+  ServerResponse,
+  ThirdParty
+} from './types'
 
 nock.disableNetConnect()
 
@@ -740,6 +746,85 @@ describe('when getting a single nft', () => {
           new ClientError(error, 200, null)
         )
       })
+    })
+  })
+})
+
+describe('when getting a third party', () => {
+  let url: string
+  let thirdPartyId: string
+  let response: ServerResponse<ThirdParty> | ServerResponse<null>
+
+  beforeEach(() => {
+    thirdPartyId = 'aThirdPartyId'
+    url = `/v1/thirdParties/${thirdPartyId}`
+  })
+
+  describe('when the response status differs from being ok', () => {
+    beforeEach(() => {
+      nock(testUrl).get(url).reply(500)
+    })
+
+    it('should throw a client error with the "Unexpected response status" message', async () => {
+      await expect(client.getThirdParty(thirdPartyId)).rejects.toEqual(
+        new ClientError('Unexpected response status', 500, null)
+      )
+    })
+  })
+
+  describe("when the response body doesn't contain JSON data", () => {
+    beforeEach(() => {
+      nock(testUrl)
+        .get(url)
+        .reply(200, undefined, { 'Content-Type': 'text/html' })
+    })
+
+    it('should throw a client error with the "Unexpected content-type in response" message', async () => {
+      await expect(client.getThirdParty(thirdPartyId)).rejects.toEqual(
+        new ClientError('Unexpected content-type in response', 500, null)
+      )
+    })
+  })
+
+  describe('when the response body contains an error', () => {
+    beforeEach(() => {
+      response = {
+        ok: false,
+        error: 'Some error',
+        data: null
+      }
+      nock(testUrl).get(url).reply(200, response)
+    })
+
+    it('should throw a client error with the error in the body', async () => {
+      await expect(client.getThirdParty(thirdPartyId)).rejects.toEqual(
+        new ClientError(response.error as string, 200, response.data)
+      )
+    })
+  })
+
+  describe('when the response body contains a third party', () => {
+    beforeEach(() => {
+      response = {
+        ok: true,
+        data: {
+          id: 'urn:decentraland:mumbai:collections-thirdparty:some-name',
+          root: '0xb6c6bc2f72b3fe1970806ec958341ad3cddef7b1a6ac347014ddba4f4b84151b',
+          name: 'Some name',
+          description: 'Some description',
+          managers: ['0x747c6f502272129bf1ba872a1903045b837ee86c'],
+          maxItems: '110',
+          totalItems: '0'
+        }
+      }
+      console.log(nock.pendingMocks)
+      nock(testUrl).get(url).reply(200, response)
+    })
+
+    it('should return the received third party', async () => {
+      await expect(client.getThirdParty(thirdPartyId)).resolves.toEqual(
+        response.data
+      )
     })
   })
 })

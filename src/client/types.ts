@@ -4,6 +4,25 @@ export type ServerResponse<T> = {
   error?: string
 }
 
+export enum ThirdPartyMetadataType {
+  THIRD_PARTY_V1 = 'third_party_v1'
+}
+
+export type ThirdPartyMetadata = {
+  type: ThirdPartyMetadataType
+  thirdParty: { name: string; description: string } | null
+}
+
+export type ThirdParty = {
+  id: string
+  root: string
+  name: string
+  description: string
+  managers: string[]
+  maxItems: string
+  totalItems: string
+}
+
 // START - Builder Server NFT
 // TODO: Abstract these types someplace else to avoid repetition
 
