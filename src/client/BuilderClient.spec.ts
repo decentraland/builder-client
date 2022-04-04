@@ -798,7 +798,7 @@ describe('when getting a third party', () => {
 
     it('should throw a client error with the error in the body', async () => {
       await expect(client.getThirdParty(thirdPartyId)).rejects.toEqual(
-        new ClientError(response.error!, 200, response.data)
+        new ClientError(response.error as string, 200, response.data)
       )
     })
   })
