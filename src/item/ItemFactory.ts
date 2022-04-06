@@ -75,7 +75,7 @@ export class ItemFactory<X extends Content> {
    */
   public fromAsset(asset: AssetJSON, content: RawContent<X>): ItemFactory<X> {
     this.newItem({
-      id: asset.id,
+      id: asset.id ?? uuidV4(),
       name: asset.name,
       rarity: asset.rarity,
       category: asset.category,

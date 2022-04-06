@@ -1033,43 +1033,94 @@ describe('when creating a new item from an asset object', () => {
         }
       ]
     }
-    itemFactory.fromAsset(asset, contents)
   })
 
-  it('should create the built item configured with the values from the asset object and the new content with the provided content', () => {
-    return expect(itemFactory.build()).resolves.toEqual({
-      item: {
-        id: asset.id,
-        name: asset.name,
-        type: ItemType.WEARABLE,
-        thumbnail: THUMBNAIL_PATH,
-        collection_id: asset.collectionId,
-        urn: null,
-        data: {
-          category: asset.category,
-          hides: asset.hides,
-          replaces: asset.replaces,
-          tags: asset.tags,
-          representations: [
-            {
-              bodyShapes: [WearableBodyShape.MALE],
-              contents: [prefixedMaleModel],
-              mainFile: prefixedMaleModel,
-              overrideHides: [WearableCategory.EYES],
-              overrideReplaces: [WearableCategory.FACIAL_HAIR]
-            }
-          ]
-        },
-        rarity: asset.rarity,
-        description: asset.description,
-        metrics: asset.representations[0].metrics,
-        contents: maleHashedContent,
-        content_hash: null
-      } as LocalItem,
-      newContent: {
-        [prefixedMaleModel]: contents[modelPath],
-        [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
-      }
+  describe('and the id is defined', () => {
+    beforeEach(() => {
+      itemFactory.fromAsset(asset, contents)
+    })
+
+    it('should create the built item configured with the values from the asset object and the new content with the provided content', () => {
+      return expect(itemFactory.build()).resolves.toEqual({
+        item: {
+          id: asset.id,
+          name: asset.name,
+          type: ItemType.WEARABLE,
+          thumbnail: THUMBNAIL_PATH,
+          collection_id: asset.collectionId,
+          urn: null,
+          data: {
+            category: asset.category,
+            hides: asset.hides,
+            replaces: asset.replaces,
+            tags: asset.tags,
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                contents: [prefixedMaleModel],
+                mainFile: prefixedMaleModel,
+                overrideHides: [WearableCategory.EYES],
+                overrideReplaces: [WearableCategory.FACIAL_HAIR]
+              }
+            ]
+          },
+          rarity: asset.rarity,
+          description: asset.description,
+          metrics: asset.representations[0].metrics,
+          contents: maleHashedContent,
+          content_hash: null
+        } as LocalItem,
+        newContent: {
+          [prefixedMaleModel]: contents[modelPath],
+          [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
+        }
+      })
+    })
+  })
+
+  describe('and the id is not defined', () => {
+    beforeEach(() => {
+      delete asset.id
+      itemFactory.fromAsset(asset, contents)
+    })
+
+    it('should create the built item configured with the values from the asset object, an auto generated id and the new content with the provided content', () => {
+      return expect(itemFactory.build()).resolves.toEqual({
+        item: {
+          id: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+          ),
+          name: asset.name,
+          type: ItemType.WEARABLE,
+          thumbnail: THUMBNAIL_PATH,
+          collection_id: asset.collectionId,
+          urn: null,
+          data: {
+            category: asset.category,
+            hides: asset.hides,
+            replaces: asset.replaces,
+            tags: asset.tags,
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                contents: [prefixedMaleModel],
+                mainFile: prefixedMaleModel,
+                overrideHides: [WearableCategory.EYES],
+                overrideReplaces: [WearableCategory.FACIAL_HAIR]
+              }
+            ]
+          },
+          rarity: asset.rarity,
+          description: asset.description,
+          metrics: asset.representations[0].metrics,
+          contents: maleHashedContent,
+          content_hash: null
+        } as LocalItem,
+        newContent: {
+          [prefixedMaleModel]: contents[modelPath],
+          [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
+        }
+      })
     })
   })
 })
