@@ -89,12 +89,12 @@ export class BuilderClient {
   }
 
   /**
-   * Updates or inserts an item.
+   * Updates or inserts an item. The item can be updated by id or URN.
    * @param item - The item to insert or update.
    * @param newContent - The content to be added or updated in the item. This content must be contained in the items contents.
    */
   public async upsertItem(
-    item: LocalItem,
+    item: Omit<LocalItem, 'id'> & { id?: LocalItem['id'] },
     newContent: Record<string, Content>
   ): Promise<RemoteItem> {
     const contentIsContainedInItem = Object.keys(newContent).every(
@@ -106,8 +106,9 @@ export class BuilderClient {
 
     let upsertResponse: Response
     let upsertResponseBody: ServerResponse<RemoteItem>
+    const endpointParam = item.id ?? item.urn
     try {
-      upsertResponse = await this.fetch(`/v1/items/${item.id}`, {
+      upsertResponse = await this.fetch(`/v1/items/${endpointParam}`, {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           item: { ...item, eth_address: this.getAddress() }
@@ -141,10 +142,13 @@ export class BuilderClient {
       let uploadResponse: Response
 
       try {
-        uploadResponse = await this.fetch(`/v1/items/${item.id}/files`, {
-          body: formData as unknown as BodyInit,
-          method: 'post'
-        })
+        uploadResponse = await this.fetch(
+          `/v1/items/${item.id ?? upsertResponseBody.data.id}/files`,
+          {
+            body: formData as unknown as BodyInit,
+            method: 'post'
+          }
+        )
       } catch (error) {
         throw new ClientError(error.message, undefined, null)
       }
