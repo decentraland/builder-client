@@ -369,34 +369,6 @@ describe('when upserting an item', () => {
     let nockedFileUpload: nock.Scope
     let result: RemoteItem
 
-    beforeEach(() => {
-      nockedUpsert = nock(testUrl)
-        .put(`/v1/items/${item.id}`, {
-          item: { ...item, eth_address: address }
-        })
-        .matchHeader(FIRST_AUTH_HEADER, firstHeaderValueMatcher)
-        .matchHeader(SECOND_AUTH_HEADER, secondHeaderValueMatcher)
-        .matchHeader(
-          THIRD_AUTH_HEADER,
-          thirdHeaderValueMatcher('put', `/items/${item.id}`)
-        )
-        .matchHeader('content-type', 'application/json')
-        .reply(200, {
-          data: remoteItem,
-          ok: true
-        })
-      nockedFileUpload = nock(testUrl)
-        .post(
-          `/v1/items/${item.id}/files`,
-          /form-data; name="QmaX5DcQkjtgfQK3foNhZLYVbUzVAU6m5Gh1GtjT4f6G3i"[^]*someContent\r\n/m
-        )
-        .matchHeader('content-type', /^multipart\/form-data;.+/)
-        .reply(200, {
-          data: {},
-          ok: true
-        })
-    })
-
     describe('and the builder client is constructed with a function to get the identity and the address', () => {
       beforeEach(async () => {
         const wallet = new ethers.Wallet(fakePrivateKey)
@@ -408,41 +380,145 @@ describe('when upserting an item', () => {
         )
       })
 
-      describe('and there are no item contents to update', () => {
-        beforeEach(async () => {
-          result = await client.upsertItem(item, {})
+      describe('and it is upserting the item by id', () => {
+        beforeEach(() => {
+          nockedUpsert = nock(testUrl)
+            .put(`/v1/items/${item.id}`, {
+              item: { ...item, eth_address: address }
+            })
+            .matchHeader(FIRST_AUTH_HEADER, firstHeaderValueMatcher)
+            .matchHeader(SECOND_AUTH_HEADER, secondHeaderValueMatcher)
+            .matchHeader(
+              THIRD_AUTH_HEADER,
+              thirdHeaderValueMatcher('put', `/items/${item.id}`)
+            )
+            .matchHeader('content-type', 'application/json')
+            .reply(200, {
+              data: remoteItem,
+              ok: true
+            })
+          nockedFileUpload = nock(testUrl)
+            .post(
+              `/v1/items/${item.id}/files`,
+              /form-data; name="QmaX5DcQkjtgfQK3foNhZLYVbUzVAU6m5Gh1GtjT4f6G3i"[^]*someContent\r\n/m
+            )
+            .matchHeader('content-type', /^multipart\/form-data;.+/)
+            .reply(200, {
+              data: {},
+              ok: true
+            })
         })
 
-        it('should have performed the request to insert/update the item with the given item', () => {
-          expect(nockedUpsert.isDone()).toBe(true)
-        })
+        describe('and there are no item contents to update', () => {
+          beforeEach(async () => {
+            result = await client.upsertItem(item, {})
+          })
+          it('should have performed the request to insert/update the item with the given item', () => {
+            expect(nockedUpsert.isDone()).toBe(true)
+          })
 
-        it('should not have performed the request to upload the item files', () => {
-          expect(nockedFileUpload.isDone()).toBe(false)
-        })
+          it('should not have performed the request to upload the item files', () => {
+            expect(nockedFileUpload.isDone()).toBe(false)
+          })
 
-        it('should have returned the full item', () => {
-          expect(result).toEqual(remoteItem)
-        })
-      })
-
-      describe('and there are item contents to update', () => {
-        beforeEach(async () => {
-          result = await client.upsertItem(item, {
-            aFileContent: Buffer.from('someContent')
+          it('should have returned the full item', () => {
+            expect(result).toEqual(remoteItem)
           })
         })
 
-        it('should have performed the request to insert/update the item with the given item', () => {
-          expect(nockedUpsert.isDone()).toBe(true)
+        describe('and there are item contents to update', () => {
+          beforeEach(async () => {
+            result = await client.upsertItem(item, {
+              aFileContent: Buffer.from('someContent')
+            })
+          })
+
+          it('should have performed the request to insert/update the item with the given item', () => {
+            expect(nockedUpsert.isDone()).toBe(true)
+          })
+
+          it('should have performed the request to upload the item files', () => {
+            expect(nockedFileUpload.isDone()).toBe(true)
+          })
+
+          it('should have returned the full item', () => {
+            expect(result).toEqual(remoteItem)
+          })
+        })
+      })
+
+      describe('and it is upserting the item by URN', () => {
+        let itemWithURN: Omit<LocalItem, 'id'> & { id?: LocalItem['id'] }
+        beforeEach(() => {
+          itemWithURN = {
+            ...item,
+            urn: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty2:tercer-fiesta-2'
+          }
+          delete itemWithURN.id
+
+          nockedUpsert = nock(testUrl)
+            .put(`/v1/items/${itemWithURN.urn}`, {
+              item: { ...itemWithURN, eth_address: address }
+            })
+            .matchHeader(FIRST_AUTH_HEADER, firstHeaderValueMatcher)
+            .matchHeader(SECOND_AUTH_HEADER, secondHeaderValueMatcher)
+            .matchHeader(
+              THIRD_AUTH_HEADER,
+              thirdHeaderValueMatcher('put', `/items/${itemWithURN.urn}`)
+            )
+            .matchHeader('content-type', 'application/json')
+            .reply(200, {
+              data: remoteItem,
+              ok: true
+            })
+
+          nockedFileUpload = nock(testUrl)
+            .post(
+              `/v1/items/${remoteItem.id}/files`,
+              /form-data; name="QmaX5DcQkjtgfQK3foNhZLYVbUzVAU6m5Gh1GtjT4f6G3i"[^]*someContent\r\n/m
+            )
+            .matchHeader('content-type', /^multipart\/form-data;.+/)
+            .reply(200, {
+              data: {},
+              ok: true
+            })
         })
 
-        it('should have performed the request to upload the item files', () => {
-          expect(nockedFileUpload.isDone()).toBe(true)
+        describe('and there are no item contents to update', () => {
+          beforeEach(async () => {
+            result = await client.upsertItem(itemWithURN, {})
+          })
+          it('should have performed the request to insert/update the item with the given item urn', () => {
+            expect(nockedUpsert.isDone()).toBe(true)
+          })
+
+          it('should not have performed the request to upload the item files', () => {
+            expect(nockedFileUpload.isDone()).toBe(false)
+          })
+
+          it('should have returned the full item', () => {
+            expect(result).toEqual(remoteItem)
+          })
         })
 
-        it('should have returned the full item', () => {
-          expect(result).toEqual(remoteItem)
+        describe('and there are item contents to update', () => {
+          beforeEach(async () => {
+            result = await client.upsertItem(itemWithURN, {
+              aFileContent: Buffer.from('someContent')
+            })
+          })
+
+          it('should have performed the request to insert/update the item with the given item', () => {
+            expect(nockedUpsert.isDone()).toBe(true)
+          })
+
+          it('should have performed the request to upload the item files', () => {
+            expect(nockedFileUpload.isDone()).toBe(true)
+          })
+
+          it('should have returned the full item', () => {
+            expect(result).toEqual(remoteItem)
+          })
         })
       })
     })
@@ -452,6 +528,31 @@ describe('when upserting an item', () => {
         const wallet = new ethers.Wallet(fakePrivateKey)
         const identity = await createIdentity(wallet, 1000)
         client = new BuilderClient(testUrl, identity, address)
+        nockedUpsert = nock(testUrl)
+          .put(`/v1/items/${item.id}`, {
+            item: { ...item, eth_address: address }
+          })
+          .matchHeader(FIRST_AUTH_HEADER, firstHeaderValueMatcher)
+          .matchHeader(SECOND_AUTH_HEADER, secondHeaderValueMatcher)
+          .matchHeader(
+            THIRD_AUTH_HEADER,
+            thirdHeaderValueMatcher('put', `/items/${item.id}`)
+          )
+          .matchHeader('content-type', 'application/json')
+          .reply(200, {
+            data: remoteItem,
+            ok: true
+          })
+        nockedFileUpload = nock(testUrl)
+          .post(
+            `/v1/items/${item.id}/files`,
+            /form-data; name="QmaX5DcQkjtgfQK3foNhZLYVbUzVAU6m5Gh1GtjT4f6G3i"[^]*someContent\r\n/m
+          )
+          .matchHeader('content-type', /^multipart\/form-data;.+/)
+          .reply(200, {
+            data: {},
+            ok: true
+          })
       })
 
       describe('and there are no item contents to update', () => {
