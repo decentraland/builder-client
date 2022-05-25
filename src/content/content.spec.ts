@@ -1,6 +1,6 @@
 import { TextEncoder } from 'util'
 import { THUMBNAIL_PATH } from '../item/constants'
-import { BodyShapeType } from '../item/types'
+import { WearableBodyShape } from '../item/types'
 import { computeHashes, prefixContentName, sortContent } from './content'
 import { RawContent } from './types'
 
@@ -66,8 +66,8 @@ describe('when prefixing the content name', () => {
   const contentName = 'aContentName'
 
   it('should return the composition of the body shape and the content name', () => {
-    expect(prefixContentName(BodyShapeType.MALE, contentName)).toEqual(
-      `${BodyShapeType.MALE}/${contentName}`
+    expect(prefixContentName(WearableBodyShape.MALE, contentName)).toEqual(
+      `male/${contentName}`
     )
   })
 })
@@ -83,7 +83,7 @@ describe('when sorting the contents', () => {
 
   describe('when the contents are male', () => {
     it('should create a sorted contents object with the male contents', () => {
-      expect(sortContent(BodyShapeType.MALE, content)).toEqual({
+      expect(sortContent(WearableBodyShape.MALE, content)).toEqual({
         male: {
           'male/aContent': content.aContent
         },
@@ -98,28 +98,10 @@ describe('when sorting the contents', () => {
 
   describe('when the contents are female', () => {
     it('should create a sorted contents object with the female contents', () => {
-      expect(sortContent(BodyShapeType.FEMALE, content)).toEqual({
+      expect(sortContent(WearableBodyShape.FEMALE, content)).toEqual({
         male: {},
         female: { 'female/aContent': content.aContent },
         all: {
-          'female/aContent': content.aContent,
-          [THUMBNAIL_PATH]: content[THUMBNAIL_PATH]
-        }
-      })
-    })
-  })
-
-  describe('when the contents are both', () => {
-    it('should create a sorted contents object with the both contents', () => {
-      expect(sortContent(BodyShapeType.BOTH, content)).toEqual({
-        male: {
-          'male/aContent': content.aContent
-        },
-        female: {
-          'female/aContent': content.aContent
-        },
-        all: {
-          'male/aContent': content.aContent,
           'female/aContent': content.aContent,
           [THUMBNAIL_PATH]: content[THUMBNAIL_PATH]
         }

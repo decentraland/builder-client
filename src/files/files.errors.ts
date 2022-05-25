@@ -21,7 +21,7 @@ export class FileTooBigError extends Error {
   }
 }
 
-export class InvalidAssetFileError extends Error {
+export class InvalidBuilderConfigFileError extends Error {
   public getErrors():
     | ErrorObject<string, Record<string, unknown>, unknown>[]
     | null
@@ -34,7 +34,24 @@ export class InvalidAssetFileError extends Error {
       | ErrorObject<string, Record<string, unknown>, unknown>[]
       | null
   ) {
-    super('The asset file is invalid')
+    super('The builder config file is invalid')
+  }
+}
+
+export class InvalidWearableConfigFileError extends Error {
+  public getErrors():
+    | ErrorObject<string, Record<string, unknown>, unknown>[]
+    | null
+    | undefined {
+    return this.errors
+  }
+
+  constructor(
+    private errors?:
+      | ErrorObject<string, Record<string, unknown>, unknown>[]
+      | null
+  ) {
+    super('The wearable config file is invalid')
   }
 }
 

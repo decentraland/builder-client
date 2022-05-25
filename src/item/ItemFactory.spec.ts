@@ -1,16 +1,14 @@
 import { Rarity, WearableRepresentation } from '@dcl/schemas'
 import { prefixContentName } from '../content/content'
 import { Content } from '../content/types'
-import { AssetJSON } from '../files/types'
+import { BuilderConfig, WearableConfig } from '../files/types'
 import { toCamelCase } from '../test-utils/string'
-import { IMAGE_PATH, THUMBNAIL_PATH } from './constants'
+import { DEFAULT_METRICS, IMAGE_PATH, THUMBNAIL_PATH } from './constants'
 import { ItemFactory } from './ItemFactory'
 import {
-  BodyShapeType,
   BuiltItem,
   ItemType,
   LocalItem,
-  ModelMetrics,
   WearableBodyShape,
   WearableCategory
 } from './types'
@@ -114,13 +112,12 @@ let prefixedFemaleModel: string
 let contents: Record<string, Uint8Array>
 let maleHashedContent: Record<string, string>
 let femaleHashedContent: Record<string, string>
-let metrics: ModelMetrics
 let maleRepresentation: WearableRepresentation
 let femaleRepresentation: WearableRepresentation
 
 beforeEach(() => {
-  prefixedMaleModel = prefixContentName(BodyShapeType.MALE, modelPath)
-  prefixedFemaleModel = prefixContentName(BodyShapeType.FEMALE, modelPath)
+  prefixedMaleModel = prefixContentName(WearableBodyShape.MALE, modelPath)
+  prefixedFemaleModel = prefixContentName(WearableBodyShape.FEMALE, modelPath)
   itemFactory = new ItemFactory()
   contents = {
     [modelPath]: new Uint8Array([1, 2, 3]),
@@ -151,14 +148,6 @@ beforeEach(() => {
     contents: [prefixedFemaleModel],
     overrideReplaces: [],
     overrideHides: []
-  }
-  metrics = {
-    triangles: 100,
-    materials: 101,
-    meshes: 102,
-    bodies: 103,
-    entities: 104,
-    textures: 105
   }
 })
 
@@ -222,27 +211,13 @@ describe('when creating a new item', () => {
 })
 
 describe('when adding a representation to an item', () => {
-  let anotherMetrics: ModelMetrics
-
-  beforeEach(() => {
-    anotherMetrics = {
-      triangles: 106,
-      materials: 107,
-      meshes: 108,
-      bodies: 109,
-      entities: 110,
-      textures: 111
-    }
-  })
-
   describe('and the item was not initialized', () => {
     it('should throw an error signaling that the item has not been initialized', () => {
       expect(() =>
         itemFactory.withRepresentation(
-          BodyShapeType.MALE,
+          WearableBodyShape.MALE,
           modelPath,
-          contents,
-          metrics
+          contents
         )
       ).toThrow('Item has not been initialized')
     })
@@ -257,20 +232,18 @@ describe('when adding a representation to an item', () => {
       describe('and the item already contained a male representation', () => {
         beforeEach(() => {
           itemFactory.withRepresentation(
-            BodyShapeType.MALE,
+            WearableBodyShape.MALE,
             modelPath,
-            contents,
-            metrics
+            contents
           )
         })
 
         it('should throw an error signaling that the item already contained that body shape', () => {
           expect(() =>
             itemFactory.withRepresentation(
-              BodyShapeType.MALE,
+              WearableBodyShape.MALE,
               modelPath,
-              contents,
-              metrics
+              contents
             )
           ).toThrow(
             "The representation that you're about to add already exists in the item"
@@ -281,17 +254,15 @@ describe('when adding a representation to an item', () => {
       describe('and the item already contained a female representation', () => {
         beforeEach(async () => {
           itemFactory.withRepresentation(
-            BodyShapeType.FEMALE,
+            WearableBodyShape.FEMALE,
             modelPath,
-            contents,
-            metrics
+            contents
           )
 
           itemFactory.withRepresentation(
-            BodyShapeType.MALE,
+            WearableBodyShape.MALE,
             modelPath,
-            contents,
-            anotherMetrics
+            contents
           )
           const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
@@ -303,10 +274,6 @@ describe('when adding a representation to an item', () => {
             femaleRepresentation,
             maleRepresentation
           ])
-        })
-
-        it('should have set the new metrics', () => {
-          expect(item.metrics).toEqual(anotherMetrics)
         })
 
         it("should have added the male contents to the item's contents", () => {
@@ -326,37 +293,12 @@ describe('when adding a representation to an item', () => {
         })
       })
 
-      describe('and the item already contained a "both" representation', () => {
-        beforeEach(() => {
-          itemFactory.withRepresentation(
-            BodyShapeType.BOTH,
-            modelPath,
-            contents,
-            metrics
-          )
-        })
-
-        it('should throw an error signaling that the item already contained that body shape', () => {
-          expect(() =>
-            itemFactory.withRepresentation(
-              BodyShapeType.MALE,
-              modelPath,
-              contents,
-              metrics
-            )
-          ).toThrow(
-            "The representation that you're about to add already exists in the item"
-          )
-        })
-      })
-
-      describe('and the item did not contain a male nor a "both" representation', () => {
+      describe('and the item did not contain a male representation', () => {
         beforeEach(async () => {
           itemFactory.withRepresentation(
-            BodyShapeType.MALE,
+            WearableBodyShape.MALE,
             modelPath,
-            contents,
-            metrics
+            contents
           )
           const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
@@ -365,10 +307,6 @@ describe('when adding a representation to an item', () => {
 
         it('should have created the male representation', () => {
           expect(item.data.representations).toEqual([maleRepresentation])
-        })
-
-        it('should have set the metrics', () => {
-          expect(item.metrics).toEqual(metrics)
         })
 
         it("should have added the contents to the item's contents", () => {
@@ -392,44 +330,18 @@ describe('when adding a representation to an item', () => {
       describe('and the item already contained a female representation', () => {
         beforeEach(() => {
           itemFactory.withRepresentation(
-            BodyShapeType.FEMALE,
+            WearableBodyShape.FEMALE,
             modelPath,
-            contents,
-            metrics
+            contents
           )
         })
 
         it('should throw an error signaling that the item already contained that body shape', () => {
           expect(() =>
             itemFactory.withRepresentation(
-              BodyShapeType.FEMALE,
+              WearableBodyShape.FEMALE,
               modelPath,
-              contents,
-              metrics
-            )
-          ).toThrow(
-            "The representation that you're about to add already exists in the item"
-          )
-        })
-      })
-
-      describe('and the item already contained a "both" representation', () => {
-        beforeEach(() => {
-          itemFactory.withRepresentation(
-            BodyShapeType.BOTH,
-            modelPath,
-            contents,
-            metrics
-          )
-        })
-
-        it('should throw an error signaling that the item already contained that body shape', () => {
-          expect(() =>
-            itemFactory.withRepresentation(
-              BodyShapeType.FEMALE,
-              modelPath,
-              contents,
-              metrics
+              contents
             )
           ).toThrow(
             "The representation that you're about to add already exists in the item"
@@ -440,17 +352,15 @@ describe('when adding a representation to an item', () => {
       describe('and the item already contained a male representation', () => {
         beforeEach(async () => {
           itemFactory.withRepresentation(
-            BodyShapeType.MALE,
+            WearableBodyShape.MALE,
             modelPath,
-            contents,
-            metrics
+            contents
           )
 
           itemFactory.withRepresentation(
-            BodyShapeType.FEMALE,
+            WearableBodyShape.FEMALE,
             modelPath,
-            contents,
-            anotherMetrics
+            contents
           )
           const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
@@ -462,10 +372,6 @@ describe('when adding a representation to an item', () => {
             maleRepresentation,
             femaleRepresentation
           ])
-        })
-
-        it('should have set the new metrics', () => {
-          expect(item.metrics).toEqual(anotherMetrics)
         })
 
         it("should have added the female contents to the item's contents", () => {
@@ -485,13 +391,12 @@ describe('when adding a representation to an item', () => {
         })
       })
 
-      describe('and the item did not contain a female nor a "both" representation', () => {
+      describe('and the item did not contain a female representation', () => {
         beforeEach(async () => {
           itemFactory.withRepresentation(
-            BodyShapeType.FEMALE,
+            WearableBodyShape.FEMALE,
             modelPath,
-            contents,
-            metrics
+            contents
           )
           const createdItem = await itemFactory.build()
           newContent = createdItem.newContent
@@ -500,10 +405,6 @@ describe('when adding a representation to an item', () => {
 
         it('should have created the male representation', () => {
           expect(item.data.representations).toEqual([femaleRepresentation])
-        })
-
-        it('should have set the given metrics', () => {
-          expect(item.metrics).toEqual(metrics)
         })
 
         it("should have added the contents to the item's contents", () => {
@@ -522,97 +423,6 @@ describe('when adding a representation to an item', () => {
         })
       })
     })
-
-    describe('and the representation is for a male and female body shapes', () => {
-      describe('and the item already contained a female representation', () => {
-        beforeEach(() => {
-          itemFactory.withRepresentation(
-            BodyShapeType.FEMALE,
-            modelPath,
-            contents,
-            metrics
-          )
-        })
-
-        it('should throw an error signaling that the item already contained that body shape', () => {
-          expect(() =>
-            itemFactory.withRepresentation(
-              BodyShapeType.BOTH,
-              modelPath,
-              contents,
-              metrics
-            )
-          ).toThrow(
-            "The representation that you're about to add already exists in the item"
-          )
-        })
-      })
-
-      describe('and the item already contained a male representation', () => {
-        beforeEach(() => {
-          itemFactory.withRepresentation(
-            BodyShapeType.MALE,
-            modelPath,
-            contents,
-            metrics
-          )
-        })
-
-        it('should throw an error signaling that the item already contained that body shape', () => {
-          expect(() =>
-            itemFactory.withRepresentation(
-              BodyShapeType.BOTH,
-              modelPath,
-              contents,
-              metrics
-            )
-          ).toThrow(
-            "The representation that you're about to add already exists in the item"
-          )
-        })
-      })
-
-      describe('and the item did not contain any representation', () => {
-        beforeEach(async () => {
-          itemFactory.withRepresentation(
-            BodyShapeType.BOTH,
-            modelPath,
-            contents,
-            metrics
-          )
-          const createdItem = await itemFactory.build()
-          newContent = createdItem.newContent
-          item = createdItem.item
-        })
-
-        it('should have created the male representation', () => {
-          expect(item.data.representations).toEqual([
-            maleRepresentation,
-            femaleRepresentation
-          ])
-        })
-
-        it('should have set the given metrics', () => {
-          expect(item.metrics).toEqual(metrics)
-        })
-
-        it("should have added the contents to the item's contents", () => {
-          expect(item).toEqual(
-            expect.objectContaining({
-              contents: { ...maleHashedContent, ...femaleHashedContent }
-            })
-          )
-        })
-
-        it('should have added the contents to the new contents', () => {
-          expect(newContent).toEqual({
-            [prefixedMaleModel]: contents[modelPath],
-            [prefixedFemaleModel]: contents[modelPath],
-            [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
-          })
-        })
-      })
-    })
   })
 })
 
@@ -620,7 +430,7 @@ describe('when removing a representation', () => {
   describe('and the item was not initialized', () => {
     it('should throw an error signaling that the item has not been initialized', () => {
       expect(() =>
-        itemFactory.withoutRepresentation(BodyShapeType.MALE)
+        itemFactory.withoutRepresentation(WearableBodyShape.MALE)
       ).toThrow('Item has not been initialized')
     })
   })
@@ -629,7 +439,7 @@ describe('when removing a representation', () => {
     describe("and the item doesn't have any representations", () => {
       beforeEach(async () => {
         createBasicItem(itemFactory)
-        itemFactory.withoutRepresentation(BodyShapeType.MALE)
+        itemFactory.withoutRepresentation(WearableBodyShape.MALE)
       })
 
       it('should not do anything', () => {
@@ -643,61 +453,13 @@ describe('when removing a representation', () => {
       })
     })
 
-    describe('and the body shape to remove is both', () => {
-      beforeEach(() => {
-        createBasicItem(itemFactory)
-        itemFactory
-          .withRepresentation(BodyShapeType.MALE, modelPath, contents, metrics)
-          .withRepresentation(
-            BodyShapeType.FEMALE,
-            modelPath,
-            contents,
-            metrics
-          )
-          .withoutRepresentation(BodyShapeType.BOTH)
-      })
-
-      it('should remove all representations', () => {
-        return expect(itemFactory.build()).resolves.toEqual(
-          expect.objectContaining({
-            item: expect.objectContaining({
-              data: expect.objectContaining({ representations: [] })
-            })
-          })
-        )
-      })
-
-      it('should remove all contents', () => {
-        return expect(itemFactory.build()).resolves.toEqual(
-          expect.objectContaining({
-            item: expect.objectContaining({
-              contents: {}
-            })
-          })
-        )
-      })
-
-      it('should remove all new contents', () => {
-        return expect(itemFactory.build()).resolves.toEqual(
-          expect.objectContaining({
-            newContent: {}
-          })
-        )
-      })
-    })
-
     describe('and the body shape to remove is female, having a female and male representations', () => {
       beforeEach(() => {
         createBasicItem(itemFactory)
         itemFactory
-          .withRepresentation(BodyShapeType.MALE, modelPath, contents, metrics)
-          .withRepresentation(
-            BodyShapeType.FEMALE,
-            modelPath,
-            contents,
-            metrics
-          )
-          .withoutRepresentation(BodyShapeType.FEMALE)
+          .withRepresentation(WearableBodyShape.MALE, modelPath, contents)
+          .withRepresentation(WearableBodyShape.FEMALE, modelPath, contents)
+          .withoutRepresentation(WearableBodyShape.FEMALE)
       })
 
       it('should remove the female representations', () => {
@@ -738,17 +500,12 @@ describe('when removing a representation', () => {
       beforeEach(() => {
         createBasicItem(itemFactory)
         itemFactory
-          .withRepresentation(
-            BodyShapeType.FEMALE,
-            modelPath,
-            contents,
-            metrics
-          )
-          .withRepresentation(BodyShapeType.MALE, modelPath, contents, metrics)
-          .withoutRepresentation(BodyShapeType.MALE)
+          .withRepresentation(WearableBodyShape.FEMALE, modelPath, contents)
+          .withRepresentation(WearableBodyShape.MALE, modelPath, contents)
+          .withoutRepresentation(WearableBodyShape.MALE)
       })
 
-      it('should remove the female representations', () => {
+      it('should remove the male representations', () => {
         return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
@@ -760,7 +517,7 @@ describe('when removing a representation', () => {
         )
       })
 
-      it('should remove the female contents', () => {
+      it('should remove the male contents', () => {
         return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             item: expect.objectContaining({
@@ -770,7 +527,7 @@ describe('when removing a representation', () => {
         )
       })
 
-      it('should remove the female new contents', () => {
+      it('should remove the male new contents', () => {
         return expect(itemFactory.build()).resolves.toEqual(
           expect.objectContaining({
             newContent: {
@@ -788,7 +545,7 @@ describe("when setting the item's thumbnail", () => {
   describe('and the item was not initialized', () => {
     it('should throw an error signaling that the item has not been initialized', () => {
       expect(() =>
-        itemFactory.withoutRepresentation(BodyShapeType.MALE)
+        itemFactory.withoutRepresentation(WearableBodyShape.MALE)
       ).toThrow('Item has not been initialized')
     })
   })
@@ -807,10 +564,9 @@ describe("when setting the item's thumbnail", () => {
         newThumbnailHash =
           'bafkreigj4dzk52sis4yszi77peaijhoo5pmbvdww33byqkku62u2apv5e4'
         itemFactory.withRepresentation(
-          BodyShapeType.MALE,
+          WearableBodyShape.MALE,
           modelPath,
-          contents,
-          metrics
+          contents
         )
         itemFactory.withThumbnail(newThumbnail)
       })
@@ -892,7 +648,7 @@ describe("when setting the item's contents", () => {
     describe('and the item already contained contents', () => {
       beforeEach(() => {
         itemFactory
-          .withRepresentation(BodyShapeType.MALE, modelPath, contents, metrics)
+          .withRepresentation(WearableBodyShape.MALE, modelPath, contents)
           .withContent(newContent)
       })
 
@@ -1008,52 +764,58 @@ describe("when setting the item's image", () => {
   })
 })
 
-describe('when creating a new item from an asset object', () => {
-  let asset: AssetJSON
+describe('when creating a new item from a wearable and builder config file objects', () => {
+  let wearableConfig: WearableConfig
+  let builderConfig: BuilderConfig
 
   beforeEach(async () => {
-    asset = {
-      id: 'f12313b4-a76b-4c9e-a2a3-ab460f59bd67',
+    wearableConfig = {
+      id: 'urn:decentraland:matic:collections-thirdparty:third-party-id:collection-id:item-id',
       name: 'test',
-      category: WearableCategory.EYEBROWS,
       rarity: Rarity.COMMON,
-      collectionId: '7c3af3a0-9ea9-4cc7-a137-dc1f1f6c0871',
       description: 'a description',
-      hides: [WearableCategory.FEET],
-      replaces: [WearableCategory.HAIR],
-      tags: ['tag1', 'tag2'],
-      representations: [
-        {
-          bodyShape: BodyShapeType.MALE,
-          mainFile: modelPath,
-          contents: [modelPath, THUMBNAIL_PATH],
-          overrideHides: [WearableCategory.EYES],
-          overrideReplaces: [WearableCategory.FACIAL_HAIR],
-          metrics
-        }
-      ]
+      data: {
+        category: WearableCategory.EYEBROWS,
+        hides: [WearableCategory.FEET],
+        replaces: [WearableCategory.HAIR],
+        tags: ['tag1', 'tag2'],
+        representations: [
+          {
+            bodyShapes: [WearableBodyShape.MALE],
+            mainFile: modelPath,
+            contents: [modelPath, THUMBNAIL_PATH],
+            overrideHides: [WearableCategory.EYES],
+            overrideReplaces: [WearableCategory.FACIAL_HAIR]
+          }
+        ]
+      }
+    }
+
+    builderConfig = {
+      id: 'f12313b4-a76b-4c9e-a2a3-ab460f59bd67',
+      collectionId: '7c3af3a0-9ea9-4cc7-a137-dc1f1f6c0871'
     }
   })
 
-  describe('and the id is defined', () => {
+  describe('and the builder config is provided and the id is defined', () => {
     beforeEach(() => {
-      itemFactory.fromAsset(asset, contents)
+      itemFactory.fromConfig(wearableConfig, contents, builderConfig)
     })
 
-    it('should create the built item configured with the values from the asset object and the new content with the provided content', () => {
+    it('should create the built item configured with the values from the builder and wearable config objects and the new content with the provided content', () => {
       return expect(itemFactory.build()).resolves.toEqual({
         item: {
-          id: asset.id,
-          name: asset.name,
+          id: builderConfig.id,
+          name: wearableConfig.name,
           type: ItemType.WEARABLE,
           thumbnail: THUMBNAIL_PATH,
-          collection_id: asset.collectionId,
-          urn: null,
+          collection_id: builderConfig.collectionId,
+          urn: wearableConfig.id,
           data: {
-            category: asset.category,
-            hides: asset.hides,
-            replaces: asset.replaces,
-            tags: asset.tags,
+            category: wearableConfig.data.category,
+            hides: wearableConfig.data.hides,
+            replaces: wearableConfig.data.replaces,
+            tags: wearableConfig.data.tags,
             representations: [
               {
                 bodyShapes: [WearableBodyShape.MALE],
@@ -1064,11 +826,11 @@ describe('when creating a new item from an asset object', () => {
               }
             ]
           },
-          rarity: asset.rarity,
-          description: asset.description,
-          metrics: asset.representations[0].metrics,
+          rarity: wearableConfig.rarity,
+          description: wearableConfig.description,
           contents: maleHashedContent,
-          content_hash: null
+          content_hash: null,
+          metrics: DEFAULT_METRICS
         } as LocalItem,
         newContent: {
           [prefixedMaleModel]: contents[modelPath],
@@ -1078,28 +840,28 @@ describe('when creating a new item from an asset object', () => {
     })
   })
 
-  describe('and the id is not defined', () => {
+  describe('and the builder config is provided and the id is not defined', () => {
     beforeEach(() => {
-      delete asset.id
-      itemFactory.fromAsset(asset, contents)
+      delete wearableConfig.id
+      itemFactory.fromConfig(wearableConfig, contents, builderConfig)
     })
 
-    it('should create the built item configured with the values from the asset object, an auto generated id and the new content with the provided content', () => {
+    it('should create the built item configured with the values from the wearable and the builder config object, an auto generated id and the new content with the provided content', () => {
       return expect(itemFactory.build()).resolves.toEqual({
         item: {
           id: expect.stringMatching(
             /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
           ),
-          name: asset.name,
+          name: wearableConfig.name,
           type: ItemType.WEARABLE,
           thumbnail: THUMBNAIL_PATH,
-          collection_id: asset.collectionId,
+          collection_id: builderConfig.collectionId,
           urn: null,
           data: {
-            category: asset.category,
-            hides: asset.hides,
-            replaces: asset.replaces,
-            tags: asset.tags,
+            category: wearableConfig.data.category,
+            hides: wearableConfig.data.hides,
+            replaces: wearableConfig.data.replaces,
+            tags: wearableConfig.data.tags,
             representations: [
               {
                 bodyShapes: [WearableBodyShape.MALE],
@@ -1110,11 +872,57 @@ describe('when creating a new item from an asset object', () => {
               }
             ]
           },
-          rarity: asset.rarity,
-          description: asset.description,
-          metrics: asset.representations[0].metrics,
+          rarity: wearableConfig.rarity,
+          description: wearableConfig.description,
           contents: maleHashedContent,
-          content_hash: null
+          content_hash: null,
+          metrics: DEFAULT_METRICS
+        } as LocalItem,
+        newContent: {
+          [prefixedMaleModel]: contents[modelPath],
+          [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH]
+        }
+      })
+    })
+  })
+
+  describe('and the builder config is not provided', () => {
+    beforeEach(() => {
+      delete wearableConfig.id
+      itemFactory.fromConfig(wearableConfig, contents, builderConfig)
+    })
+
+    it('should create the built item configured with the values from the wearable config object, an auto generated id and the new content with the provided content', () => {
+      return expect(itemFactory.build()).resolves.toEqual({
+        item: {
+          id: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+          ),
+          name: wearableConfig.name,
+          type: ItemType.WEARABLE,
+          thumbnail: THUMBNAIL_PATH,
+          collection_id: builderConfig.collectionId,
+          urn: null,
+          data: {
+            category: wearableConfig.data.category,
+            hides: wearableConfig.data.hides,
+            replaces: wearableConfig.data.replaces,
+            tags: wearableConfig.data.tags,
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                contents: [prefixedMaleModel],
+                mainFile: prefixedMaleModel,
+                overrideHides: [WearableCategory.EYES],
+                overrideReplaces: [WearableCategory.FACIAL_HAIR]
+              }
+            ]
+          },
+          rarity: wearableConfig.rarity,
+          description: wearableConfig.description,
+          contents: maleHashedContent,
+          content_hash: null,
+          metrics: DEFAULT_METRICS
         } as LocalItem,
         newContent: {
           [prefixedMaleModel]: contents[modelPath],

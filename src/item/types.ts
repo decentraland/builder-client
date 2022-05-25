@@ -1,4 +1,9 @@
-import { Rarity, WearableCategory, WearableRepresentation } from '@dcl/schemas'
+import {
+  Rarity,
+  WearableCategory,
+  WearableRepresentation,
+  WearableBodyShape
+} from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 
 export type RemoteItem = {
@@ -52,18 +57,6 @@ export enum ItemType {
   WEARABLE = 'wearable'
 }
 
-export enum BodyShapeType {
-  // DCL Schemas doesn't have both
-  BOTH = 'both',
-  MALE = 'male',
-  FEMALE = 'female'
-}
-
-export enum WearableBodyShape {
-  MALE = 'urn:decentraland:off-chain:base-avatars:BaseMale',
-  FEMALE = 'urn:decentraland:off-chain:base-avatars:BaseFemale'
-}
-
 export type ModelMetrics = {
   triangles: number
   materials: number
@@ -86,4 +79,4 @@ export type BuiltItem<T extends Content> = {
   newContent: RawContent<T>
 }
 
-export { Rarity, WearableCategory }
+export { Rarity, WearableCategory, WearableBodyShape }

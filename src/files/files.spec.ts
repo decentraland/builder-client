@@ -1,17 +1,19 @@
+import { WearableBodyShape } from '@dcl/schemas'
 import JSZip from 'jszip'
 import { THUMBNAIL_PATH } from '../item/constants'
-import { BodyShapeType, Rarity, WearableCategory } from '../item/types'
-import { ASSET_MANIFEST, MAX_FILE_SIZE } from './constants'
+import { Rarity, WearableCategory } from '../item/types'
+import { WEARABLE_MANIFEST, MAX_FILE_SIZE, BUILDER_MANIFEST } from './constants'
 import { loadFile } from './files'
 import {
   FileNotFoundError,
   FileTooBigError,
-  InvalidAssetFileError,
+  InvalidBuilderConfigFileError,
+  InvalidWearableConfigFileError,
   ModelFileNotFoundError,
   ModelInRepresentationNotFoundError,
   WrongExtensionError
 } from './files.errors'
-import { AssetJSON } from './types'
+import { WearableConfig } from './types'
 
 describe('when loading an item file', () => {
   const extensions = ['glb', 'gltf', 'png']
@@ -62,41 +64,46 @@ describe('when loading an item file', () => {
       zipFile.file(THUMBNAIL_PATH, thumbnailContent)
     })
 
-    describe('and the zip has an asset file', () => {
-      describe('and the asset file is wrongly formatted', () => {
+    describe('and the zip has a wearable config file', () => {
+      describe('and the wearable config file is wrongly formatted', () => {
         beforeEach(async () => {
-          zipFile.file(ASSET_MANIFEST, '{}')
+          zipFile.file(WEARABLE_MANIFEST, '{}')
           zipFileContent = await zipFile.generateAsync({
             type: 'uint8array'
           })
         })
 
-        it('should throw an error signaling that the asset file is invalid', () => {
+        it('should throw an error signaling that the wearable config file is invalid', () => {
           return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-            new InvalidAssetFileError()
+            new InvalidWearableConfigFileError()
           )
         })
       })
 
-      describe('and the asset file contains a representation whose main file is not part of the representation contents', () => {
+      describe('and the wearable config file contains a representation whose main file is not part of the representation contents', () => {
         beforeEach(async () => {
-          const assetFile: AssetJSON = {
+          const wearableConfigFile: WearableConfig = {
             id: 'f12313b4-a76b-4c9e-a2a3-ab460f59bd67',
             name: 'test',
-            category: WearableCategory.EYEBROWS,
             rarity: Rarity.COMMON,
-            representations: [
-              {
-                bodyShape: BodyShapeType.MALE,
-                mainFile: 'some-unkown-file.glb',
-                contents: ['some-other-file.png'],
-                overrideHides: [],
-                overrideReplaces: []
-              }
-            ]
+            data: {
+              category: WearableCategory.EYEBROWS,
+              hides: [],
+              replaces: [],
+              tags: [],
+              representations: [
+                {
+                  bodyShapes: [WearableBodyShape.MALE],
+                  mainFile: 'some-unkown-file.glb',
+                  contents: ['some-other-file.png'],
+                  overrideHides: [],
+                  overrideReplaces: []
+                }
+              ]
+            }
           }
 
-          zipFile.file(ASSET_MANIFEST, JSON.stringify(assetFile))
+          zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableConfigFile))
           zipFileContent = await zipFile.generateAsync({
             type: 'uint8array'
           })
@@ -109,24 +116,29 @@ describe('when loading an item file', () => {
         })
       })
 
-      describe('and the asset file contains a representation whose content is not present in the zipped file', () => {
+      describe('and the wearable config file contains a representation whose content is not present in the zipped file', () => {
         beforeEach(async () => {
-          const assetFile: AssetJSON = {
+          const wearableConfig: WearableConfig = {
             id: 'f12313b4-a76b-4c9e-a2a3-ab460f59bd67',
             name: 'test',
-            category: WearableCategory.EYEBROWS,
             rarity: Rarity.COMMON,
-            representations: [
-              {
-                bodyShape: BodyShapeType.MALE,
-                mainFile: 'some-unkown-file.glb',
-                contents: ['some-unkown-file.glb'],
-                overrideHides: [],
-                overrideReplaces: []
-              }
-            ]
+            data: {
+              category: WearableCategory.EYEBROWS,
+              hides: [],
+              replaces: [],
+              tags: [],
+              representations: [
+                {
+                  bodyShapes: [WearableBodyShape.MALE],
+                  mainFile: 'some-unkown-file.glb',
+                  contents: ['some-unkown-file.glb'],
+                  overrideHides: [],
+                  overrideReplaces: []
+                }
+              ]
+            }
           }
-          zipFile.file(ASSET_MANIFEST, JSON.stringify(assetFile))
+          zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableConfig))
           zipFileContent = await zipFile.generateAsync({
             type: 'uint8array'
           })
@@ -139,8 +151,8 @@ describe('when loading an item file', () => {
         })
       })
 
-      describe("and the asset file is valid and contains all the representations' files", () => {
-        let assetFileContent: AssetJSON
+      describe("and the wearable config file is valid and contains all the representations' files", () => {
+        let wearableFileContent: WearableConfig
         let modelFile: string
         let modelFileContent: Uint8Array
         let textureFile: string
@@ -152,23 +164,27 @@ describe('when loading an item file', () => {
           textureFile = 'a-texture-file.png'
           textureFileContent = new Uint8Array([5, 6, 7])
 
-          assetFileContent = {
-            id: 'f12313b4-a76b-4c9e-a2a3-ab460f59bd67',
+          wearableFileContent = {
+            id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
             name: 'test',
-            category: WearableCategory.EYEBROWS,
             rarity: Rarity.COMMON,
-            urn: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
-            representations: [
-              {
-                bodyShape: BodyShapeType.MALE,
-                mainFile: modelFile,
-                contents: [modelFile, textureFile],
-                overrideHides: [],
-                overrideReplaces: []
-              }
-            ]
+            data: {
+              category: WearableCategory.EYEBROWS,
+              hides: [],
+              replaces: [],
+              tags: [],
+              representations: [
+                {
+                  bodyShapes: [WearableBodyShape.MALE],
+                  mainFile: modelFile,
+                  contents: [modelFile, textureFile],
+                  overrideHides: [],
+                  overrideReplaces: []
+                }
+              ]
+            }
           }
-          zipFile.file(ASSET_MANIFEST, JSON.stringify(assetFileContent))
+          zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
           zipFile.file(modelFile, modelFileContent)
           zipFile.file(textureFile, textureFileContent)
         })
@@ -180,14 +196,14 @@ describe('when loading an item file', () => {
             })
           })
 
-          it('should build the LoadedFile with the zipped contents and the asset file with the same buffer format as the zip', () => {
+          it('should build the LoadedFile with the zipped contents and the wearable config file with the same buffer format as the zip', () => {
             return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
               content: {
                 [modelFile]: modelFileContent,
                 [textureFile]: textureFileContent,
                 [THUMBNAIL_PATH]: thumbnailContent
               },
-              asset: assetFileContent
+              wearable: wearableFileContent
             })
           })
         })
@@ -199,14 +215,14 @@ describe('when loading an item file', () => {
             })
           })
 
-          it('should build the LoadedFile with the zipped contents and the asset file with the same buffer format as the zip', () => {
+          it('should build the LoadedFile with the zipped contents and the wearable config file with the same buffer format as the zip', () => {
             return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
               content: {
                 [modelFile]: modelFileContent.buffer,
                 [textureFile]: textureFileContent.buffer,
                 [THUMBNAIL_PATH]: thumbnailContent.buffer
               },
-              asset: assetFileContent
+              wearable: wearableFileContent
             })
           })
         })
@@ -218,15 +234,149 @@ describe('when loading an item file', () => {
             })
           })
 
-          it('should build the LoadedFile with the zipped contents and the asset file with the same buffer format as the zip', () => {
+          it('should build the LoadedFile with the zipped contents and the wearable config file with the same buffer format as the zip', () => {
             return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
               content: {
                 [modelFile]: Buffer.from(modelFileContent.buffer),
                 [textureFile]: Buffer.from(textureFileContent.buffer),
                 [THUMBNAIL_PATH]: Buffer.from(thumbnailContent.buffer)
               },
-              asset: assetFileContent
+              wearable: wearableFileContent
             })
+          })
+        })
+      })
+    })
+
+    describe('and the zip has a builder config file', () => {
+      describe('and the builder config file is wrongly formatted', () => {
+        beforeEach(async () => {
+          zipFile.file(BUILDER_MANIFEST, '{ "aWrongProperty": "something" }')
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should throw an error signaling that the wearable config file is invalid', () => {
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new InvalidBuilderConfigFileError()
+          )
+        })
+      })
+
+      describe('and the builder config file contains an id', () => {
+        const mainModel = 'test.gltf'
+        let modelContent: Uint8Array
+
+        beforeEach(async () => {
+          modelContent = new Uint8Array([0, 1, 2, 3])
+          zipFile.file(
+            BUILDER_MANIFEST,
+            '{ "id": "a81e1272-73bf-4b62-ab0f-3d2fd2fad1d2" }'
+          )
+          zipFile.file(mainModel, modelContent)
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should build the LoadedFile contents with the zipped files, the main model file path and the builder information', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [mainModel]: modelContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            builder: { id: 'a81e1272-73bf-4b62-ab0f-3d2fd2fad1d2' },
+            mainModel
+          })
+        })
+      })
+
+      describe('and the builder config file contains a collection id', () => {
+        const mainModel = 'test.gltf'
+        let modelContent: Uint8Array
+
+        beforeEach(async () => {
+          modelContent = new Uint8Array([0, 1, 2, 3])
+          zipFile.file(
+            BUILDER_MANIFEST,
+            '{ "collectionId": "a81e1272-73bf-4b62-ab0f-3d2fd2fad1d2" }'
+          )
+          zipFile.file(mainModel, modelContent)
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should build the LoadedFile contents with the zipped files, the main model file path and the builder information', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [mainModel]: modelContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            builder: { collectionId: 'a81e1272-73bf-4b62-ab0f-3d2fd2fad1d2' },
+            mainModel
+          })
+        })
+      })
+
+      describe('and the zip contains a builder and a wearable config file', () => {
+        let wearableFileContent: WearableConfig
+        let modelFile: string
+        let modelFileContent: Uint8Array
+        let textureFile: string
+        let textureFileContent: Uint8Array
+
+        beforeEach(async () => {
+          modelFile = 'some-model.glb'
+          modelFileContent = new Uint8Array([0, 1, 2, 3, 4])
+          textureFile = 'a-texture-file.png'
+          textureFileContent = new Uint8Array([5, 6, 7])
+
+          wearableFileContent = {
+            id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+            name: 'test',
+            rarity: Rarity.COMMON,
+            data: {
+              category: WearableCategory.EYEBROWS,
+              hides: [],
+              replaces: [],
+              tags: [],
+              representations: [
+                {
+                  bodyShapes: [WearableBodyShape.MALE],
+                  mainFile: modelFile,
+                  contents: [modelFile, textureFile],
+                  overrideHides: [],
+                  overrideReplaces: []
+                }
+              ]
+            }
+          }
+          zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
+          zipFile.file(modelFile, modelFileContent)
+          zipFile.file(textureFile, textureFileContent)
+          zipFile.file(
+            BUILDER_MANIFEST,
+            '{ "id": "ac5a6289-32c0-4a6a-ad05-58e0d42a609f", "collectionId": "a81e1272-73bf-4b62-ab0f-3d2fd2fad1d2" }'
+          )
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should build the LoadedFile with the zipped contents, the wearable and the builder configs', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [modelFile]: modelFileContent,
+              [textureFile]: textureFileContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            builder: {
+              id: 'ac5a6289-32c0-4a6a-ad05-58e0d42a609f',
+              collectionId: 'a81e1272-73bf-4b62-ab0f-3d2fd2fad1d2'
+            },
+            wearable: wearableFileContent
           })
         })
       })
@@ -249,7 +399,7 @@ describe('when loading an item file', () => {
       })
     })
 
-    describe("and the zip doesn't have an asset file", () => {
+    describe("and the zip doesn't have a wearable config file", () => {
       let modelContent: Uint8Array
 
       beforeEach(async () => {
@@ -270,6 +420,7 @@ describe('when loading an item file', () => {
 
       describe('and it contains a model file', () => {
         const mainModel = 'test.gltf'
+
         beforeEach(async () => {
           zipFile.file(mainModel, modelContent)
           zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })

@@ -1,6 +1,6 @@
 import { hashV1 } from '@dcl/hashing'
 import { Buffer } from 'buffer'
-import { BodyShapeType } from '../item/types'
+import { WearableBodyShape } from '../item/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { Content, HashedContent, RawContent, SortedContent } from './types'
 
@@ -61,10 +61,12 @@ async function makeContentFile(
  * @param contentKey - The name of the content.
  */
 export function prefixContentName(
-  bodyShape: BodyShapeType,
+  bodyShape: WearableBodyShape,
   contentKey: string
 ): string {
-  return `${bodyShape}/${contentKey}`
+  return `${
+    bodyShape === WearableBodyShape.MALE ? 'male' : 'female'
+  }/${contentKey}`
 }
 
 /**
@@ -75,16 +77,16 @@ export function prefixContentName(
  * @param contents - The contents to be sorted.
  */
 export function sortContent<T extends Content>(
-  bodyShape: BodyShapeType,
+  bodyShape: WearableBodyShape,
   contents: RawContent<T>
 ): SortedContent<T> {
   const male =
-    bodyShape === BodyShapeType.BOTH || bodyShape === BodyShapeType.MALE
-      ? prefixContents(BodyShapeType.MALE, contents)
+    bodyShape === WearableBodyShape.MALE
+      ? prefixContents(WearableBodyShape.MALE, contents)
       : {}
   const female =
-    bodyShape === BodyShapeType.BOTH || bodyShape === BodyShapeType.FEMALE
-      ? prefixContents(BodyShapeType.FEMALE, contents)
+    bodyShape === WearableBodyShape.FEMALE
+      ? prefixContents(WearableBodyShape.FEMALE, contents)
       : {}
   const all = {
     [THUMBNAIL_PATH]: contents[THUMBNAIL_PATH],
@@ -103,7 +105,7 @@ export function sortContent<T extends Content>(
  * @param contents - The contents which keys are going to be prefixed.
  */
 function prefixContents<T extends Content>(
-  bodyShape: BodyShapeType,
+  bodyShape: WearableBodyShape,
   contents: RawContent<T>
 ): RawContent<T> {
   return Object.keys(contents).reduce(
