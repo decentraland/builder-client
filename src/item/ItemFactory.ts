@@ -6,16 +6,14 @@ import {
   sortContent
 } from '../content/content'
 import { Content, RawContent, SortedContent } from '../content/types'
-import { AssetJSON } from '../files/types'
+import { BuilderConfig, WearableConfig } from '../files/types'
 import { DEFAULT_METRICS, IMAGE_PATH, THUMBNAIL_PATH } from './constants'
 import { ItemNotInitializedError } from './ItemFactory.errors'
 import {
   BasicItem,
-  BodyShapeType,
   BuiltItem,
   ItemType,
   LocalItem,
-  ModelMetrics,
   WearableBodyShape,
   WearableCategory
 } from './types'
@@ -70,45 +68,53 @@ export class ItemFactory<X extends Content> {
 
   /**
    * Instantiates a new item with the base properties.
-   * @param asset - The AssetJSON object containing all the information about the item.
+   * @param wearableConfig - The AssetJSON object containing all the information about the item.
    * @param contents - The item's content.
    */
-  public fromAsset(asset: AssetJSON, content: RawContent<X>): ItemFactory<X> {
+  public fromConfig(
+    wearableConfig: WearableConfig,
+    content: RawContent<X>,
+    builderConfig?: BuilderConfig
+  ): ItemFactory<X> {
     this.newItem({
-      id: asset.id ?? uuidV4(),
-      name: asset.name,
-      rarity: asset.rarity,
-      category: asset.category,
-      collection_id: asset.collectionId ?? null,
-      description: asset.description ?? null,
-      urn: asset.urn ?? null
+      id: builderConfig?.id ?? uuidV4(),
+      name: wearableConfig.name,
+      rarity: wearableConfig.rarity ?? null,
+      category: wearableConfig.data.category,
+      collection_id: builderConfig?.collectionId ?? null,
+      description: wearableConfig.description ?? null,
+      urn: wearableConfig.id ?? null
     })
 
     if (content[THUMBNAIL_PATH]) {
       this.withThumbnail(content[THUMBNAIL_PATH])
     }
 
-    if (asset.replaces) {
-      this.withReplaces(asset.replaces)
+    if (wearableConfig.data.replaces) {
+      this.withReplaces(wearableConfig.data.replaces)
     }
 
-    if (asset.hides) {
-      this.withHides(asset.hides)
+    if (wearableConfig.data.hides) {
+      this.withHides(wearableConfig.data.hides)
     }
 
-    if (asset.tags) {
-      this.withTags(asset.tags)
+    if (wearableConfig.data.tags) {
+      this.withTags(wearableConfig.data.tags)
     }
 
-    asset.representations.forEach((representation) => {
-      this.withRepresentation(
-        representation.bodyShape,
-        representation.mainFile,
-        this.buildAssetRepresentationContents(content, representation.contents),
-        representation.metrics ?? DEFAULT_METRICS,
-        representation.overrideHides,
-        representation.overrideReplaces
-      )
+    wearableConfig.data.representations.forEach((representation) => {
+      representation.bodyShapes.forEach((bodyShape) => {
+        this.withRepresentation(
+          bodyShape,
+          representation.mainFile,
+          this.buildWearableConfigRepresentationContents(
+            content,
+            representation.contents
+          ),
+          representation.overrideHides,
+          representation.overrideReplaces
+        )
+      })
     })
 
     return this
@@ -274,10 +280,9 @@ export class ItemFactory<X extends Content> {
    * @param contents - The contents of the representation to be used to build the new representation.
    */
   public withRepresentation(
-    bodyShape: BodyShapeType,
+    bodyShape: WearableBodyShape,
     model: string,
     contents: RawContent<X>,
-    metrics: ModelMetrics,
     overrideHides: WearableCategory[] = [],
     overrideReplaces: WearableCategory[] = []
   ): ItemFactory<X> {
@@ -319,8 +324,7 @@ export class ItemFactory<X extends Content> {
             overrideReplaces
           )
         ]
-      },
-      metrics
+      }
     }
 
     return this
@@ -333,7 +337,7 @@ export class ItemFactory<X extends Content> {
    * It requires the item to be defined first.
    * @param bodyShape - The body shape that will be used to identify the representation to remove.
    */
-  public withoutRepresentation(bodyShape: BodyShapeType): ItemFactory<X> {
+  public withoutRepresentation(bodyShape: WearableBodyShape): ItemFactory<X> {
     if (!this.item) {
       throw new ItemNotInitializedError()
     }
@@ -399,7 +403,7 @@ export class ItemFactory<X extends Content> {
    * @param contents - The sorted contents of the representation to build.
    */
   private buildRepresentations(
-    bodyShape: BodyShapeType,
+    bodyShape: WearableBodyShape,
     model: string,
     contents: SortedContent<X>,
     overrideHides: WearableCategory[],
@@ -408,10 +412,10 @@ export class ItemFactory<X extends Content> {
     const representations: WearableRepresentation[] = []
 
     // Add male representation
-    if (bodyShape === BodyShapeType.MALE || bodyShape === BodyShapeType.BOTH) {
+    if (bodyShape === WearableBodyShape.MALE) {
       representations.push({
         bodyShapes: [WearableBodyShape.MALE],
-        mainFile: prefixContentName(BodyShapeType.MALE, model),
+        mainFile: prefixContentName(WearableBodyShape.MALE, model),
         contents: Object.keys(contents.male),
         overrideHides,
         overrideReplaces
@@ -419,13 +423,10 @@ export class ItemFactory<X extends Content> {
     }
 
     // Add female representation
-    if (
-      bodyShape === BodyShapeType.FEMALE ||
-      bodyShape === BodyShapeType.BOTH
-    ) {
+    if (bodyShape === WearableBodyShape.FEMALE) {
       representations.push({
         bodyShapes: [WearableBodyShape.FEMALE],
-        mainFile: prefixContentName(BodyShapeType.FEMALE, model),
+        mainFile: prefixContentName(WearableBodyShape.FEMALE, model),
         contents: Object.keys(contents.female),
         overrideHides,
         overrideReplaces
@@ -441,15 +442,10 @@ export class ItemFactory<X extends Content> {
    * @param representation - The representation to see if fits the body shape.
    */
   private representsBodyShape(
-    bodyShape: BodyShapeType,
+    bodyShape: WearableBodyShape,
     representation: WearableRepresentation
   ): boolean {
-    return (
-      bodyShape === BodyShapeType.BOTH ||
-      (bodyShape === BodyShapeType.MALE
-        ? WearableBodyShape.MALE === representation.bodyShapes[0]
-        : WearableBodyShape.FEMALE === representation.bodyShapes[0])
-    )
+    return representation.bodyShapes.includes(bodyShape)
   }
 
   /**
@@ -458,14 +454,15 @@ export class ItemFactory<X extends Content> {
    * @param contents - The contents to be filtered taking into consideration the specified body shape.
    */
   private removeContentsOfBodyShape<J extends X | string>(
-    bodyShape: BodyShapeType,
+    bodyShape: WearableBodyShape,
     contents: Record<string, J>
   ): Record<string, J> {
     return Object.keys(contents)
       .filter(
         (key) =>
-          bodyShape !== BodyShapeType.BOTH &&
-          !key.startsWith(bodyShape.toString())
+          !key.startsWith(
+            bodyShape === WearableBodyShape.MALE ? 'male' : 'female'
+          )
       )
       .reduce((accum, key) => {
         accum[key] = contents[key]
@@ -491,16 +488,14 @@ export class ItemFactory<X extends Content> {
    * @param contents - The full list of sorted contents.
    */
   private getBodyShapeSortedContents(
-    bodyShape: BodyShapeType,
+    bodyShape: WearableBodyShape,
     contents: SortedContent<X>
   ): RawContent<X> {
     switch (bodyShape) {
-      case BodyShapeType.MALE:
+      case WearableBodyShape.MALE:
         return contents.male
-      case BodyShapeType.FEMALE:
+      case WearableBodyShape.FEMALE:
         return contents.female
-      case BodyShapeType.BOTH:
-        return contents.all
       default:
         throw new Error(
           `The BodyShape ${bodyShape} couldn't get matched with the content`
@@ -556,7 +551,7 @@ export class ItemFactory<X extends Content> {
    * @param rawContent - The map containing the content available for an item.
    * @param contentPaths - The paths or keys of the rawContent map to build the new content map.
    */
-  private buildAssetRepresentationContents(
+  private buildWearableConfigRepresentationContents(
     rawContent: RawContent<X>,
     contentPaths: string[]
   ): RawContent<X> {

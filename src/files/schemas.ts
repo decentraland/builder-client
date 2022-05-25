@@ -1,53 +1,69 @@
-import { BodyShapeType, WearableCategory, Rarity } from '../item/types'
+import { JSONSchema, WearableRepresentation } from '@dcl/schemas'
+import { WearableCategory, Rarity } from '../item/types'
+import { BuilderConfig, WearableConfig } from './types'
 
-const WearableRepresentationSchema = {
+export const BuilderConfigSchema: JSONSchema<BuilderConfig> = {
   type: 'object',
   properties: {
-    bodyShape: {
+    id: {
       type: 'string',
-      enum: Object.values(BodyShapeType)
+      nullable: true
     },
-    mainFile: {
-      type: 'string'
-    },
-    contents: {
-      type: 'array',
-      items: { type: 'string' }
-    },
-    overrideHides: {
-      type: 'array',
-      items: WearableCategory.schema
-    },
-    overrideReplaces: {
-      type: 'array',
-      items: WearableCategory.schema
+    collectionId: {
+      type: 'string',
+      nullable: true
     }
   },
-  required: ['bodyShape', 'mainFile', 'contents'],
-  additionalProperties: false
+  additionalProperties: false,
+  required: []
 }
 
-export const AssetJSONSchema = {
+export const WearableConfigSchema: JSONSchema<WearableConfig> = {
   type: 'object',
   properties: {
-    id: { type: 'string', format: 'uuid' },
-    collectionId: { type: 'string', format: 'uuid' },
-    name: { type: 'string' },
-    description: { type: 'string' },
-    urn: { type: 'string' },
-    rarity: Rarity.schema,
-    category: WearableCategory.schema,
-    hides: {
-      type: 'array',
-      items: WearableCategory.schema
+    id: {
+      type: 'string',
+      nullable: true
     },
-    replaces: {
-      type: 'array',
-      items: WearableCategory.schema
+    description: {
+      type: 'string',
+      nullable: true
     },
-    tags: { type: 'array', items: { type: 'string' } },
-    representations: { type: 'array', items: WearableRepresentationSchema }
+    rarity: {
+      ...Rarity.schema,
+      nullable: true
+    },
+    name: {
+      type: 'string'
+    },
+    data: {
+      type: 'object',
+      properties: {
+        replaces: {
+          type: 'array',
+          items: WearableCategory.schema
+        },
+        hides: {
+          type: 'array',
+          items: WearableCategory.schema
+        },
+        tags: {
+          type: 'array',
+          items: {
+            type: 'string',
+            minLength: 1
+          }
+        },
+        representations: {
+          type: 'array',
+          items: WearableRepresentation.schema,
+          minItems: 1
+        },
+        category: WearableCategory.schema
+      },
+      required: ['replaces', 'hides', 'tags', 'representations', 'category']
+    }
   },
-  required: ['name', 'rarity', 'category', 'representations'],
-  additionalProperties: false
+  additionalProperties: false,
+  required: ['name', 'data']
 }

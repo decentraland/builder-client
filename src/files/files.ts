@@ -5,13 +5,14 @@ import addAjvFormats from 'ajv-formats'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
-import { ASSET_MANIFEST, MAX_FILE_SIZE } from './constants'
-import { AssetJSON, LoadedFile } from './types'
-import { AssetJSONSchema } from './schemas'
+import { WEARABLE_MANIFEST, MAX_FILE_SIZE, BUILDER_MANIFEST } from './constants'
+import { WearableConfig, LoadedFile, BuilderConfig } from './types'
+import { WearableConfigSchema, BuilderConfigSchema } from './schemas'
 import {
   FileNotFoundError,
   FileTooBigError,
-  InvalidAssetFileError,
+  InvalidBuilderConfigFileError,
+  InvalidWearableConfigFileError,
   ModelFileNotFoundError,
   ModelInRepresentationNotFoundError,
   WrongExtensionError
@@ -19,7 +20,9 @@ import {
 
 const ajv = new Ajv()
 addAjvFormats(ajv)
-const validator = ajv.addSchema(AssetJSONSchema, 'AssetJSON')
+const validator = ajv
+  .addSchema(WearableConfigSchema, 'WearableConfig')
+  .addSchema(BuilderConfigSchema, 'BuilderConfig')
 
 export async function loadFile<T extends Content>(
   fileName: string,
@@ -89,7 +92,8 @@ async function handleZippedModelFiles<T extends Content>(
   zip.forEach((filePath, file) => {
     if (
       !basename(filePath).startsWith('.') &&
-      basename(filePath) !== ASSET_MANIFEST
+      basename(filePath) !== WEARABLE_MANIFEST &&
+      basename(filePath) !== BUILDER_MANIFEST
     ) {
       fileNames.push(filePath)
       promiseOfFileContents.push(file.async(fileFormat) as Promise<T>)
@@ -114,12 +118,16 @@ async function handleZippedModelFiles<T extends Content>(
     return acc
   }, {})
 
-  let asset: AssetJSON | undefined = undefined
-  const assetZipFile = zip.file(ASSET_MANIFEST)
-  if (assetZipFile) {
-    const assetFileContents = await assetZipFile.async('uint8array')
-    asset = await loadAssetJSON(assetFileContents)
-    asset.representations.forEach((representation) => {
+  let wearable: WearableConfig | undefined = undefined
+  let builder: BuilderConfig | undefined = undefined
+
+  const wearableZipFile = zip.file(WEARABLE_MANIFEST)
+  const builderZipFile = zip.file(BUILDER_MANIFEST)
+
+  if (wearableZipFile) {
+    const wearableFileContents = await wearableZipFile.async('uint8array')
+    wearable = await loadWearableConfig(wearableFileContents)
+    wearable.data.representations.forEach((representation) => {
       if (!representation.contents.includes(representation.mainFile)) {
         throw new ModelInRepresentationNotFoundError(representation.mainFile)
       }
@@ -130,16 +138,30 @@ async function handleZippedModelFiles<T extends Content>(
         }
       })
     })
+  }
 
-    return { content, asset }
+  if (builderZipFile) {
+    const builderZipFileContents = await builderZipFile.async('uint8array')
+    builder = await loadBuilderConfig(builderZipFileContents)
+  }
+
+  let result: LoadedFile<T> = { content }
+
+  if (builder) {
+    result = { ...result, builder }
+  }
+
+  if (wearable) {
+    result = { ...result, wearable }
   } else {
     const mainModelFile = fileNames.find(isModelPath)
     if (!mainModelFile) {
       throw new ModelFileNotFoundError()
     }
-
-    return { content, mainModel: mainModelFile }
+    result = { ...result, mainModel: mainModelFile }
   }
+
+  return result
 }
 
 function handleFileModel<T extends Content>(
@@ -149,19 +171,33 @@ function handleFileModel<T extends Content>(
   return { content: { [fileName]: file }, mainModel: fileName }
 }
 
-async function loadAssetJSON<T extends Content>(file: T): Promise<AssetJSON> {
-  let content: string
+async function readContent<T extends Content>(file: T): Promise<string> {
   if (globalThis.Blob && file instanceof globalThis.Blob) {
-    content = await (file as Blob).text()
+    return (file as Blob).text()
   } else if (globalThis.TextDecoder) {
-    content = new TextDecoder('utf-8').decode(file as Uint8Array)
-  } else {
-    content = new NodeTextDecoder('utf-8').decode(file as Uint8Array)
+    return new TextDecoder('utf-8').decode(file as Uint8Array)
   }
+  return new NodeTextDecoder('utf-8').decode(file as Uint8Array)
+}
 
+async function loadBuilderConfig<T extends Content>(
+  file: T
+): Promise<BuilderConfig> {
+  const content = await readContent(file)
   const parsedContent = JSON.parse(content)
-  if (!validator.validate('AssetJSON', parsedContent)) {
-    throw new InvalidAssetFileError(validator.errors)
+  if (!validator.validate('BuilderConfig', parsedContent)) {
+    throw new InvalidBuilderConfigFileError(validator.errors)
+  }
+  return parsedContent
+}
+
+async function loadWearableConfig<T extends Content>(
+  file: T
+): Promise<WearableConfig> {
+  const content = await readContent(file)
+  const parsedContent = JSON.parse(content)
+  if (!validator.validate('WearableConfig', parsedContent)) {
+    throw new InvalidWearableConfigFileError(validator.errors)
   }
   return parsedContent
 }
