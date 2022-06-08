@@ -1,7 +1,7 @@
 import FormData from 'form-data'
 import { Buffer } from 'buffer'
 import crossFetch from 'cross-fetch'
-import { Authenticator, AuthIdentity } from 'dcl-crypto'
+import { Authenticator, AuthIdentity } from '@dcl/crypto'
 import { RemoteItem, LocalItem } from '../item/types'
 import { Content } from '../content/types'
 import { ClientError } from './BuilderClient.errors'
