@@ -60,11 +60,3 @@ export class FileNotFoundError extends Error {
     super(`The file ${fileName} does not exist.`)
   }
 }
-
-export class ModelInRepresentationNotFoundError extends Error {
-  constructor(fileName: string) {
-    super(
-      `The representation doesn't contain the file ${fileName} as its contents.`
-    )
-  }
-}

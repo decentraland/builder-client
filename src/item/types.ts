@@ -2,8 +2,9 @@ import {
   Rarity,
   WearableCategory,
   WearableRepresentation,
-  WearableBodyShape
+  BodyShape as WearableBodyShape
 } from '@dcl/schemas'
+
 import { Content, RawContent } from '../content/types'
 
 export type RemoteItem = {

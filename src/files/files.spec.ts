@@ -1,4 +1,4 @@
-import { WearableBodyShape } from '@dcl/schemas'
+import { BodyShape as WearableBodyShape } from '@dcl/schemas'
 import JSZip from 'jszip'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { Rarity, WearableCategory } from '../item/types'
@@ -10,7 +10,6 @@ import {
   InvalidBuilderConfigFileError,
   InvalidWearableConfigFileError,
   ModelFileNotFoundError,
-  ModelInRepresentationNotFoundError,
   WrongExtensionError
 } from './files.errors'
 import { WearableConfig } from './types'
@@ -111,7 +110,7 @@ describe('when loading an item file', () => {
 
         it("should throw an error signaling that the main file isn't included in the representation contents", () => {
           return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-            new ModelInRepresentationNotFoundError('some-unkown-file.glb')
+            'The wearable config file is invalid'
           )
         })
       })
