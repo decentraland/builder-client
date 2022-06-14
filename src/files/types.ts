@@ -1,8 +1,8 @@
-import { Wearable } from '@dcl/schemas'
+import { StandardProps, ThirdPartyProps, Wearable } from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 
 export type WearableConfig = Omit<
-  Wearable,
+  Wearable & Partial<StandardProps> & Partial<ThirdPartyProps>,
   | 'id'
   | 'collectionAddress'
   | 'content'

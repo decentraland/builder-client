@@ -1,4 +1,4 @@
-import { Authenticator, AuthIdentity } from 'dcl-crypto'
+import { Authenticator, AuthIdentity } from '@dcl/crypto'
 import { Wallet } from '@ethersproject/wallet'
 import { Bytes } from '@ethersproject/bytes'
 import { Signer } from '@ethersproject/abstract-signer'

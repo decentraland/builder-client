@@ -6,7 +6,7 @@ import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
 import { WEARABLE_MANIFEST, MAX_FILE_SIZE, BUILDER_MANIFEST } from './constants'
-import { WearableConfig, LoadedFile, BuilderConfig } from './types'
+import { WearableConfig, BuilderConfig, LoadedFile } from './types'
 import { WearableConfigSchema, BuilderConfigSchema } from './schemas'
 import {
   FileNotFoundError,
@@ -14,11 +14,10 @@ import {
   InvalidBuilderConfigFileError,
   InvalidWearableConfigFileError,
   ModelFileNotFoundError,
-  ModelInRepresentationNotFoundError,
   WrongExtensionError
 } from './files.errors'
 
-const ajv = new Ajv()
+const ajv = new Ajv({ $data: true })
 addAjvFormats(ajv)
 const validator = ajv
   .addSchema(WearableConfigSchema, 'WearableConfig')
@@ -128,10 +127,6 @@ async function handleZippedModelFiles<T extends Content>(
     const wearableFileContents = await wearableZipFile.async('uint8array')
     wearable = await loadWearableConfig(wearableFileContents)
     wearable.data.representations.forEach((representation) => {
-      if (!representation.contents.includes(representation.mainFile)) {
-        throw new ModelInRepresentationNotFoundError(representation.mainFile)
-      }
-
       representation.contents.forEach((content) => {
         if (!zip.file(representation.mainFile)) {
           throw new FileNotFoundError(content)
