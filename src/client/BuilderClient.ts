@@ -10,8 +10,12 @@ import {
   GetNFTsParams,
   GetNFTsResponse,
   NFT,
+  UploadLandRedirectionFileParams,
   ServerResponse,
-  ThirdParty
+  ThirdParty,
+  UploadLandRedirectionFileResult,
+  GetLandEIP1557ContentHashResult,
+  GetLandEIP1557ContentHashParams
 } from './types'
 
 export class BuilderClient {
@@ -311,6 +315,55 @@ export class BuilderClient {
     }
 
     const body: ServerResponse<NFT> = await res.json()
+
+    if (!res.ok || !body.ok) {
+      throw new ClientError(body.error || 'Unknown error', res.status, null)
+    }
+
+    return body.data
+  }
+
+  public async uploadLandRedirectionFile(
+    params: UploadLandRedirectionFileParams
+  ) {
+    let res: Response
+
+    try {
+      res = await this.fetch(`/v1/lands/redirection`, {
+        method: 'post',
+        body: JSON.stringify(params)
+      })
+    } catch (e) {
+      throw new ClientError(e.message, undefined, null)
+    }
+
+    const body: ServerResponse<UploadLandRedirectionFileResult> =
+      await res.json()
+
+    if (!res.ok || !body.ok) {
+      throw new ClientError(body.error || 'Unknown error', res.status, null)
+    }
+
+    return body.data
+  }
+
+  public async getLandEIP1557ContentHash({
+    landURL,
+    msg1,
+    msg2
+  }: GetLandEIP1557ContentHashParams) {
+    let res: Response
+
+    try {
+      res = await this.fetch(
+        `/v1/lands/eip1557ContentHash?landURL=${landURL}&msg1=${msg1}&msg2=${msg2}`
+      )
+    } catch (e) {
+      throw new ClientError(e.message, undefined, null)
+    }
+
+    const body: ServerResponse<GetLandEIP1557ContentHashResult> =
+      await res.json()
 
     if (!res.ok || !body.ok) {
       throw new ClientError(body.error || 'Unknown error', res.status, null)

@@ -127,4 +127,17 @@ export type GetNFTParams = {
   tokenId: string
 }
 
+export type UploadLandRedirectionFileParams = {
+  landURL: string
+  msg1: string
+  msg2: string
+}
+
+export type UploadLandRedirectionFileResult = {
+  hash: string
+}
+
+export type GetLandEIP1557ContentHashParams = UploadLandRedirectionFileParams
+export type GetLandEIP1557ContentHashResult = UploadLandRedirectionFileResult
+
 // END - Builder Server NFT
