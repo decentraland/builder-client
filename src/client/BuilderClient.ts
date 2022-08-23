@@ -331,6 +331,7 @@ export class BuilderClient {
     try {
       res = await this.fetch(`/v1/lands/redirection`, {
         method: 'post',
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ redirection: params })
       })
     } catch (e) {
@@ -355,6 +356,7 @@ export class BuilderClient {
     try {
       res = await this.fetch(`/v1/lands/redirection/hashes`, {
         method: 'post',
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ redirections: params })
       })
     } catch (e) {
