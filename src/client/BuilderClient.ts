@@ -325,7 +325,7 @@ export class BuilderClient {
 
   public async uploadLandRedirectionFile(
     params: UploadLandRedirectionFileParams
-  ) {
+  ): Promise<UploadLandRedirectionFileResult> {
     let res: Response
 
     try {
@@ -349,7 +349,7 @@ export class BuilderClient {
 
   public async getLandEIP1557ContentHash(
     params: GetLandEIP1557ContentHashParams
-  ) {
+  ): Promise<GetLandEIP1557ContentHashResult> {
     let res: Response
 
     try {
