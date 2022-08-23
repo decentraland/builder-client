@@ -321,15 +321,18 @@ export class BuilderClient {
     return body.data
   }
 
-  public async uploadLandRedirectionFile({
-    x,
-    y
-  }: LandCoords): Promise<LandHashes> {
+  public async uploadLandRedirectionFile(
+    { x, y }: LandCoords,
+    locale: string
+  ): Promise<LandHashes> {
     let res: Response
 
     try {
       res = await this.fetch(`/v1/lands/${x},${y}/redirection`, {
-        method: 'post'
+        method: 'post',
+        headers: {
+          'accept-language': locale
+        }
       })
     } catch (e) {
       throw new ClientError(e.message, undefined, null)
@@ -345,7 +348,8 @@ export class BuilderClient {
   }
 
   public async getLandRedirectionHashes(
-    coordsList: LandCoords[]
+    coordsList: LandCoords[],
+    locale: string
   ): Promise<(LandCoords & LandHashes)[]> {
     const output: (LandCoords & LandHashes)[] = []
 
@@ -369,7 +373,12 @@ export class BuilderClient {
         res = await this.fetch(
           `/v1/lands/redirection/hashes?coords=${coordsList
             .map(({ x, y }) => `${x},${y}`)
-            .join(';')}`
+            .join(';')}`,
+          {
+            headers: {
+              'accept-language': locale
+            }
+          }
         )
       } catch (e) {
         throw new ClientError(e.message, undefined, null)
