@@ -367,7 +367,7 @@ export class BuilderClient {
 
       try {
         res = await this.fetch(
-          `/v1/lands/hashes?coords=${coordsList
+          `/v1/lands/redirection/hashes?coords=${coordsList
             .map(({ x, y }) => `${x},${y}`)
             .join(';')}`
         )
