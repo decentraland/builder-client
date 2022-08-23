@@ -131,23 +131,14 @@ export type GetNFTParams = {
 
 // START - Builder Server LAND
 
-export type Redirection = {
-  landURL: string
-  i18nCouldNotRedirectMsg: string
-  i18nClickHereMsg: string
+export type LandCoords = {
+  x: number
+  y: number
 }
 
-export type RedirectionWithHashes = Redirection & {
+export type LandHashes = {
   ipfsHash: string
   contentHash: string
 }
-
-export type UploadLandRedirectionFileParams = Redirection
-
-export type UploadLandRedirectionFileResult = RedirectionWithHashes
-
-export type GetLandRedirectionHashesParams = Redirection[]
-
-export type GetLandRedirectionHashesResult = RedirectionWithHashes[]
 
 // END - Builder Server LAND

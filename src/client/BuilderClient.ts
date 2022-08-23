@@ -9,13 +9,11 @@ import {
   GetNFTParams,
   GetNFTsParams,
   GetNFTsResponse,
+  LandCoords,
+  LandHashes,
   NFT,
-  UploadLandRedirectionFileParams,
   ServerResponse,
-  ThirdParty,
-  UploadLandRedirectionFileResult,
-  GetLandRedirectionHashesResult,
-  GetLandRedirectionHashesParams
+  ThirdParty
 } from './types'
 
 export class BuilderClient {
@@ -323,23 +321,21 @@ export class BuilderClient {
     return body.data
   }
 
-  public async uploadLandRedirectionFile(
-    params: UploadLandRedirectionFileParams
-  ): Promise<UploadLandRedirectionFileResult> {
+  public async uploadLandRedirectionFile({
+    x,
+    y
+  }: LandCoords): Promise<LandHashes> {
     let res: Response
 
     try {
-      res = await this.fetch(`/v1/lands/redirection`, {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ redirection: params })
+      res = await this.fetch(`/v1/lands/${x},${y}/redirection`, {
+        method: 'post'
       })
     } catch (e) {
       throw new ClientError(e.message, undefined, null)
     }
 
-    const body: ServerResponse<UploadLandRedirectionFileResult> =
-      await res.json()
+    const body: ServerResponse<LandHashes> = await res.json()
 
     if (!res.ok || !body.ok) {
       throw new ClientError(body.error || 'Unknown error', res.status, null)
@@ -349,27 +345,45 @@ export class BuilderClient {
   }
 
   public async getLandRedirectionHashes(
-    params: GetLandRedirectionHashesParams
-  ): Promise<GetLandRedirectionHashesResult> {
-    let res: Response
+    coordsList: LandCoords[]
+  ): Promise<(LandCoords & LandHashes)[]> {
+    const output: (LandCoords & LandHashes)[] = []
 
-    try {
-      res = await this.fetch(`/v1/lands/redirection/hashes`, {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ redirections: params })
-      })
-    } catch (e) {
-      throw new ClientError(e.message, undefined, null)
+    const batchedCoordsList: LandCoords[][] = [[]]
+    const batchLength = 50
+
+    for (let i = 0; i < coordsList.length; i++) {
+      if ((i + 1) % batchLength === 0) {
+        batchedCoordsList.push([])
+      }
+
+      const coords = coordsList[i]
+
+      batchedCoordsList[batchedCoordsList.length].push(coords)
     }
 
-    const body: ServerResponse<GetLandRedirectionHashesResult> =
-      await res.json()
+    for (const coordsList of batchedCoordsList) {
+      let res: Response
 
-    if (!res.ok || !body.ok) {
-      throw new ClientError(body.error || 'Unknown error', res.status, null)
+      try {
+        res = await this.fetch(`/v1/lands/redirection/hashes`, {
+          method: 'post',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ redirections: coordsList })
+        })
+      } catch (e) {
+        throw new ClientError(e.message, undefined, null)
+      }
+
+      const body: ServerResponse<(LandCoords & LandHashes)[]> = await res.json()
+
+      if (!res.ok || !body.ok) {
+        throw new ClientError(body.error || 'Unknown error', res.status, null)
+      }
+
+      body.data.forEach((d) => output.push(d))
     }
 
-    return body.data
+    return output
   }
 }
