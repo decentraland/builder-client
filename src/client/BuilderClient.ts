@@ -14,8 +14,8 @@ import {
   ServerResponse,
   ThirdParty,
   UploadLandRedirectionFileResult,
-  GetLandEIP1557ContentHashResult,
-  GetLandEIP1557ContentHashParams
+  GetLandRedirectionContentHashResult,
+  GetLandRedirectionContentHashParams
 } from './types'
 
 export class BuilderClient {
@@ -347,13 +347,13 @@ export class BuilderClient {
     return body.data
   }
 
-  public async getLandEIP1557ContentHash(
-    params: GetLandEIP1557ContentHashParams
-  ): Promise<GetLandEIP1557ContentHashResult> {
+  public async getLandRedirectionContentHash(
+    params: GetLandRedirectionContentHashParams
+  ): Promise<GetLandRedirectionContentHashResult> {
     let res: Response
 
     try {
-      res = await this.fetch(`/v1/lands/eip1557ContentHash`, {
+      res = await this.fetch(`/v1/lands/redirection/contentHash`, {
         method: 'post',
         body: JSON.stringify({ redirections: params })
       })
@@ -361,7 +361,7 @@ export class BuilderClient {
       throw new ClientError(e.message, undefined, null)
     }
 
-    const body: ServerResponse<GetLandEIP1557ContentHashResult> =
+    const body: ServerResponse<GetLandRedirectionContentHashResult> =
       await res.json()
 
     if (!res.ok || !body.ok) {
