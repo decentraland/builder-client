@@ -366,11 +366,11 @@ export class BuilderClient {
       let res: Response
 
       try {
-        res = await this.fetch(`/v1/lands/redirection/hashes`, {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ redirections: coordsList })
-        })
+        res = await this.fetch(
+          `/v1/lands/redirection/hashes?coords=${coordsList
+            .map(({ x, y }) => `${x},${y}`)
+            .join(';')}`
+        )
       } catch (e) {
         throw new ClientError(e.message, undefined, null)
       }
