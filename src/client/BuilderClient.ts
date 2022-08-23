@@ -331,7 +331,7 @@ export class BuilderClient {
     try {
       res = await this.fetch(`/v1/lands/redirection`, {
         method: 'post',
-        body: JSON.stringify(params)
+        body: JSON.stringify({ redirection: params })
       })
     } catch (e) {
       throw new ClientError(e.message, undefined, null)
@@ -347,17 +347,16 @@ export class BuilderClient {
     return body.data
   }
 
-  public async getLandEIP1557ContentHash({
-    landURL,
-    msg1,
-    msg2
-  }: GetLandEIP1557ContentHashParams) {
+  public async getLandEIP1557ContentHash(
+    params: GetLandEIP1557ContentHashParams
+  ) {
     let res: Response
 
     try {
-      res = await this.fetch(
-        `/v1/lands/eip1557ContentHash?landURL=${landURL}&msg1=${msg1}&msg2=${msg2}`
-      )
+      res = await this.fetch(`/v1/lands/eip1557ContentHash`, {
+        method: 'post',
+        body: JSON.stringify({ redirections: params })
+      })
     } catch (e) {
       throw new ClientError(e.message, undefined, null)
     }
