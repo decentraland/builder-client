@@ -14,8 +14,8 @@ import {
   ServerResponse,
   ThirdParty,
   UploadLandRedirectionFileResult,
-  GetLandRedirectionContentHashResult,
-  GetLandRedirectionContentHashParams
+  GetLandRedirectionHashesResult,
+  GetLandRedirectionHashesParams
 } from './types'
 
 export class BuilderClient {
@@ -347,13 +347,13 @@ export class BuilderClient {
     return body.data
   }
 
-  public async getLandRedirectionContentHash(
-    params: GetLandRedirectionContentHashParams
-  ): Promise<GetLandRedirectionContentHashResult> {
+  public async getLandRedirectionHashes(
+    params: GetLandRedirectionHashesParams
+  ): Promise<GetLandRedirectionHashesResult> {
     let res: Response
 
     try {
-      res = await this.fetch(`/v1/lands/redirection/contentHash`, {
+      res = await this.fetch(`/v1/lands/redirection/hashes`, {
         method: 'post',
         body: JSON.stringify({ redirections: params })
       })
@@ -361,7 +361,7 @@ export class BuilderClient {
       throw new ClientError(e.message, undefined, null)
     }
 
-    const body: ServerResponse<GetLandRedirectionContentHashResult> =
+    const body: ServerResponse<GetLandRedirectionHashesResult> =
       await res.json()
 
     if (!res.ok || !body.ok) {

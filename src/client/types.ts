@@ -127,20 +127,27 @@ export type GetNFTParams = {
   tokenId: string
 }
 
+// END - Builder Server NFT
+
+// START - Builder Server LAND
+
 export type Redirection = {
   landURL: string
   i18nCouldNotRedirectMsg: string
   i18nClickHereMsg: string
 }
 
-export type RedirectionWithContentHash = Redirection & { contentHash: string }
+export type RedirectionWithHashes = Redirection & {
+  ipfsHash: string
+  contentHash: string
+}
 
 export type UploadLandRedirectionFileParams = Redirection
 
-export type UploadLandRedirectionFileResult = RedirectionWithContentHash
+export type UploadLandRedirectionFileResult = RedirectionWithHashes
 
-export type GetLandRedirectionContentHashParams = Redirection[]
+export type GetLandRedirectionHashesParams = Redirection[]
 
-export type GetLandRedirectionContentHashResult = RedirectionWithContentHash[]
+export type GetLandRedirectionHashesResult = RedirectionWithHashes[]
 
-// END - Builder Server NFT
+// END - Builder Server LAND
