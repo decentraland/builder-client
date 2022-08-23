@@ -359,7 +359,7 @@ export class BuilderClient {
 
       const coords = coordsList[i]
 
-      batchedCoordsList[batchedCoordsList.length].push(coords)
+      batchedCoordsList[batchedCoordsList.length - 1].push(coords)
     }
 
     for (const coordsList of batchedCoordsList) {
