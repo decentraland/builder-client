@@ -371,9 +371,9 @@ export class BuilderClient {
 
       try {
         res = await this.fetch(
-          `/v1/lands/redirection/hashes?coords=${coordsList
-            .map(({ x, y }) => `${x},${y}`)
-            .join(';')}`,
+          `/v1/lands/redirectionHashes?${coordsList
+            .map(({ x, y }) => `coords=${x},${y}`)
+            .join('&')}`,
           {
             headers: {
               'accept-language': locale
