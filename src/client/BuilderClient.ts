@@ -21,6 +21,7 @@ export class BuilderClient {
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
   private readonly getIdentity: () => AuthIdentity
   private readonly getAddress: () => string
+  private readonly baseUrl: string
 
   constructor(
     url: string,
@@ -31,6 +32,8 @@ export class BuilderClient {
     this.getIdentity = () =>
       identity instanceof Function ? identity() : identity
     this.getAddress = () => (address instanceof Function ? address() : address)
+
+    this.baseUrl = url
 
     this.fetch = (path: string, init?: RequestInit) => {
       const method: string = init?.method ?? path ?? 'get'
@@ -353,33 +356,39 @@ export class BuilderClient {
   ): Promise<(LandCoords & LandHashes)[]> {
     const output: (LandCoords & LandHashes)[] = []
 
-    const batchedCoordsList: LandCoords[][] = [[]]
-    const batchLength = 50
+    const path = '/v1/lands/redirectionHashes?'
+    const urlLengthWithoutCoords = (this.baseUrl + path).length
+    const urlMaxLength = 2048 // https://stackoverflow.com/a/1051565
+    const coordsQueryLength = 17 // "coords=-999,-999&"
+    const coordsThatFitInUrl = Math.floor(
+      (urlMaxLength - urlLengthWithoutCoords) / coordsQueryLength
+    )
+
+    const coordsListInBatches: LandCoords[][] = [[]]
 
     for (let i = 0; i < coordsList.length; i++) {
-      if ((i + 1) % batchLength === 0) {
-        batchedCoordsList.push([])
+      if ((i + 1) % coordsThatFitInUrl === 0) {
+        coordsListInBatches.push([])
       }
 
       const coords = coordsList[i]
 
-      batchedCoordsList[batchedCoordsList.length - 1].push(coords)
+      coordsListInBatches[coordsListInBatches.length - 1].push(coords)
     }
 
-    for (const coordsList of batchedCoordsList) {
+    for (const coordsList of coordsListInBatches) {
       let res: Response
 
+      const coordsAsQueryParams = coordsList
+        .map(({ x, y }) => `coords=${x},${y}`)
+        .join('&')
+
       try {
-        res = await this.fetch(
-          `/v1/lands/redirectionHashes?${coordsList
-            .map(({ x, y }) => `coords=${x},${y}`)
-            .join('&')}`,
-          {
-            headers: {
-              'accept-language': locale
-            }
+        res = await this.fetch(`${path}${coordsAsQueryParams}`, {
+          headers: {
+            'accept-language': locale
           }
-        )
+        })
       } catch (e) {
         throw new ClientError(e.message, undefined, null)
       }
