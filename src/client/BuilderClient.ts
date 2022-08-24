@@ -321,7 +321,7 @@ export class BuilderClient {
     return body.data
   }
 
-  public async uploadLandRedirectionFile(
+  public async createLandRedirectionFile(
     { x, y }: LandCoords,
     locale: string
   ): Promise<LandHashes> {
