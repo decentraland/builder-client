@@ -354,8 +354,6 @@ export class BuilderClient {
     coordsList: LandCoords[],
     locale: string
   ): Promise<(LandCoords & LandHashes)[]> {
-    const output: (LandCoords & LandHashes)[] = []
-
     const path = '/v1/lands/redirectionHashes?'
     const urlLengthWithoutCoords = (this.baseUrl + path).length
     const urlMaxLength = 2048 // https://stackoverflow.com/a/1051565
@@ -375,6 +373,8 @@ export class BuilderClient {
 
       coordsListInBatches[coordsListInBatches.length - 1].push(coords)
     }
+
+    let output: (LandCoords & LandHashes)[] = []
 
     for (const coordsList of coordsListInBatches) {
       let res: Response
@@ -399,7 +399,7 @@ export class BuilderClient {
         throw new ClientError(body.error || 'Unknown error', res.status, null)
       }
 
-      body.data.forEach((d) => output.push(d))
+      output = output.concat(body.data)
     }
 
     return output
