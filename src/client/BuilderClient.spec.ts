@@ -934,7 +934,6 @@ describe('when getting a third party', () => {
 describe('when creating the LAND redirection file', () => {
   let url: string
   let coords: { x: number; y: number }
-  let response: ServerResponse<LandHashes>
 
   beforeEach(() => {
     coords = { x: 100, y: 400 }
@@ -942,10 +941,12 @@ describe('when creating the LAND redirection file', () => {
   })
 
   describe('and the endpoint responds with non 200 status code', () => {
+    let response: ServerResponse<unknown>
+
     beforeEach(() => {
       response = {
         ok: false,
-        data: {} as any,
+        data: {},
         error: 'Some error'
       }
       nock(testUrl).post(url).reply(500, response)
@@ -959,10 +960,12 @@ describe('when creating the LAND redirection file', () => {
   })
 
   describe('and the data returned from the endpoint has ok as false', () => {
+    let response: ServerResponse<unknown>
+
     beforeEach(() => {
       response = {
         ok: false,
-        data: {} as any,
+        data: {},
         error: 'Some error'
       }
       nock(testUrl).post(url).reply(200, response)
@@ -976,6 +979,8 @@ describe('when creating the LAND redirection file', () => {
   })
 
   describe('and the endpoint responds with a 200 status code and the hashed data', () => {
+    let response: ServerResponse<LandHashes>
+
     beforeEach(() => {
       response = {
         ok: true,
@@ -1091,12 +1096,12 @@ describe('when getting LAND redirection hashes', () => {
   })
 
   describe('and the endpoint responds with 200 status code but with ok as false', () => {
-    let response: ServerResponse<(LandCoords & LandHashes)[]>
+    let response: ServerResponse<unknown>
 
     beforeEach(() => {
       response = {
         ok: false,
-        data: {} as any,
+        data: {},
         error: 'Some error'
       }
       coords = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i }))
