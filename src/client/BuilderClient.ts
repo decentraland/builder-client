@@ -9,16 +9,20 @@ import {
   GetNFTParams,
   GetNFTsParams,
   GetNFTsResponse,
+  LandCoords,
+  LandHashes,
   NFT,
   ServerResponse,
   ThirdParty
 } from './types'
+import { URL_MAX_LENGTH } from './constants'
 
 export class BuilderClient {
   private fetch: (url: string, init?: RequestInit) => Promise<Response>
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
   private readonly getIdentity: () => AuthIdentity
   private readonly getAddress: () => string
+  private readonly baseUrl: string
 
   constructor(
     url: string,
@@ -29,6 +33,8 @@ export class BuilderClient {
     this.getIdentity = () =>
       identity instanceof Function ? identity() : identity
     this.getAddress = () => (address instanceof Function ? address() : address)
+
+    this.baseUrl = url
 
     this.fetch = (path: string, init?: RequestInit) => {
       const method: string = init?.method ?? path ?? 'get'
@@ -317,5 +323,80 @@ export class BuilderClient {
     }
 
     return body.data
+  }
+
+  public async createLandRedirectionFile(
+    { x, y }: LandCoords,
+    locale: string
+  ): Promise<LandHashes> {
+    let res: Response
+
+    try {
+      res = await this.fetch(`/v1/lands/${x},${y}/redirection`, {
+        method: 'post',
+        headers: {
+          'accept-language': locale
+        }
+      })
+    } catch (e) {
+      throw new ClientError(e.message, undefined, null)
+    }
+
+    const body: ServerResponse<LandHashes> = await res.json()
+
+    if (!res.ok || !body.ok) {
+      throw new ClientError(body.error || 'Unknown error', res.status, null)
+    }
+
+    return body.data
+  }
+
+  public async getLandRedirectionHashes(
+    coordsList: LandCoords[],
+    locale: string
+  ): Promise<(LandCoords & LandHashes)[]> {
+    const basePath = '/v1/lands/redirectionHashes'
+    const paths: string[] = []
+    let path = basePath
+
+    for (const [index, coord] of coordsList.entries()) {
+      const newPath = `${path}${index === 0 ? '?' : '&'}coords=${coord.x},${
+        coord.y
+      }`
+      if (newPath.length + this.baseUrl.length > URL_MAX_LENGTH) {
+        paths.push(path)
+        path = `${basePath}?coords=${coord.x},${coord.y}`
+      } else {
+        path = newPath
+      }
+    }
+    paths.push(path)
+
+    let output: (LandCoords & LandHashes)[] = []
+
+    for (const path of paths) {
+      let res: Response
+      console.log('Requesting a path', path)
+
+      try {
+        res = await this.fetch(path, {
+          headers: {
+            'accept-language': locale
+          }
+        })
+      } catch (e) {
+        throw new ClientError(e.message, undefined, null)
+      }
+
+      const body: ServerResponse<(LandCoords & LandHashes)[]> = await res.json()
+
+      if (!res.ok || !body.ok) {
+        throw new ClientError(body.error || 'Unknown error', res.status, null)
+      }
+
+      output = output.concat(body.data)
+    }
+
+    return output
   }
 }

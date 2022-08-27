@@ -128,3 +128,17 @@ export type GetNFTParams = {
 }
 
 // END - Builder Server NFT
+
+// START - Builder Server LAND
+
+export type LandCoords = {
+  x: number
+  y: number
+}
+
+export type LandHashes = {
+  ipfsHash: string
+  contentHash: string
+}
+
+// END - Builder Server LAND
