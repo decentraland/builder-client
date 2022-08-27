@@ -19,6 +19,8 @@ import {
 import {
   GetNFTParams,
   GetNFTsResponse,
+  LandHashes,
+  LandCoords,
   NFT,
   ServerResponse,
   ThirdParty
@@ -925,6 +927,189 @@ describe('when getting a third party', () => {
       await expect(client.getThirdParty(thirdPartyId)).resolves.toEqual(
         response.data
       )
+    })
+  })
+})
+
+describe('when creating the LAND redirection file', () => {
+  let url: string
+  let coords: { x: number; y: number }
+  let response: ServerResponse<LandHashes>
+
+  beforeEach(() => {
+    coords = { x: 100, y: 400 }
+    url = `/v1/lands/${coords.x},${coords.y}/redirection`
+  })
+
+  describe('and the endpoint responds with non 200 status code', () => {
+    beforeEach(() => {
+      response = {
+        ok: false,
+        data: {} as any,
+        error: 'Some error'
+      }
+      nock(testUrl).post(url).reply(500, response)
+    })
+
+    it("should throw an error with the server's error message", () => {
+      return expect(
+        client.createLandRedirectionFile(coords, 'en-us')
+      ).rejects.toEqual(new ClientError('Some error', 500, {}))
+    })
+  })
+
+  describe('and the data returned from the endpoint has ok as false', () => {
+    beforeEach(() => {
+      response = {
+        ok: false,
+        data: {} as any,
+        error: 'Some error'
+      }
+      nock(testUrl).post(url).reply(200, response)
+    })
+
+    it("should throw an error with the server's error message", () => {
+      return expect(
+        client.createLandRedirectionFile(coords, 'en-us')
+      ).rejects.toEqual(new ClientError('Some error', 200, {}))
+    })
+  })
+
+  describe('and the endpoint responds with a 200 status code and the hashed data', () => {
+    beforeEach(() => {
+      response = {
+        ok: true,
+        data: {
+          contentHash:
+            'e301017012205453e784584c205c23a771c67af071129721f0e21b0472e3061361005393a908',
+          ipfsHash: 'QmU1qAKrZKEUinZ7j7gbPcJ7dKSkJ6diHLk9YrB4PbLr7q'
+        }
+      }
+      nock(testUrl).post(url).reply(200, response)
+    })
+
+    it('should return the LAND hashes of the redirection file of the sent coordinates', () => {
+      return expect(
+        client.createLandRedirectionFile(coords, 'en-us')
+      ).resolves.toEqual(response.data)
+    })
+  })
+})
+
+describe('when getting LAND redirection hashes', () => {
+  let url: string
+  let coords: LandCoords[]
+
+  describe("and the amount of cords don't overpass the URL length limit", () => {
+    let response: ServerResponse<(LandCoords & LandHashes)[]>
+
+    beforeEach(() => {
+      coords = [
+        { x: 100, y: 400 },
+        { x: 150, y: 450 }
+      ]
+      url = `/v1/lands/redirectionHashes?${coords
+        .map((coord) => `coords=${coord.x},${coord.y}`)
+        .join('&')}`
+      response = {
+        ok: true,
+        data: coords.map((coord) => ({
+          x: coord.x,
+          y: coord.y,
+          contentHash: `${coord.x},${coord.y}-content-hash`,
+          ipfsHash: `${coord.x},${coord.y}-ipfs-hash`
+        }))
+      }
+      nock(testUrl).get(url).reply(200, response)
+    })
+
+    it('should respond with the hashes of each coord', () => {
+      return expect(
+        client.getLandRedirectionHashes(coords, 'en-us')
+      ).resolves.toEqual(response.data)
+    })
+  })
+
+  describe('and the amount of cords overpass the URL length limit', () => {
+    let responses: ServerResponse<(LandCoords & LandHashes)[]>[]
+
+    beforeEach(() => {
+      coords = Array.from({ length: 200 }, (_, i) => ({ x: i, y: i }))
+      responses = [
+        {
+          ok: true,
+          data: coords.slice(0, 148).map((coord) => ({
+            x: coord.x,
+            y: coord.y,
+            contentHash: `${coord.x},${coord.y}-content-hash`,
+            ipfsHash: `${coord.x},${coord.y}-ipfs-hash`
+          }))
+        },
+        {
+          ok: true,
+          data: coords.slice(148).map((coord) => ({
+            x: coord.x,
+            y: coord.y,
+            contentHash: `${coord.x},${coord.y}-content-hash`,
+            ipfsHash: `${coord.x},${coord.y}-ipfs-hash`
+          }))
+        }
+      ]
+
+      responses.forEach((response) => {
+        nock(testUrl)
+          .get(
+            `/v1/lands/redirectionHashes?${response.data
+              .map((coord) => `coords=${coord.x},${coord.y}`)
+              .join('&')}`
+          )
+          .reply(200, response)
+      })
+    })
+
+    it('should respond with the hashes of each coord by concatenating the response of multiple requests', () => {
+      return expect(
+        client.getLandRedirectionHashes(coords, 'en-us')
+      ).resolves.toEqual(responses.flatMap((response) => response.data))
+    })
+  })
+
+  describe('and the endpoint responds with a non 200 status code', () => {
+    beforeEach(() => {
+      coords = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i }))
+      url = `/v1/lands/redirectionHashes?${coords
+        .map((coord) => `coords=${coord.x},${coord.y}`)
+        .join('&')}`
+      nock(testUrl).get(url).reply(500, {})
+    })
+
+    it('should throw an error with the message of the failed request', () => {
+      return expect(
+        client.getLandRedirectionHashes(coords, 'en-us')
+      ).rejects.toEqual(new ClientError('Unknown error', 500, null))
+    })
+  })
+
+  describe('and the endpoint responds with 200 status code but with ok as false', () => {
+    let response: ServerResponse<(LandCoords & LandHashes)[]>
+
+    beforeEach(() => {
+      response = {
+        ok: false,
+        data: {} as any,
+        error: 'Some error'
+      }
+      coords = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i }))
+      url = `/v1/lands/redirectionHashes?${coords
+        .map((coord) => `coords=${coord.x},${coord.y}`)
+        .join('&')}`
+      nock(testUrl).get(url).reply(200, response)
+    })
+
+    it('should throw an error with the message of the failed request', () => {
+      return expect(
+        client.getLandRedirectionHashes(coords, 'en-us')
+      ).rejects.toEqual(new ClientError('Some error', 200, null))
     })
   })
 })

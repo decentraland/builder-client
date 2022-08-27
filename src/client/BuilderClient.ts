@@ -15,6 +15,7 @@ import {
   ServerResponse,
   ThirdParty
 } from './types'
+import { URL_MAX_LENGTH } from './constants'
 
 export class BuilderClient {
   private fetch: (url: string, init?: RequestInit) => Promise<Response>
@@ -354,37 +355,31 @@ export class BuilderClient {
     coordsList: LandCoords[],
     locale: string
   ): Promise<(LandCoords & LandHashes)[]> {
-    const path = '/v1/lands/redirectionHashes?'
-    const urlLengthWithoutCoords = (this.baseUrl + path).length
-    const urlMaxLength = 2048 // https://stackoverflow.com/a/1051565
-    const coordsQueryLength = 17 // "coords=-999,-999&"
-    const coordsThatFitInUrl = Math.floor(
-      (urlMaxLength - urlLengthWithoutCoords) / coordsQueryLength
-    )
+    const basePath = '/v1/lands/redirectionHashes'
+    const paths: string[] = []
+    let path = basePath
 
-    const coordsListInBatches: LandCoords[][] = [[]]
-
-    for (let i = 0; i < coordsList.length; i++) {
-      if ((i + 1) % coordsThatFitInUrl === 0) {
-        coordsListInBatches.push([])
+    for (const [index, coord] of coordsList.entries()) {
+      const newPath = `${path}${index === 0 ? '?' : '&'}coords=${coord.x},${
+        coord.y
+      }`
+      if (newPath.length + this.baseUrl.length > URL_MAX_LENGTH) {
+        paths.push(path)
+        path = `${basePath}?coords=${coord.x},${coord.y}`
+      } else {
+        path = newPath
       }
-
-      const coords = coordsList[i]
-
-      coordsListInBatches[coordsListInBatches.length - 1].push(coords)
     }
+    paths.push(path)
 
     let output: (LandCoords & LandHashes)[] = []
 
-    for (const coordsList of coordsListInBatches) {
+    for (const path of paths) {
       let res: Response
-
-      const coordsAsQueryParams = coordsList
-        .map(({ x, y }) => `coords=${x},${y}`)
-        .join('&')
+      console.log('Requesting a path', path)
 
       try {
-        res = await this.fetch(`${path}${coordsAsQueryParams}`, {
+        res = await this.fetch(path, {
           headers: {
             'accept-language': locale
           }
