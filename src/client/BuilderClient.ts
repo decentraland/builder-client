@@ -45,8 +45,11 @@ export class BuilderClient {
     ) => {
       const method: string = init?.method ?? path ?? 'get'
       const fullUrl = url + path
-      const authenticated =
-        init?.authenticated !== undefined ? init.authenticated : true
+      let authenticated = true
+      if (init && init.authenticated !== undefined) {
+        authenticated = init.authenticated
+        delete init.authenticated
+      }
 
       return externalFetch(fullUrl, {
         ...init,
