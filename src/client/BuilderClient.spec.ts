@@ -1025,7 +1025,9 @@ describe('when getting LAND redirection hashes', () => {
           ipfsHash: `${coord.x},${coord.y}-ipfs-hash`
         }))
       }
-      nock(testUrl).get(url).reply(200, response)
+      nock(testUrl, { badheaders: ['x-identity-auth-chain-'] })
+        .get(url)
+        .reply(200, response)
     })
 
     it('should respond with the hashes of each coord', () => {
