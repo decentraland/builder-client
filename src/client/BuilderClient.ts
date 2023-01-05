@@ -18,7 +18,10 @@ import {
 import { URL_MAX_LENGTH } from './constants'
 
 export class BuilderClient {
-  private fetch: (url: string, init?: RequestInit) => Promise<Response>
+  private fetch: (
+    url: string,
+    init?: RequestInit & { authenticated?: boolean }
+  ) => Promise<Response>
   private readonly AUTH_CHAIN_HEADER_PREFIX = 'x-identity-auth-chain-'
   private readonly getIdentity: () => AuthIdentity
   private readonly getAddress: () => string
@@ -36,15 +39,22 @@ export class BuilderClient {
 
     this.baseUrl = url
 
-    this.fetch = (path: string, init?: RequestInit) => {
+    this.fetch = (
+      path: string,
+      init?: RequestInit & { authenticated?: boolean }
+    ) => {
       const method: string = init?.method ?? path ?? 'get'
       const fullUrl = url + path
+      const authenticated =
+        init?.authenticated !== undefined ? init.authenticated : true
 
       return externalFetch(fullUrl, {
         ...init,
         headers: {
           ...init?.headers,
-          ...this.createAuthHeaders(method, path.replace(/\/v[0-9]/, ''))
+          ...(authenticated
+            ? this.createAuthHeaders(method, path.replace(/\/v[0-9]/, ''))
+            : undefined)
         }
       })
     }
@@ -336,7 +346,8 @@ export class BuilderClient {
         method: 'post',
         headers: {
           'accept-language': locale
-        }
+        },
+        authenticated: false
       })
     } catch (e) {
       throw new ClientError(e.message, undefined, null)
@@ -376,13 +387,13 @@ export class BuilderClient {
 
     for (const path of paths) {
       let res: Response
-      console.log('Requesting a path', path)
 
       try {
         res = await this.fetch(path, {
           headers: {
             'accept-language': locale
-          }
+          },
+          authenticated: false
         })
       } catch (e) {
         throw new ClientError(e.message, undefined, null)
