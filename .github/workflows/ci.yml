@@ -37,5 +37,7 @@ jobs:
         uses: menduz/oddish-action@master
         with:
           access: public
+          ## Sign the deployment
+          provenance: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
