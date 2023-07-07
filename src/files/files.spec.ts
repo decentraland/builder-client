@@ -79,7 +79,7 @@ describe('when loading an item file', () => {
               parcels: ['0,0', '0,1', '1,0', '1,1'],
               base: '0,0'
             },
-            main: 'scene.json',
+            main: 'game.js',
             requiredPermissions: ['REQUIRED_PERMISSION']
           }
           zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
@@ -332,7 +332,7 @@ describe('when loading an item file', () => {
           })
         })
 
-        describe('and the scene config file is correctly formatted', () => {
+        describe('and the main property of the scene config file is not present in the zipped file', () => {
           let sceneFileContent: SceneConfig
 
           beforeEach(() => {
@@ -341,10 +341,37 @@ describe('when loading an item file', () => {
                 parcels: ['0,0', '0,1', '1,0', '1,1'],
                 base: '0,0'
               },
-              main: 'scene.json',
+              main: 'game.js',
               requiredPermissions: ['REQUIRED_PERMISSION']
             }
             zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
+          })
+
+          it('should throw an error signaling that the scene config file is invalid', () => {
+            return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+              new InvalidSceneConfigFileError()
+            )
+          })
+        })
+
+        describe('and the scene config file is valid and contains the main property in the zipped file', () => {
+          let sceneFileContent: SceneConfig
+          let sceneMainFile: string
+          let sceneMainFileContent: Uint8Array
+
+          beforeEach(() => {
+            sceneMainFile = 'game.js'
+            sceneMainFileContent = new Uint8Array([0, 1, 2, 3, 4])
+            sceneFileContent = {
+              scene: {
+                parcels: ['0,0', '0,1', '1,0', '1,1'],
+                base: '0,0'
+              },
+              main: sceneMainFile,
+              requiredPermissions: ['REQUIRED_PERMISSION']
+            }
+            zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
+            zipFile.file(sceneMainFile, sceneMainFileContent)
           })
 
           describe('and the zip file is in the Uint8Array format', () => {
@@ -361,6 +388,7 @@ describe('when loading an item file', () => {
                 content: {
                   [modelFile]: modelFileContent,
                   [textureFile]: textureFileContent,
+                  [sceneMainFile]: sceneMainFileContent,
                   [THUMBNAIL_PATH]: thumbnailContent
                 },
                 wearable: wearableFileContent,
@@ -383,6 +411,7 @@ describe('when loading an item file', () => {
                 content: {
                   [modelFile]: modelFileContent.buffer,
                   [textureFile]: textureFileContent.buffer,
+                  [sceneMainFile]: sceneMainFileContent.buffer,
                   [THUMBNAIL_PATH]: thumbnailContent.buffer
                 },
                 wearable: wearableFileContent,
@@ -405,6 +434,7 @@ describe('when loading an item file', () => {
                 content: {
                   [modelFile]: Buffer.from(modelFileContent.buffer),
                   [textureFile]: Buffer.from(textureFileContent.buffer),
+                  [sceneMainFile]: Buffer.from(sceneMainFileContent.buffer),
                   [THUMBNAIL_PATH]: Buffer.from(thumbnailContent.buffer)
                 },
                 wearable: wearableFileContent,

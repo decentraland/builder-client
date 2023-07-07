@@ -154,6 +154,10 @@ async function handleZippedModelFiles<T extends Content>(
     if (sceneZipFile) {
       const sceneFileContents = await sceneZipFile.async('uint8array')
       scene = await loadSceneConfig(sceneFileContents)
+
+      if (!zip.file(scene.main)) {
+        throw new FileNotFoundError(scene.main)
+      }
     }
   }
 
