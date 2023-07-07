@@ -55,6 +55,23 @@ export class InvalidWearableConfigFileError extends Error {
   }
 }
 
+export class InvalidSceneConfigFileError extends Error {
+  public getErrors():
+    | ErrorObject<string, Record<string, unknown>, unknown>[]
+    | null
+    | undefined {
+    return this.errors
+  }
+
+  constructor(
+    private errors?:
+      | ErrorObject<string, Record<string, unknown>, unknown>[]
+      | null
+  ) {
+    super('The scene config file is invalid')
+  }
+}
+
 export class FileNotFoundError extends Error {
   constructor(fileName: string) {
     super(`The file ${fileName} does not exist.`)
