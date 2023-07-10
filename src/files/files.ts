@@ -5,13 +5,23 @@ import addAjvFormats from 'ajv-formats'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
-import { WEARABLE_MANIFEST, MAX_FILE_SIZE, BUILDER_MANIFEST } from './constants'
-import { WearableConfig, BuilderConfig, LoadedFile } from './types'
-import { WearableConfigSchema, BuilderConfigSchema } from './schemas'
+import {
+  WEARABLE_MANIFEST,
+  MAX_FILE_SIZE,
+  BUILDER_MANIFEST,
+  SCENE_MANIFEST
+} from './constants'
+import { WearableConfig, BuilderConfig, LoadedFile, SceneConfig } from './types'
+import {
+  BuilderConfigSchema,
+  WearableConfigSchema,
+  SceneConfigSchema
+} from './schemas'
 import {
   FileNotFoundError,
   FileTooBigError,
   InvalidBuilderConfigFileError,
+  InvalidSceneConfigFileError,
   InvalidWearableConfigFileError,
   ModelFileNotFoundError,
   WrongExtensionError
@@ -21,6 +31,7 @@ const ajv = new Ajv({ $data: true })
 addAjvFormats(ajv)
 const validator = ajv
   .addSchema(WearableConfigSchema, 'WearableConfig')
+  .addSchema(SceneConfigSchema, 'SceneConfig')
   .addSchema(BuilderConfigSchema, 'BuilderConfig')
 
 export async function loadFile<T extends Content>(
@@ -92,7 +103,8 @@ async function handleZippedModelFiles<T extends Content>(
     if (
       !basename(filePath).startsWith('.') &&
       basename(filePath) !== WEARABLE_MANIFEST &&
-      basename(filePath) !== BUILDER_MANIFEST
+      basename(filePath) !== BUILDER_MANIFEST &&
+      basename(filePath) !== SCENE_MANIFEST
     ) {
       fileNames.push(filePath)
       promiseOfFileContents.push(file.async(fileFormat) as Promise<T>)
@@ -118,12 +130,16 @@ async function handleZippedModelFiles<T extends Content>(
   }, {})
 
   let wearable: WearableConfig | undefined = undefined
+  let scene: SceneConfig | undefined = undefined
   let builder: BuilderConfig | undefined = undefined
 
   const wearableZipFile = zip.file(WEARABLE_MANIFEST)
+  const sceneZipFile = zip.file(SCENE_MANIFEST)
   const builderZipFile = zip.file(BUILDER_MANIFEST)
 
-  if (wearableZipFile) {
+  if (!wearableZipFile && sceneZipFile) {
+    throw new FileNotFoundError(WEARABLE_MANIFEST)
+  } else if (wearableZipFile) {
     const wearableFileContents = await wearableZipFile.async('uint8array')
     wearable = await loadWearableConfig(wearableFileContents)
     wearable.data.representations.forEach((representation) => {
@@ -133,6 +149,16 @@ async function handleZippedModelFiles<T extends Content>(
         }
       })
     })
+
+    // Smart Wearables also have a scene.json file representing the required permissions
+    if (sceneZipFile) {
+      const sceneFileContents = await sceneZipFile.async('uint8array')
+      scene = await loadSceneConfig(sceneFileContents)
+
+      if (!zip.file(scene.main)) {
+        throw new FileNotFoundError(scene.main)
+      }
+    }
   }
 
   if (builderZipFile) {
@@ -147,7 +173,7 @@ async function handleZippedModelFiles<T extends Content>(
   }
 
   if (wearable) {
-    result = { ...result, wearable }
+    result = { ...result, wearable, scene }
   } else {
     const mainModelFile = fileNames.find(isModelPath)
     if (!mainModelFile) {
@@ -193,6 +219,17 @@ async function loadWearableConfig<T extends Content>(
   const parsedContent = JSON.parse(content)
   if (!validator.validate('WearableConfig', parsedContent)) {
     throw new InvalidWearableConfigFileError(validator.errors)
+  }
+  return parsedContent
+}
+
+async function loadSceneConfig<T extends Content>(
+  file: T
+): Promise<SceneConfig> {
+  const content = await readContent(file)
+  const parsedContent = JSON.parse(content)
+  if (!validator.validate('SceneConfig', parsedContent)) {
+    throw new InvalidSceneConfigFileError(validator.errors)
   }
   return parsedContent
 }
