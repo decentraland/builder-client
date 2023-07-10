@@ -52,7 +52,7 @@
   "dependencies": {
     "@dcl/crypto": "^3.0.1",
     "@dcl/hashing": "^1.1.0",
-    "@dcl/schemas": "^5.0.1",
+    "@dcl/schemas": "^8.1.0",
     "ajv": "^8.11.0",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^2.1.1",

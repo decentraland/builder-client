@@ -2,7 +2,8 @@ import {
   Rarity,
   WearableCategory,
   WearableRepresentation,
-  BodyShape as WearableBodyShape
+  BodyShape as WearableBodyShape,
+  HideableWearableCategory
 } from '@dcl/schemas'
 
 import { Content, RawContent } from '../content/types'
@@ -70,8 +71,8 @@ export type ModelMetrics = {
 export type WearableData = {
   category?: WearableCategory
   representations: WearableRepresentation[]
-  replaces: WearableCategory[]
-  hides: WearableCategory[]
+  replaces: HideableWearableCategory[]
+  hides: HideableWearableCategory[]
   tags: string[]
 }
 
