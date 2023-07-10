@@ -166,9 +166,9 @@ A wearable config file is a JSON file that contains the item's information and i
   "data": {
     // The item's WearableCategory
     "category": "eyebrows",
-    // The WearableCategories that the item hides (optional)
+    // The HideableWearableCategories that the item hides (optional)
     "hides": [],
-    // The WearableCategories that the item replaces (optional)
+    // The HideableWearableCategories that the item replaces (optional)
     "replaces": [],
     // The item's tags (optional)
     "tags": ["special", "new", "eyebrows"],

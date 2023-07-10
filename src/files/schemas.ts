@@ -1,4 +1,9 @@
-import { JSONSchema, SceneParcels, WearableRepresentation } from '@dcl/schemas'
+import {
+  HideableWearableCategory,
+  JSONSchema,
+  SceneParcels,
+  WearableRepresentation
+} from '@dcl/schemas'
 import { WearableCategory, Rarity } from '../item/types'
 import { BuilderConfig, SceneConfig, WearableConfig } from './types'
 
@@ -41,11 +46,11 @@ export const WearableConfigSchema: JSONSchema<WearableConfig> = {
       properties: {
         replaces: {
           type: 'array',
-          items: WearableCategory.schema
+          items: HideableWearableCategory.schema
         },
         hides: {
           type: 'array',
-          items: WearableCategory.schema
+          items: HideableWearableCategory.schema
         },
         tags: {
           type: 'array',

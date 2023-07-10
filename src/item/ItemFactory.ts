@@ -1,4 +1,8 @@
-import { Rarity, WearableRepresentation } from '@dcl/schemas'
+import {
+  HideableWearableCategory,
+  Rarity,
+  WearableRepresentation
+} from '@dcl/schemas'
 import { v4 as uuidV4 } from 'uuid'
 import {
   computeHashes,
@@ -152,7 +156,7 @@ export class ItemFactory<X extends Content> {
    * It requires the item to be defined first.
    * @param replaces - The item's replaces property.
    */
-  public withReplaces(replaces: WearableCategory[]): ItemFactory<X> {
+  public withReplaces(replaces: HideableWearableCategory[]): ItemFactory<X> {
     return this.setItemDataProperty('replaces', replaces)
   }
 
@@ -188,7 +192,7 @@ export class ItemFactory<X extends Content> {
    * It requires the item to be defined first.
    * @param hides - The item's hides property.
    */
-  public withHides(hides: WearableCategory[]): ItemFactory<X> {
+  public withHides(hides: HideableWearableCategory[]): ItemFactory<X> {
     return this.setItemDataProperty('hides', hides)
   }
 
@@ -283,8 +287,8 @@ export class ItemFactory<X extends Content> {
     bodyShape: WearableBodyShape,
     model: string,
     contents: RawContent<X>,
-    overrideHides: WearableCategory[] = [],
-    overrideReplaces: WearableCategory[] = []
+    overrideHides: HideableWearableCategory[] = [],
+    overrideReplaces: HideableWearableCategory[] = []
   ): ItemFactory<X> {
     if (!this.item) {
       throw new ItemNotInitializedError()
@@ -406,8 +410,8 @@ export class ItemFactory<X extends Content> {
     bodyShape: WearableBodyShape,
     model: string,
     contents: SortedContent<X>,
-    overrideHides: WearableCategory[],
-    overrideReplaces: WearableCategory[]
+    overrideHides: HideableWearableCategory[],
+    overrideReplaces: HideableWearableCategory[]
   ): WearableRepresentation[] {
     const representations: WearableRepresentation[] = []
 
