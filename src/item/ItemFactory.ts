@@ -1,4 +1,8 @@
-import { HideableWearableCategory, Rarity, WearableRepresentation } from '@dcl/schemas'
+import {
+  HideableWearableCategory,
+  Rarity,
+  WearableRepresentation
+} from '@dcl/schemas'
 import { v4 as uuidV4 } from 'uuid'
 import {
   computeHashes,
