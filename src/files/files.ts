@@ -2,6 +2,8 @@ import JSZip, { OutputType } from 'jszip'
 import { basename } from 'path'
 import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
+import addAjvKeywords from 'ajv-keywords'
+import addAjvErrors from 'ajv-errors'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
@@ -27,8 +29,12 @@ import {
   WrongExtensionError
 } from './files.errors'
 
-const ajv = new Ajv({ $data: true })
+const ajv = new Ajv({ $data: true, allErrors: true })
+
 addAjvFormats(ajv)
+addAjvKeywords(ajv)
+addAjvErrors(ajv, { singleError: true })
+
 const validator = ajv
   .addSchema(WearableConfigSchema, 'WearableConfig')
   .addSchema(SceneConfigSchema, 'SceneConfig')
