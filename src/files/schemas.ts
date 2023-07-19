@@ -1,7 +1,7 @@
 import {
   HideableWearableCategory,
   JSONSchema,
-  SceneParcels,
+  Scene,
   WearableRepresentation
 } from '@dcl/schemas'
 import { WearableCategory, Rarity } from '../item/types'
@@ -73,27 +73,4 @@ export const WearableConfigSchema: JSONSchema<WearableConfig> = {
   required: ['name', 'data']
 }
 
-export const SceneConfigSchema: JSONSchema<SceneConfig> = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'string',
-      nullable: true
-    },
-    main: {
-      description: "File that contains the entry point of the scene's code",
-      type: 'string',
-      minLength: 1
-    },
-    scene: SceneParcels.schema,
-    requiredPermissions: {
-      type: 'array',
-      items: {
-        type: 'string'
-      },
-      nullable: true
-    }
-  },
-  additionalProperties: false,
-  required: ['main', 'scene']
-}
+export const SceneConfigSchema: JSONSchema<SceneConfig> = Scene.schema
