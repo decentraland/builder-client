@@ -23,11 +23,11 @@ import {
   FileNotFoundError,
   FileTooBigError,
   InvalidBuilderConfigFileError,
-  InvalidSceneConfigFileError,
   InvalidWearableConfigFileError,
   ModelFileNotFoundError,
   WrongExtensionError
 } from './files.errors'
+import { handleAjvErrors } from './errorHandler'
 
 const ajv = new Ajv({ $data: true, allErrors: true })
 
@@ -235,7 +235,7 @@ async function loadSceneConfig<T extends Content>(
   const content = await readContent(file)
   const parsedContent = JSON.parse(content)
   if (!validator.validate('SceneConfig', parsedContent)) {
-    throw new InvalidSceneConfigFileError(validator.errors)
+    handleAjvErrors(parsedContent as SceneConfig, validator.errors)
   }
   return parsedContent
 }

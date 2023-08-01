@@ -77,3 +77,39 @@ export class FileNotFoundError extends Error {
     super(`The file ${fileName} does not exist.`)
   }
 }
+
+export class UnknownRequiredPermissionsError extends Error {
+  constructor(unknownRequiredPermissions: string[]) {
+    super(
+      `The following required permissions do not exist: ${unknownRequiredPermissions.join(
+        ', '
+      )}.`
+    )
+  }
+}
+
+export class DuplicatedRequiredPermissionsError extends Error {
+  constructor() {
+    super(
+      'Some required permissions are duplicated. Please remove the duplicates.'
+    )
+  }
+}
+
+export class AllowedMediaHostnameIsEmptyOrInvalidError extends Error {
+  constructor() {
+    super("The property 'allowedMediaHostnames' is empty or invalid.")
+  }
+}
+
+export class MissingRequiredPropertiesError extends Error {
+  constructor(properties: string[]) {
+    const error =
+      properties.length === 1
+        ? `The required property ${properties[0]} is missing.`
+        : `The following required properties ${properties.join(
+            ', '
+          )} are missing.`
+    super(error)
+  }
+}
