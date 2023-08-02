@@ -53,7 +53,57 @@ describe('when handling the errors detected by ajv in the scene file', () => {
 
   describe('and one of the errors mentions that there are duplicated required permissions', () => {
     beforeEach(() => {
+      sceneConfig = {
+        ...sceneConfig,
+        requiredPermissions: [
+          RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE,
+          RequiredPermission.OPEN_EXTERNAL_LINK,
+          RequiredPermission.OPEN_EXTERNAL_LINK
+        ] as unknown as RequiredPermission[]
+      }
+
       errors = [
+        {
+          instancePath: '/requiredPermissions',
+          keyword: 'uniqueItems',
+          message:
+            'must NOT have duplicate items (items ## 2 and 1 are identical)',
+          params: { i: 1, j: 2 },
+          schemaPath: '#/properties/requiredPermissions/uniqueItems'
+        }
+      ]
+    })
+
+    it('should throw DuplicatedRequiredPermissions error', () => {
+      expect(() => handleAjvErrors(sceneConfig, errors)).toThrow(
+        new DuplicatedRequiredPermissionsError([
+          RequiredPermission.OPEN_EXTERNAL_LINK
+        ])
+      )
+    })
+  })
+
+  describe('and more than one of the errors mention that there are duplicated required permissions', () => {
+    beforeEach(() => {
+      sceneConfig = {
+        ...sceneConfig,
+        requiredPermissions: [
+          RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE,
+          RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE,
+          RequiredPermission.OPEN_EXTERNAL_LINK,
+          RequiredPermission.OPEN_EXTERNAL_LINK
+        ] as unknown as RequiredPermission[]
+      }
+
+      errors = [
+        {
+          instancePath: '/requiredPermissions',
+          keyword: 'uniqueItems',
+          message:
+            'must NOT have duplicate items (items ## 1 and 0 are identical)',
+          params: { i: 0, j: 1 },
+          schemaPath: '#/properties/requiredPermissions/uniqueItems'
+        },
         {
           instancePath: '/requiredPermissions',
           keyword: 'uniqueItems',
@@ -67,7 +117,10 @@ describe('when handling the errors detected by ajv in the scene file', () => {
 
     it('should throw DuplicatedRequiredPermissions error', () => {
       expect(() => handleAjvErrors(sceneConfig, errors)).toThrow(
-        DuplicatedRequiredPermissionsError
+        new DuplicatedRequiredPermissionsError([
+          RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE,
+          RequiredPermission.OPEN_EXTERNAL_LINK
+        ])
       )
     })
   })
@@ -106,6 +159,12 @@ describe('when handling the errors detected by ajv in the scene file', () => {
           message: 'must be equal to one of the allowed values',
           params: {},
           schemaPath: '#/properties/requiredPermissions/items/enum'
+        },
+        {
+          instancePath: '/allowedMediaHostnames',
+          keyword: 'type',
+          params: { type: 'array' },
+          schemaPath: '#/properties/allowedMediaHostnames/type'
         }
       ]
     })

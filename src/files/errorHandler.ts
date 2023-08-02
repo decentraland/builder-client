@@ -13,19 +13,36 @@ function requiredPermissionsErrorHandler(
   errors: AjvError[],
   sceneConfig: SceneConfig
 ) {
+  const requiredPermissions =
+    sceneConfig.requiredPermissions as RequiredPermission[]
+
+  const isRequiredPermissionsError = (err: AjvError) =>
+    getPropertyWithError(err) === 'requiredPermissions'
+
   switch (error.keyword) {
     case 'enum': {
-      const requiredPermissions =
-        sceneConfig.requiredPermissions as RequiredPermission[]
       const wrongPermissions = errors
+        .filter(
+          (err) => err.keyword === 'enum' && isRequiredPermissionsError(err)
+        )
         .flatMap(({ instancePath }) => instancePath.split('/').slice(-1))
         .map((i) => requiredPermissions[i])
 
       throw new UnknownRequiredPermissionsError(wrongPermissions)
     }
 
-    case 'uniqueItems':
-      throw new DuplicatedRequiredPermissionsError()
+    case 'uniqueItems': {
+      const duplicatedRequiredPermissions = errors
+        .filter(
+          (err) =>
+            err.keyword === 'uniqueItems' && isRequiredPermissionsError(err)
+        )
+        .flatMap(({ params: { i } }) => requiredPermissions[i as number])
+
+      throw new DuplicatedRequiredPermissionsError(
+        duplicatedRequiredPermissions
+      )
+    }
   }
 }
 
@@ -39,6 +56,11 @@ function allowedMediaHostnamesErrorHandler(error: AjvError) {
 const propertyHandlers: ErrorHandlerBySceneProperty = {
   requiredPermissions: requiredPermissionsErrorHandler,
   allowedMediaHostnames: allowedMediaHostnamesErrorHandler
+}
+
+const getPropertyWithError = ({ instancePath }: AjvError) => {
+  const [property] = instancePath.split('/').slice(1)
+  return property
 }
 
 const handleAjvError = (
@@ -61,8 +83,7 @@ const handleAjvError = (
     }
   }
 
-  const [property] = instancePath.split('/').slice(1)
-
+  const property = getPropertyWithError(error)
   if (!property || !(property in propertyHandlers)) return
 
   propertyHandlers[property](error, errors, sceneConfig)

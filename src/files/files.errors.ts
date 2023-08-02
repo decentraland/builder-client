@@ -79,19 +79,25 @@ export class FileNotFoundError extends Error {
 }
 
 export class UnknownRequiredPermissionsError extends Error {
-  constructor(unknownRequiredPermissions: string[]) {
+  public getUnknownRequiredPermissions(): string[] {
+    return this.unknownRequiredPermissions
+  }
+
+  constructor(private unknownRequiredPermissions: string[]) {
     super(
-      `The following required permissions do not exist: ${unknownRequiredPermissions.join(
-        ', '
-      )}.`
+      `The following required permissions do not exist: ${unknownRequiredPermissions}.`
     )
   }
 }
 
 export class DuplicatedRequiredPermissionsError extends Error {
-  constructor() {
+  public getDuplicatedRequiredPermissions(): string[] {
+    return this.duplicatedRequiredPermissions
+  }
+
+  constructor(private duplicatedRequiredPermissions: string[]) {
     super(
-      'Some required permissions are duplicated. Please remove the duplicates.'
+      `Some required permissions are duplicated: ${duplicatedRequiredPermissions}. Please remove the duplicates.`
     )
   }
 }
@@ -103,13 +109,11 @@ export class AllowedMediaHostnameIsEmptyOrInvalidError extends Error {
 }
 
 export class MissingRequiredPropertiesError extends Error {
-  constructor(properties: string[]) {
-    const error =
-      properties.length === 1
-        ? `The required property ${properties[0]} is missing.`
-        : `The following required properties ${properties.join(
-            ', '
-          )} are missing.`
-    super(error)
+  public getMissingProperties(): string[] {
+    return this.missingProperties
+  }
+
+  constructor(private missingProperties: string[]) {
+    super(`The following required properties are missing: ${missingProperties}`)
   }
 }
