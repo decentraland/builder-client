@@ -1,4 +1,7 @@
-import { BodyShape as WearableBodyShape } from '@dcl/schemas'
+import {
+  RequiredPermission,
+  BodyShape as WearableBodyShape
+} from '@dcl/schemas'
 import JSZip from 'jszip'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { Rarity, WearableCategory } from '../item/types'
@@ -15,6 +18,7 @@ import {
   InvalidBuilderConfigFileError,
   InvalidSceneConfigFileError,
   InvalidWearableConfigFileError,
+  MissingRequiredPropertiesError,
   ModelFileNotFoundError,
   WrongExtensionError
 } from './files.errors'
@@ -80,7 +84,9 @@ describe('when loading an item file', () => {
               base: '0,0'
             },
             main: 'game.js',
-            requiredPermissions: ['REQUIRED_PERMISSION']
+            requiredPermissions: [
+              RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE
+            ]
           }
           zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
           zipFileContent = await zipFile.generateAsync({
@@ -285,6 +291,8 @@ describe('when loading an item file', () => {
         let modelFileContent: Uint8Array
         let textureFile: string
         let textureFileContent: Uint8Array
+        let sceneMainFile: string
+        let sceneMainFileContent: Uint8Array
 
         beforeEach(async () => {
           modelFile = 'some-model.glb'
@@ -312,14 +320,21 @@ describe('when loading an item file', () => {
               ]
             }
           }
+          sceneMainFile = 'game.js'
+          sceneMainFileContent = new Uint8Array([0, 1, 2, 3, 4])
           zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
           zipFile.file(modelFile, modelFileContent)
           zipFile.file(textureFile, textureFileContent)
+          zipFile.file(sceneMainFile, sceneMainFileContent)
         })
 
         describe('and the scene config file is wrongly formatted', () => {
           beforeEach(async () => {
-            zipFile.file(SCENE_MANIFEST, '{}')
+            zipFile.file(
+              SCENE_MANIFEST,
+              '{"main": "game.js","scene": {"parcels": ["0,0", "0,1", "1,0", "1,1"],"base": "0,0" }, "owner": [35] }'
+            )
+
             zipFileContent = await zipFile.generateAsync({
               type: 'uint8array'
             })
@@ -335,29 +350,29 @@ describe('when loading an item file', () => {
         describe('and the main property of the scene config file is not present in the zipped file', () => {
           let sceneFileContent: SceneConfig
 
-          beforeEach(() => {
+          beforeEach(async () => {
             sceneFileContent = {
               scene: {
                 parcels: ['0,0', '0,1', '1,0', '1,1'],
                 base: '0,0'
               },
-              main: 'game.js',
-              requiredPermissions: ['REQUIRED_PERMISSION']
-            }
+              requiredPermissions: [RequiredPermission.OPEN_EXTERNAL_LINK]
+            } as SceneConfig
             zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
+            zipFileContent = await zipFile.generateAsync({
+              type: 'uint8array'
+            })
           })
 
-          it('should throw an error signaling that the scene config file is invalid', () => {
+          it('should throw an error signaling that the main property is missing in the scene config', () => {
             return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-              new InvalidSceneConfigFileError()
+              new MissingRequiredPropertiesError(['main'])
             )
           })
         })
 
         describe('and the scene config file is valid and contains the main property in the zipped file', () => {
           let sceneFileContent: SceneConfig
-          let sceneMainFile: string
-          let sceneMainFileContent: Uint8Array
 
           beforeEach(() => {
             sceneMainFile = 'game.js'
@@ -368,7 +383,7 @@ describe('when loading an item file', () => {
                 base: '0,0'
               },
               main: sceneMainFile,
-              requiredPermissions: ['REQUIRED_PERMISSION']
+              requiredPermissions: [RequiredPermission.OPEN_EXTERNAL_LINK]
             }
             zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
             zipFile.file(sceneMainFile, sceneMainFileContent)

@@ -1,3 +1,4 @@
+import { ErrorObject } from 'ajv/dist/core'
 import { StandardProps, ThirdPartyProps, Wearable, Scene } from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 
@@ -31,4 +32,14 @@ export type LoadedFile<T extends Content> = {
   scene?: SceneConfig
   builder?: BuilderConfig
   mainModel?: string
+}
+
+export type AjvError = ErrorObject<string, Record<string, unknown>, unknown>
+
+export type ErrorHandlerBySceneProperty = {
+  [P in keyof Partial<SceneConfig>]: (
+    error: AjvError,
+    errors: AjvError[],
+    sceneConfig: SceneConfig
+  ) => void
 }
