@@ -74,20 +74,23 @@ describe('when loading an item file', () => {
     })
 
     describe('and the zip has a scene config file', () => {
-      describe('and the zip contains a scene but not a wearable', () => {
-        let sceneFileContent: SceneConfig
+      let sceneFileContent: SceneConfig
 
+      beforeEach(async () => {
+        sceneFileContent = {
+          scene: {
+            parcels: ['0,0', '0,1', '1,0', '1,1'],
+            base: '0,0'
+          },
+          main: 'game.js',
+          requiredPermissions: [
+            RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE
+          ]
+        }
+      })
+
+      describe('and the zip contains a scene but not a wearable', () => {
         beforeEach(async () => {
-          sceneFileContent = {
-            scene: {
-              parcels: ['0,0', '0,1', '1,0', '1,1'],
-              base: '0,0'
-            },
-            main: 'game.js',
-            requiredPermissions: [
-              RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE
-            ]
-          }
           zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
           zipFileContent = await zipFile.generateAsync({
             type: 'uint8array'
@@ -100,6 +103,27 @@ describe('when loading an item file', () => {
           )
         })
       })
+
+      describe.each(['folder', 'folder/subFolder'])(
+        'and the scene config file is under a folder',
+        (folderPath) => {
+          beforeEach(async () => {
+            zipFile.file(
+              `${folderPath}/${SCENE_MANIFEST}`,
+              JSON.stringify(sceneFileContent)
+            )
+            zipFileContent = await zipFile.generateAsync({
+              type: 'uint8array'
+            })
+          })
+
+          it('should throw an error signaling that the wearable config file is missing', () => {
+            return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+              new FileNotFoundError(WEARABLE_MANIFEST)
+            )
+          })
+        }
+      )
     })
 
     describe('and the zip has a wearable config file', () => {
@@ -284,6 +308,65 @@ describe('when loading an item file', () => {
           })
         })
       })
+
+      describe.each(['folder', 'folder/subFolder'])(
+        'and the wearable config file is under a folder',
+        (folderPath) => {
+          let wearableFileContent: WearableConfig
+          let modelFile: string
+          let modelFileContent: Uint8Array
+          let textureFile: string
+          let textureFileContent: Uint8Array
+
+          beforeEach(async () => {
+            modelFile = 'some-model.glb'
+            modelFileContent = new Uint8Array([0, 1, 2, 3, 4])
+            textureFile = 'a-texture-file.png'
+            textureFileContent = new Uint8Array([5, 6, 7])
+
+            wearableFileContent = {
+              id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+              name: 'test',
+              rarity: Rarity.COMMON,
+              data: {
+                category: WearableCategory.EYEBROWS,
+                hides: [],
+                replaces: [],
+                tags: [],
+                representations: [
+                  {
+                    bodyShapes: [WearableBodyShape.MALE],
+                    mainFile: modelFile,
+                    contents: [modelFile, textureFile],
+                    overrideHides: [],
+                    overrideReplaces: []
+                  }
+                ]
+              }
+            }
+            zipFile.file(
+              `${folderPath}/${WEARABLE_MANIFEST}`,
+              JSON.stringify(wearableFileContent)
+            )
+            zipFile.file(`${folderPath}/${modelFile}`, modelFileContent)
+            zipFile.file(`${folderPath}/${textureFile}`, textureFileContent)
+            zipFileContent = await zipFile.generateAsync({
+              type: 'uint8array'
+            })
+          })
+
+          it('should build the LoadedFile with the zipped contents and the wearable config file with the same buffer format as the zip', async () => {
+            return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+              content: {
+                [modelFile]: modelFileContent,
+                [textureFile]: textureFileContent,
+                [THUMBNAIL_PATH]: thumbnailContent
+              },
+              wearable: wearableFileContent
+            })
+          })
+        }
+      )
 
       describe('and the zip also contains a scene config file', () => {
         let wearableFileContent: WearableConfig

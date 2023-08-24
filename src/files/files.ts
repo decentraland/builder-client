@@ -1,5 +1,5 @@
 import JSZip, { OutputType } from 'jszip'
-import { basename } from 'path'
+import { basename, dirname } from 'path'
 import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
 import addAjvKeywords from 'ajv-keywords'
@@ -105,20 +105,30 @@ async function handleZippedModelFiles<T extends Content>(
     fileFormat = 'arraybuffer'
   }
 
+  let baseDir = ''
+
   zip.forEach((filePath, file) => {
     if (
       !basename(filePath).startsWith('.') &&
-      basename(filePath) !== WEARABLE_MANIFEST &&
-      basename(filePath) !== BUILDER_MANIFEST &&
-      basename(filePath) !== SCENE_MANIFEST
+      ![WEARABLE_MANIFEST, BUILDER_MANIFEST, SCENE_MANIFEST].includes(
+        basename(filePath)
+      )
     ) {
       fileNames.push(filePath)
       promiseOfFileContents.push(file.async(fileFormat) as Promise<T>)
+    } else if (
+      [WEARABLE_MANIFEST, SCENE_MANIFEST].includes(basename(filePath))
+    ) {
+      baseDir = dirname(filePath) === '.' ? '' : `${dirname(filePath)}/`
     }
   })
 
   const fileContents = await Promise.all(promiseOfFileContents)
   const content: RawContent<T> = fileNames.reduce((acc, fileName, index) => {
+    if (fileName.endsWith('/')) {
+      return acc
+    }
+
     let size: number
 
     if (globalThis.Blob && fileContents[index] instanceof globalThis.Blob) {
@@ -131,7 +141,9 @@ async function handleZippedModelFiles<T extends Content>(
       throw new FileTooBigError(fileName, size)
     }
 
-    acc[fileName] = fileContents[index]
+    // store the contents files without the parent directories
+    const sanitizeFileName = fileName.replace(baseDir, '')
+    acc[sanitizeFileName] = fileContents[index]
     return acc
   }, {})
 
@@ -139,8 +151,8 @@ async function handleZippedModelFiles<T extends Content>(
   let scene: SceneConfig | undefined = undefined
   let builder: BuilderConfig | undefined = undefined
 
-  const wearableZipFile = zip.file(WEARABLE_MANIFEST)
-  const sceneZipFile = zip.file(SCENE_MANIFEST)
+  const wearableZipFile = zip.file(new RegExp(`${WEARABLE_MANIFEST}$`))[0]
+  const sceneZipFile = zip.file(new RegExp(`${SCENE_MANIFEST}$`))[0]
   const builderZipFile = zip.file(BUILDER_MANIFEST)
 
   if (!wearableZipFile && sceneZipFile) {
@@ -150,7 +162,7 @@ async function handleZippedModelFiles<T extends Content>(
     wearable = await loadWearableConfig(wearableFileContents)
     wearable.data.representations.forEach((representation) => {
       representation.contents.forEach((content) => {
-        if (!zip.file(representation.mainFile)) {
+        if (!zip.file(new RegExp(`${representation.mainFile}$`))[0]) {
           throw new FileNotFoundError(content)
         }
       })
@@ -161,7 +173,7 @@ async function handleZippedModelFiles<T extends Content>(
       const sceneFileContents = await sceneZipFile.async('uint8array')
       scene = await loadSceneConfig(sceneFileContents)
 
-      if (!zip.file(scene.main)) {
+      if (!zip.file(new RegExp(`${scene.main}$`))[0]) {
         throw new FileNotFoundError(scene.main)
       }
     }
