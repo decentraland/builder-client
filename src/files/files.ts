@@ -11,18 +11,21 @@ import {
   WEARABLE_MANIFEST,
   MAX_FILE_SIZE,
   BUILDER_MANIFEST,
-  SCENE_MANIFEST
+  SCENE_MANIFEST,
+  EMOTE_MANIFEST
 } from './constants'
-import { WearableConfig, BuilderConfig, LoadedFile, SceneConfig } from './types'
+import { WearableConfig, BuilderConfig, LoadedFile, SceneConfig, EmoteConfig } from './types'
 import {
   BuilderConfigSchema,
   WearableConfigSchema,
-  SceneConfigSchema
+  SceneConfigSchema,
+  EmoteConfigSchema
 } from './schemas'
 import {
   FileNotFoundError,
   FileTooBigError,
   InvalidBuilderConfigFileError,
+  InvalidEmoteConfigFileError,
   InvalidWearableConfigFileError,
   ModelFileNotFoundError,
   WrongExtensionError
@@ -39,6 +42,7 @@ const validator = ajv
   .addSchema(WearableConfigSchema, 'WearableConfig')
   .addSchema(SceneConfigSchema, 'SceneConfig')
   .addSchema(BuilderConfigSchema, 'BuilderConfig')
+  .addSchema(EmoteConfigSchema, 'EmoteConfig')
 
 export async function loadFile<T extends Content>(
   fileName: string,
@@ -110,7 +114,8 @@ async function handleZippedModelFiles<T extends Content>(
       !basename(filePath).startsWith('.') &&
       basename(filePath) !== WEARABLE_MANIFEST &&
       basename(filePath) !== BUILDER_MANIFEST &&
-      basename(filePath) !== SCENE_MANIFEST
+      basename(filePath) !== SCENE_MANIFEST &&
+      basename(filePath) !== EMOTE_MANIFEST
     ) {
       fileNames.push(filePath)
       promiseOfFileContents.push(file.async(fileFormat) as Promise<T>)
@@ -138,10 +143,12 @@ async function handleZippedModelFiles<T extends Content>(
   let wearable: WearableConfig | undefined = undefined
   let scene: SceneConfig | undefined = undefined
   let builder: BuilderConfig | undefined = undefined
+  let emote: EmoteConfig | undefined = undefined
 
   const wearableZipFile = zip.file(WEARABLE_MANIFEST)
   const sceneZipFile = zip.file(SCENE_MANIFEST)
   const builderZipFile = zip.file(BUILDER_MANIFEST)
+  const emoteZipFile = zip.file(EMOTE_MANIFEST)
 
   if (!wearableZipFile && sceneZipFile) {
     throw new FileNotFoundError(WEARABLE_MANIFEST)
@@ -172,10 +179,19 @@ async function handleZippedModelFiles<T extends Content>(
     builder = await loadBuilderConfig(builderZipFileContents)
   }
 
+  if (emoteZipFile) {
+    const emoteZipFileContents = await emoteZipFile.async('uint8array')
+    emote = await loadEmoteConfig(emoteZipFileContents)
+  }
+
   let result: LoadedFile<T> = { content }
 
   if (builder) {
     result = { ...result, builder }
+  }
+
+  if (emote) {
+    result = { ...result, emote }
   }
 
   if (wearable) {
@@ -236,6 +252,17 @@ async function loadSceneConfig<T extends Content>(
   const parsedContent = JSON.parse(content)
   if (!validator.validate('SceneConfig', parsedContent)) {
     handleAjvErrors(parsedContent as SceneConfig, validator.errors)
+  }
+  return parsedContent
+}
+
+async function loadEmoteConfig<T extends Content>(
+  file: T
+): Promise<EmoteConfig> {
+  const content = await readContent(file)
+  const parsedContent = JSON.parse(content)
+  if (!validator.validate('EmoteConfig', parsedContent)) {
+    throw new InvalidEmoteConfigFileError(validator.errors)
   }
   return parsedContent
 }

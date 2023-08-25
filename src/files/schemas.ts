@@ -1,11 +1,13 @@
 import {
+  EmoteCategory,
+  EmotePlayMode,
   HideableWearableCategory,
   JSONSchema,
   Scene,
   WearableRepresentation
 } from '@dcl/schemas'
 import { WearableCategory, Rarity } from '../item/types'
-import { BuilderConfig, SceneConfig, WearableConfig } from './types'
+import { BuilderConfig, EmoteConfig, SceneConfig, WearableConfig } from './types'
 
 export const BuilderConfigSchema: JSONSchema<BuilderConfig> = {
   type: 'object',
@@ -79,3 +81,31 @@ export const WearableConfigSchema: JSONSchema<WearableConfig> = {
 }
 
 export const SceneConfigSchema: JSONSchema<SceneConfig> = Scene.schema
+
+export const EmoteConfigSchema: JSONSchema<EmoteConfig> = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      nullable: true
+    },
+    description: {
+      type: 'string',
+      nullable: true
+    },
+    rarity: {
+      ...Rarity.schema,
+      nullable: true
+    },
+    category: {
+      ...EmoteCategory.schema,
+      nullable: true
+    },
+    play_mode: {
+      ...EmotePlayMode.schema,
+      nullable: true
+    }
+  },
+  additionalProperties: false,
+  required: []
+}
