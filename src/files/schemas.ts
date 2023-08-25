@@ -39,7 +39,8 @@ export const WearableConfigSchema: JSONSchema<WearableConfig> = {
     },
     description: {
       type: 'string',
-      nullable: true
+      nullable: true,
+      maxLength: 64
     },
     rarity: {
       ...Rarity.schema,
@@ -96,7 +97,8 @@ export const EmoteConfigSchema: JSONSchema<EmoteConfig> = {
     },
     description: {
       type: 'string',
-      nullable: true
+      nullable: true,
+      maxLength: 64
     },
     rarity: {
       ...Rarity.schema,

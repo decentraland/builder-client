@@ -1,4 +1,6 @@
 import {
+  EmoteCategory,
+  EmotePlayMode,
   RequiredPermission,
   BodyShape as WearableBodyShape
 } from '@dcl/schemas'
@@ -9,13 +11,15 @@ import {
   WEARABLE_MANIFEST,
   MAX_FILE_SIZE,
   BUILDER_MANIFEST,
-  SCENE_MANIFEST
+  SCENE_MANIFEST,
+  EMOTE_MANIFEST
 } from './constants'
 import { loadFile } from './files'
 import {
   FileNotFoundError,
   FileTooBigError,
   InvalidBuilderConfigFileError,
+  InvalidEmoteConfigFileError,
   InvalidSceneConfigFileError,
   InvalidWearableConfigFileError,
   MissingRequiredPropertiesError,
@@ -591,6 +595,80 @@ describe('when loading an item file', () => {
             },
             wearable: wearableFileContent
           })
+        })
+      })
+    })
+
+    describe('and the zip has an emote config file', () => {
+      describe('and the emote config file has unsupported properties', () => {
+        beforeEach(async () => {
+          zipFile.file(EMOTE_MANIFEST, '{ "unsupportedProp": "something" }')
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should throw an error signaling that the wearable config file is invalid', () => {
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new InvalidEmoteConfigFileError()
+          )
+        })
+      })
+
+      describe('and the emote config file contains all properties', () => {
+        const mainModel = 'test.gltf'
+        let modelContent: Uint8Array
+
+        beforeEach(async () => {
+          modelContent = new Uint8Array([0, 1, 2, 3])
+          zipFile.file(
+            EMOTE_MANIFEST,
+            '{"name": "test", "description": "test d", "rarity": "unique", "category": "fun", "play_mode": "simple" }'
+          )
+          zipFile.file(mainModel, modelContent)
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should build the LoadedFile contents with the zipped files, the main model file path and the builder information', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [mainModel]: modelContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            emote: {
+              name: "test",
+              description: "test d",
+              rarity: Rarity.UNIQUE,
+              category: EmoteCategory.FUN,
+              play_mode: EmotePlayMode.SIMPLE
+            },
+            mainModel
+          })
+        })
+      })
+
+      describe('and the emote config file contains a really long description', () => {
+        const mainModel = 'test.gltf'
+        let modelContent: Uint8Array
+
+        beforeEach(async () => {
+          modelContent = new Uint8Array([0, 1, 2, 3])
+          zipFile.file(
+            EMOTE_MANIFEST,
+            '{ "description": "this is a really loooooooooooooooooooooooooooooooooooong description" }'
+          )
+          zipFile.file(mainModel, modelContent)
+          zipFileContent = await zipFile.generateAsync({
+            type: 'uint8array'
+          })
+        })
+
+        it('should fail to build the loaded file', () => {
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new InvalidEmoteConfigFileError()
+          )
         })
       })
     })
