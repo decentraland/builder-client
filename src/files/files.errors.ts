@@ -72,7 +72,6 @@ export class InvalidEmoteConfigFileError extends Error {
   }
 }
 
-
 export class InvalidSceneConfigFileError extends Error {
   public getErrors():
     | ErrorObject<string, Record<string, unknown>, unknown>[]

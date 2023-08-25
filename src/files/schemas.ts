@@ -7,7 +7,12 @@ import {
   WearableRepresentation
 } from '@dcl/schemas'
 import { WearableCategory, Rarity } from '../item/types'
-import { BuilderConfig, EmoteConfig, SceneConfig, WearableConfig } from './types'
+import {
+  BuilderConfig,
+  EmoteConfig,
+  SceneConfig,
+  WearableConfig
+} from './types'
 
 export const BuilderConfigSchema: JSONSchema<BuilderConfig> = {
   type: 'object',

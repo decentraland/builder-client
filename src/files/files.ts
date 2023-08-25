@@ -14,7 +14,13 @@ import {
   SCENE_MANIFEST,
   EMOTE_MANIFEST
 } from './constants'
-import { WearableConfig, BuilderConfig, LoadedFile, SceneConfig, EmoteConfig } from './types'
+import {
+  WearableConfig,
+  BuilderConfig,
+  LoadedFile,
+  SceneConfig,
+  EmoteConfig
+} from './types'
 import {
   BuilderConfigSchema,
   WearableConfigSchema,
