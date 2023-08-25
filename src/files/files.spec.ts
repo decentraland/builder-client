@@ -638,8 +638,8 @@ describe('when loading an item file', () => {
               [THUMBNAIL_PATH]: thumbnailContent
             },
             emote: {
-              name: "test",
-              description: "test d",
+              name: 'test',
+              description: 'test d',
               rarity: Rarity.UNIQUE,
               category: EmoteCategory.FUN,
               play_mode: EmotePlayMode.SIMPLE
