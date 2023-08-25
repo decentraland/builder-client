@@ -1,5 +1,13 @@
 import { ErrorObject } from 'ajv/dist/core'
-import { StandardProps, ThirdPartyProps, Wearable, Scene } from '@dcl/schemas'
+import {
+  StandardProps,
+  ThirdPartyProps,
+  Wearable,
+  Scene,
+  EmoteCategory,
+  EmotePlayMode,
+  Rarity
+} from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 
 export type WearableConfig = Omit<
@@ -24,6 +32,14 @@ export type BuilderConfig = {
   collectionId?: string
 }
 
+export type EmoteConfig = {
+  name?: string
+  description?: string
+  category?: EmoteCategory
+  rarity?: Rarity
+  play_mode?: EmotePlayMode
+}
+
 export type SceneConfig = Scene
 
 export type LoadedFile<T extends Content> = {
@@ -31,6 +47,7 @@ export type LoadedFile<T extends Content> = {
   wearable?: WearableConfig
   scene?: SceneConfig
   builder?: BuilderConfig
+  emote?: EmoteConfig
   mainModel?: string
 }
 
