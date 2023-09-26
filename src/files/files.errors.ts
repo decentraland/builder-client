@@ -55,23 +55,6 @@ export class InvalidWearableConfigFileError extends Error {
   }
 }
 
-export class InvalidEmoteConfigFileError extends Error {
-  public getErrors():
-    | ErrorObject<string, Record<string, unknown>, unknown>[]
-    | null
-    | undefined {
-    return this.errors
-  }
-
-  constructor(
-    private errors?:
-      | ErrorObject<string, Record<string, unknown>, unknown>[]
-      | null
-  ) {
-    super('The emote config file is invalid')
-  }
-}
-
 export class InvalidSceneConfigFileError extends Error {
   public getErrors():
     | ErrorObject<string, Record<string, unknown>, unknown>[]

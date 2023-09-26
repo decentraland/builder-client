@@ -38,6 +38,7 @@ export type EmoteConfig = {
   category?: EmoteCategory
   rarity?: Rarity
   play_mode?: EmotePlayMode
+  tags?: string[]
 }
 
 export type SceneConfig = Scene

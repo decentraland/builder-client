@@ -31,7 +31,6 @@ import {
   FileNotFoundError,
   FileTooBigError,
   InvalidBuilderConfigFileError,
-  InvalidEmoteConfigFileError,
   InvalidWearableConfigFileError,
   ModelFileNotFoundError,
   WrongExtensionError
@@ -266,9 +265,27 @@ async function loadEmoteConfig<T extends Content>(
   file: T
 ): Promise<EmoteConfig> {
   const content = await readContent(file)
+  const validProperties = [
+    'name',
+    'description',
+    'tags',
+    'rarity',
+    'category',
+    'play_mode'
+  ]
   const parsedContent = JSON.parse(content)
-  if (!validator.validate('EmoteConfig', parsedContent)) {
-    throw new InvalidEmoteConfigFileError(validator.errors)
-  }
-  return parsedContent
+  validator.validate('EmoteConfig', parsedContent)
+  const values = Object.keys(parsedContent).reduce((val, key) => {
+    const propertyHasErrors = validator.errors?.some(({ instancePath }) =>
+      instancePath.includes(key)
+    )
+    if (propertyHasErrors || !validProperties.includes(key)) {
+      return val
+    }
+    return {
+      ...val,
+      [key]: parsedContent[key]
+    }
+  }, {})
+  return values
 }
