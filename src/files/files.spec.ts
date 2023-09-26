@@ -19,7 +19,6 @@ import {
   FileNotFoundError,
   FileTooBigError,
   InvalidBuilderConfigFileError,
-  InvalidEmoteConfigFileError,
   InvalidSceneConfigFileError,
   InvalidWearableConfigFileError,
   MissingRequiredPropertiesError,
@@ -601,17 +600,27 @@ describe('when loading an item file', () => {
 
     describe('and the zip has an emote config file', () => {
       describe('and the emote config file has unsupported properties', () => {
+        const mainModel = 'test.gltf'
+        let modelContent: Uint8Array
+
         beforeEach(async () => {
+          modelContent = new Uint8Array([0, 1, 2, 3])
           zipFile.file(EMOTE_MANIFEST, '{ "unsupportedProp": "something" }')
+          zipFile.file(mainModel, modelContent)
           zipFileContent = await zipFile.generateAsync({
             type: 'uint8array'
           })
         })
 
-        it('should throw an error signaling that the wearable config file is invalid', () => {
-          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-            new InvalidEmoteConfigFileError()
-          )
+        it('should ignore invalid property', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [mainModel]: modelContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            emote: {},
+            mainModel
+          })
         })
       })
 
@@ -657,7 +666,7 @@ describe('when loading an item file', () => {
           modelContent = new Uint8Array([0, 1, 2, 3])
           zipFile.file(
             EMOTE_MANIFEST,
-            '{ "description": "this is a really loooooooooooooooooooooooooooooooooooong description" }'
+            '{ "description": "this is a really loooooooooooooooooooooooooooooooooooong description", "name": "Name" }'
           )
           zipFile.file(mainModel, modelContent)
           zipFileContent = await zipFile.generateAsync({
@@ -665,10 +674,17 @@ describe('when loading an item file', () => {
           })
         })
 
-        it('should fail to build the loaded file', () => {
-          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-            new InvalidEmoteConfigFileError()
-          )
+        it('should ignore description property', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [mainModel]: modelContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            emote: {
+              name: "Name"
+            },
+            mainModel
+          })
         })
       })
     })

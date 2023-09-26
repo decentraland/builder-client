@@ -111,8 +111,16 @@ export const EmoteConfigSchema: JSONSchema<EmoteConfig> = {
     play_mode: {
       ...EmotePlayMode.schema,
       nullable: true
-    }
+    },
+    tags: {
+      type: 'array',
+      items: {
+        type: 'string',
+        minLength: 1
+      },
+      nullable: true
+    },
   },
-  additionalProperties: false,
+  additionalProperties: true,
   required: []
 }
