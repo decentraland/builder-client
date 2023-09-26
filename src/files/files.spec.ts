@@ -681,7 +681,7 @@ describe('when loading an item file', () => {
               [THUMBNAIL_PATH]: thumbnailContent
             },
             emote: {
-              name: "Name"
+              name: 'Name'
             },
             mainModel
           })

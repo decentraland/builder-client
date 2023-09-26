@@ -265,11 +265,20 @@ async function loadEmoteConfig<T extends Content>(
   file: T
 ): Promise<EmoteConfig> {
   const content = await readContent(file)
-  const validProperties = ['name', 'description', 'tags', 'rarity', 'category', 'play_mode']
+  const validProperties = [
+    'name',
+    'description',
+    'tags',
+    'rarity',
+    'category',
+    'play_mode'
+  ]
   const parsedContent = JSON.parse(content)
   validator.validate('EmoteConfig', parsedContent)
   const values = Object.keys(parsedContent).reduce((val, key) => {
-    const propertyHasErrors = validator.errors?.some(({ instancePath }) => instancePath.includes(key))
+    const propertyHasErrors = validator.errors?.some(({ instancePath }) =>
+      instancePath.includes(key)
+    )
     if (propertyHasErrors || !validProperties.includes(key)) {
       return val
     }

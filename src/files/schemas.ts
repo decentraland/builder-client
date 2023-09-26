@@ -119,7 +119,7 @@ export const EmoteConfigSchema: JSONSchema<EmoteConfig> = {
         minLength: 1
       },
       nullable: true
-    },
+    }
   },
   additionalProperties: true,
   required: []
