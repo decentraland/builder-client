@@ -96,6 +96,7 @@ function isModelPath(fileName: string) {
  *
  * @param zipFile - The ZIP file.
  */
+/** @deprecated */
 async function handleZippedModelFiles<T extends Content>(
   zipFile: T
 ): Promise<LoadedFile<T>> {
