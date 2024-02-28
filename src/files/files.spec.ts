@@ -9,7 +9,7 @@ import { THUMBNAIL_PATH } from '../item/constants'
 import { Rarity, WearableCategory } from '../item/types'
 import {
   WEARABLE_MANIFEST,
-  MAX_WEARABLE_FILE_SIZE,  
+  MAX_WEARABLE_FILE_SIZE,
   MAX_SKIN_FILE_SIZE,
   BUILDER_MANIFEST,
   SCENE_MANIFEST,

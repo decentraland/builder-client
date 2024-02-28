@@ -1,5 +1,5 @@
 import { ErrorObject } from 'ajv'
-import { MAX_WEARABLE_FILE_SIZE,  MAX_SKIN_FILE_SIZE } from './constants'
+import { MAX_WEARABLE_FILE_SIZE, MAX_SKIN_FILE_SIZE } from './constants'
 
 export class WrongExtensionError extends Error {
   constructor(file: string) {
