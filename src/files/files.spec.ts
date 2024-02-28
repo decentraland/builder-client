@@ -9,7 +9,8 @@ import { THUMBNAIL_PATH } from '../item/constants'
 import { Rarity, WearableCategory } from '../item/types'
 import {
   WEARABLE_MANIFEST,
-  MAX_FILE_SIZE,
+  MAX_WEARABLE_FILE_SIZE,
+  MAX_SKIN_FILE_SIZE,
   BUILDER_MANIFEST,
   SCENE_MANIFEST,
   EMOTE_MANIFEST
@@ -689,11 +690,11 @@ describe('when loading an item file', () => {
       })
     })
 
-    describe('and the zip file contains a file that exceeds the maximum file size limit', () => {
+    describe('and the zip file contains a wearable file that exceeds the maximum file size limit', () => {
       const modelFile = 'test.glb'
 
       beforeEach(async () => {
-        zipFile.file(modelFile, new Uint8Array(MAX_FILE_SIZE + 1))
+        zipFile.file(modelFile, new Uint8Array(MAX_WEARABLE_FILE_SIZE + 1))
         zipFileContent = await zipFile.generateAsync({
           type: 'uint8array'
         })
@@ -701,7 +702,24 @@ describe('when loading an item file', () => {
 
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-          new FileTooBigError(modelFile, MAX_FILE_SIZE + 1)
+          new FileTooBigError(modelFile, MAX_WEARABLE_FILE_SIZE + 1)
+        )
+      })
+    })
+
+    describe('and the zip file contains a skin file that exceeds the maximum file size limit', () => {
+      const modelFile = 'test.glb'
+
+      beforeEach(async () => {
+        zipFile.file(modelFile, new Uint8Array(MAX_SKIN_FILE_SIZE + 1))
+        zipFileContent = await zipFile.generateAsync({
+          type: 'uint8array'
+        })
+      })
+
+      it('should throw an error signaling that the file is too big', () => {
+        return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+          new FileTooBigError(modelFile, MAX_SKIN_FILE_SIZE + 1)
         )
       })
     })
