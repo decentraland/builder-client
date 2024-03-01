@@ -13,7 +13,8 @@ import {
   MAX_SKIN_FILE_SIZE,
   BUILDER_MANIFEST,
   SCENE_MANIFEST,
-  EMOTE_MANIFEST
+  EMOTE_MANIFEST,
+  MAX_EMOTE_FILE_SIZE
 } from './constants'
 import { loadFile } from './files'
 import {
@@ -720,6 +721,23 @@ describe('when loading an item file', () => {
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
           new FileTooBigError(modelFile, MAX_SKIN_FILE_SIZE + 1)
+        )
+      })
+    })
+
+    describe('and the zip file contains a emote file that exceeds the maximum file size limit', () => {
+      const modelFile = 'test.glb'
+
+      beforeEach(async () => {
+        zipFile.file(modelFile, new Uint8Array(MAX_EMOTE_FILE_SIZE + 1))
+        zipFileContent = await zipFile.generateAsync({
+          type: 'uint8array'
+        })
+      })
+
+      it('should throw an error signaling that the file is too big', () => {
+        return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+          new FileTooBigError(modelFile, MAX_EMOTE_FILE_SIZE + 1)
         )
       })
     })
