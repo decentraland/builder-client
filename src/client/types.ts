@@ -30,9 +30,9 @@ export type ThirdParty = {
 export type NFT = {
   tokenId: string
   imageUrl: string
-  name: string | null
-  description: string | null
-  contract: string
+  name: string
+  description: string
+  contract: { address: string; name: string }
 }
 
 // Service types
