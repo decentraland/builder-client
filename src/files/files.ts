@@ -12,7 +12,11 @@ import {
   MAX_FILE_SIZE,
   BUILDER_MANIFEST,
   SCENE_MANIFEST,
-  EMOTE_MANIFEST
+  EMOTE_MANIFEST,
+  MAX_SKIN_FILE_SIZE,
+  MAX_WEARABLE_FILE_SIZE,
+  MAX_THUMBNAIL_FILE_SIZE,
+  MAX_EMOTE_FILE_SIZE
 } from './constants'
 import {
   WearableConfig,
@@ -36,6 +40,7 @@ import {
   WrongExtensionError
 } from './files.errors'
 import { handleAjvErrors } from './errorHandler'
+import { WearableCategory } from '@dcl/schemas'
 
 const ajv = new Ajv({ $data: true, allErrors: true })
 
@@ -96,7 +101,6 @@ function isModelPath(fileName: string) {
  *
  * @param zipFile - The ZIP file.
  */
-/** @deprecated */
 async function handleZippedModelFiles<T extends Content>(
   zipFile: T
 ): Promise<LoadedFile<T>> {
@@ -161,12 +165,46 @@ async function handleZippedModelFiles<T extends Content>(
   } else if (wearableZipFile) {
     const wearableFileContents = await wearableZipFile.async('uint8array')
     wearable = await loadWearableConfig(wearableFileContents)
-    wearable.data.representations.forEach((representation) => {
-      representation.contents.forEach((content) => {
+    const wearableData = wearable.data
+    wearableData.representations.forEach((representation) => {
+      representation.contents.forEach((representationContent) => {
         if (!zip.file(representation.mainFile)) {
-          throw new FileNotFoundError(content)
+          throw new FileNotFoundError(representationContent)
+        }
+        const isSkin = wearableData.category == WearableCategory.SKIN
+        
+        let size: number
+
+        if (globalThis.Blob && content[representation.mainFile] instanceof globalThis.Blob) {
+          size = (content[representation.mainFile] as Blob).size
+        } else {
+          size = (content[representation.mainFile] as Uint8Array).length
+        }
+
+        if (isSkin && size > MAX_SKIN_FILE_SIZE) {
+          throw new FileTooBigError(representation.mainFile, size)
+        }
+
+        if (!isSkin && size > MAX_WEARABLE_FILE_SIZE) {
+          throw new FileTooBigError(representation.mainFile, size)
         }
       })
+    })
+
+    // Verify Max thumbnail size
+    Object.keys(content).forEach((file) => {
+      if(file.endsWith('.png') && content[file] instanceof Uint8Array) {
+        let size: number
+        if (globalThis.Blob && content[file] instanceof globalThis.Blob) {
+          size = (content[file] as Blob).size
+        } else {
+          size = (content[file] as Uint8Array).length
+        }
+
+        if (size > MAX_THUMBNAIL_FILE_SIZE) {
+          throw new FileTooBigError(file, size)
+        }
+      }
     })
 
     // Smart Wearables also have a scene.json file representing the required permissions
@@ -188,6 +226,21 @@ async function handleZippedModelFiles<T extends Content>(
   if (emoteZipFile) {
     const emoteZipFileContents = await emoteZipFile.async('uint8array')
     emote = await loadEmoteConfig(emoteZipFileContents)
+
+    Object.keys(content).forEach((file) => {
+      if(file.endsWith('.glb') && content[file] instanceof Uint8Array) {
+        let size: number
+        if (globalThis.Blob && content[file] instanceof globalThis.Blob) {
+          size = (content[file] as Blob).size
+        } else {
+          size = (content[file] as Uint8Array).length
+        }
+
+        if (size > MAX_EMOTE_FILE_SIZE) {
+          throw new FileTooBigError(file, size)
+        }
+      }
+    })
   }
 
   let result: LoadedFile<T> = { content }
