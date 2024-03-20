@@ -172,10 +172,13 @@ async function handleZippedModelFiles<T extends Content>(
           throw new FileNotFoundError(representationContent)
         }
         const isSkin = wearableData.category == WearableCategory.SKIN
-        
+
         let size: number
 
-        if (globalThis.Blob && content[representation.mainFile] instanceof globalThis.Blob) {
+        if (
+          globalThis.Blob &&
+          content[representation.mainFile] instanceof globalThis.Blob
+        ) {
           size = (content[representation.mainFile] as Blob).size
         } else {
           size = (content[representation.mainFile] as Uint8Array).length
@@ -193,7 +196,7 @@ async function handleZippedModelFiles<T extends Content>(
 
     // Verify Max thumbnail size
     Object.keys(content).forEach((file) => {
-      if(file.endsWith('.png') && content[file] instanceof Uint8Array) {
+      if (file.endsWith('.png') && content[file] instanceof Uint8Array) {
         let size: number
         if (globalThis.Blob && content[file] instanceof globalThis.Blob) {
           size = (content[file] as Blob).size
@@ -228,7 +231,10 @@ async function handleZippedModelFiles<T extends Content>(
     emote = await loadEmoteConfig(emoteZipFileContents)
 
     Object.keys(content).forEach((file) => {
-      if(file.endsWith('.glb') && content[file] instanceof Uint8Array) {
+      if (
+        (file.endsWith('.glb') || file.endsWith('.gltf')) &&
+        content[file] instanceof Uint8Array
+      ) {
         let size: number
         if (globalThis.Blob && content[file] instanceof globalThis.Blob) {
           size = (content[file] as Blob).size
