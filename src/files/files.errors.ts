@@ -1,5 +1,6 @@
 import { ErrorObject } from 'ajv'
 import { MAX_WEARABLE_FILE_SIZE, MAX_SKIN_FILE_SIZE } from './constants'
+import { FileType } from './types'
 
 export class WrongExtensionError extends Error {
   constructor(file: string) {
@@ -14,7 +15,25 @@ export class ModelFileNotFoundError extends Error {
 }
 
 export class FileTooBigError extends Error {
-  constructor(fileName: string, fileSize: number) {
+  public geFileName(): string {
+    return this.fileName
+  }
+  public geFileSize(): number {
+    return this.fileSize
+  }
+  public getMaxFileSize(): number {
+    return this.maxFileSize
+  }
+  public getType(): FileType {
+    return this.type
+  }
+
+  constructor(
+    private fileName: string,
+    private fileSize: number,
+    private maxFileSize: number,
+    private type: FileType
+  ) {
     super(
       `The file ${fileName} too big (${fileSize} bytes) but should be less than ${MAX_WEARABLE_FILE_SIZE} bytes for wearables and ${MAX_SKIN_FILE_SIZE} bytes for skins`
     )

@@ -61,3 +61,10 @@ export type ErrorHandlerBySceneProperty = {
     sceneConfig: SceneConfig
   ) => void
 }
+
+export enum FileType {
+  WEARABLE = 'wearable',
+  SKIN = 'skin',
+  THUMBNAIL = 'thumbnail',
+  EMOTE = 'emote'
+}
