@@ -9,7 +9,6 @@ import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
 import {
   WEARABLE_MANIFEST,
-  MAX_FILE_SIZE,
   BUILDER_MANIFEST,
   SCENE_MANIFEST,
   EMOTE_MANIFEST,
@@ -23,7 +22,8 @@ import {
   BuilderConfig,
   LoadedFile,
   SceneConfig,
-  EmoteConfig
+  EmoteConfig,
+  FileType
 } from './types'
 import {
   BuilderConfigSchema,
@@ -134,18 +134,6 @@ async function handleZippedModelFiles<T extends Content>(
 
   const fileContents = await Promise.all(promiseOfFileContents)
   const content: RawContent<T> = fileNames.reduce((acc, fileName, index) => {
-    let size: number
-
-    if (globalThis.Blob && fileContents[index] instanceof globalThis.Blob) {
-      size = (fileContents[index] as Blob).size
-    } else {
-      size = (fileContents[index] as Uint8Array).length
-    }
-
-    if (size > MAX_FILE_SIZE) {
-      throw new FileTooBigError(fileName, size)
-    }
-
     acc[fileName] = fileContents[index]
     return acc
   }, {})
@@ -185,11 +173,21 @@ async function handleZippedModelFiles<T extends Content>(
         }
 
         if (isSkin && size > MAX_SKIN_FILE_SIZE) {
-          throw new FileTooBigError(representation.mainFile, size)
+          throw new FileTooBigError(
+            representation.mainFile,
+            size,
+            MAX_SKIN_FILE_SIZE,
+            FileType.SKIN
+          )
         }
 
         if (!isSkin && size > MAX_WEARABLE_FILE_SIZE) {
-          throw new FileTooBigError(representation.mainFile, size)
+          throw new FileTooBigError(
+            representation.mainFile,
+            size,
+            MAX_WEARABLE_FILE_SIZE,
+            FileType.WEARABLE
+          )
         }
       })
     })
@@ -205,7 +203,12 @@ async function handleZippedModelFiles<T extends Content>(
         }
 
         if (size > MAX_THUMBNAIL_FILE_SIZE) {
-          throw new FileTooBigError(file, size)
+          throw new FileTooBigError(
+            file,
+            size,
+            MAX_THUMBNAIL_FILE_SIZE,
+            FileType.THUMBNAIL
+          )
         }
       }
     })
@@ -243,7 +246,12 @@ async function handleZippedModelFiles<T extends Content>(
         }
 
         if (size > MAX_EMOTE_FILE_SIZE) {
-          throw new FileTooBigError(file, size)
+          throw new FileTooBigError(
+            file,
+            size,
+            MAX_EMOTE_FILE_SIZE,
+            FileType.EMOTE
+          )
         }
       }
     })

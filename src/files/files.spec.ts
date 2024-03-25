@@ -27,7 +27,7 @@ import {
   ModelFileNotFoundError,
   WrongExtensionError
 } from './files.errors'
-import { SceneConfig, WearableConfig } from './types'
+import { FileType, SceneConfig, WearableConfig } from './types'
 
 describe('when loading an item file', () => {
   const extensions = ['glb', 'gltf', 'png']
@@ -696,6 +696,27 @@ describe('when loading an item file', () => {
 
       beforeEach(async () => {
         zipFile.file(modelFile, new Uint8Array(MAX_WEARABLE_FILE_SIZE + 1))
+        const wearableConfigFile: WearableConfig = {
+          id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+          name: 'test',
+          rarity: Rarity.COMMON,
+          data: {
+            category: WearableCategory.EYEBROWS,
+            hides: [],
+            replaces: [],
+            tags: [],
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                mainFile: modelFile,
+                contents: [modelFile],
+                overrideHides: [],
+                overrideReplaces: []
+              }
+            ]
+          }
+        }
+        zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableConfigFile))
         zipFileContent = await zipFile.generateAsync({
           type: 'uint8array'
         })
@@ -703,7 +724,12 @@ describe('when loading an item file', () => {
 
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-          new FileTooBigError(modelFile, MAX_WEARABLE_FILE_SIZE + 1)
+          new FileTooBigError(
+            modelFile,
+            MAX_WEARABLE_FILE_SIZE + 1,
+            MAX_WEARABLE_FILE_SIZE,
+            FileType.WEARABLE
+          )
         )
       })
     })
@@ -712,7 +738,29 @@ describe('when loading an item file', () => {
       const modelFile = 'test.glb'
 
       beforeEach(async () => {
+        const wearableConfigFile: WearableConfig = {
+          id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+          name: 'test',
+          rarity: Rarity.COMMON,
+          data: {
+            category: WearableCategory.SKIN,
+            hides: [],
+            replaces: [],
+            tags: [],
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                mainFile: modelFile,
+                contents: [modelFile],
+                overrideHides: [],
+                overrideReplaces: []
+              }
+            ]
+          }
+        }
+
         zipFile.file(modelFile, new Uint8Array(MAX_SKIN_FILE_SIZE + 1))
+        zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableConfigFile))
         zipFileContent = await zipFile.generateAsync({
           type: 'uint8array'
         })
@@ -720,7 +768,12 @@ describe('when loading an item file', () => {
 
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-          new FileTooBigError(modelFile, MAX_SKIN_FILE_SIZE + 1)
+          new FileTooBigError(
+            modelFile,
+            MAX_SKIN_FILE_SIZE + 1,
+            MAX_SKIN_FILE_SIZE,
+            FileType.SKIN
+          )
         )
       })
     })
@@ -730,6 +783,11 @@ describe('when loading an item file', () => {
 
       beforeEach(async () => {
         zipFile.file(modelFile, new Uint8Array(MAX_EMOTE_FILE_SIZE + 1))
+
+        zipFile.file(
+          EMOTE_MANIFEST,
+          '{ "description": "test description", "name": "Name" }'
+        )
         zipFileContent = await zipFile.generateAsync({
           type: 'uint8array'
         })
@@ -737,7 +795,12 @@ describe('when loading an item file', () => {
 
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
-          new FileTooBigError(modelFile, MAX_EMOTE_FILE_SIZE + 1)
+          new FileTooBigError(
+            modelFile,
+            MAX_EMOTE_FILE_SIZE + 1,
+            MAX_EMOTE_FILE_SIZE,
+            FileType.EMOTE
+          )
         )
       })
     })
