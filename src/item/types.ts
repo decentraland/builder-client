@@ -74,6 +74,7 @@ export type WearableData = {
   replaces: HideableWearableCategory[]
   hides: HideableWearableCategory[]
   tags: string[]
+  blockVrmExport?: boolean
 }
 
 export type BuiltItem<T extends Content> = {

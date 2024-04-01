@@ -77,6 +77,10 @@ export const WearableConfigSchema: JSONSchema<WearableConfig> = {
           type: 'array',
           nullable: true,
           items: HideableWearableCategory.schema
+        },
+        blockVrmExport: {
+          type: 'boolean',
+          nullable: true
         }
       },
       required: ['replaces', 'hides', 'tags', 'representations', 'category']

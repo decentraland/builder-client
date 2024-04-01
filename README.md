@@ -187,7 +187,9 @@ A wearable config file is a JSON file that contains the item's information and i
         // The representation's WearableCategories replaces overrides
         "overrideReplaces": []
       }
-    ]
+    ],
+    // When true, the vrm export feature will be blocked if this wearable is equipped
+    "blockVrmExport": false
   }
 }
 ```
