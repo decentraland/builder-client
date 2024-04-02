@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 14.x
       - name: Install dependencies
-        run: npm ci
+        run: npm intall
       - name: Build package
         run: npm run build
       - name: Run tests
