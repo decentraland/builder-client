@@ -1,5 +1,4 @@
 import { ErrorObject } from 'ajv'
-import { MAX_WEARABLE_FILE_SIZE, MAX_SKIN_FILE_SIZE } from './constants'
 import { FileType } from './types'
 
 export class WrongExtensionError extends Error {
@@ -35,7 +34,7 @@ export class FileTooBigError extends Error {
     private type: FileType
   ) {
     super(
-      `The file ${fileName} too big (${fileSize} bytes) but should be less than ${MAX_WEARABLE_FILE_SIZE} bytes for wearables and ${MAX_SKIN_FILE_SIZE} bytes for skins`
+      `The file ${fileName} too big (${fileSize} bytes) but should be less than ${maxFileSize} bytes for the ${type} type.`
     )
   }
 }

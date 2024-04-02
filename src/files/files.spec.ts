@@ -725,7 +725,7 @@ describe('when loading an item file', () => {
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
           new FileTooBigError(
-            modelFile,
+            fileName,
             MAX_WEARABLE_FILE_SIZE + 1,
             MAX_WEARABLE_FILE_SIZE,
             FileType.WEARABLE
@@ -769,7 +769,7 @@ describe('when loading an item file', () => {
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
           new FileTooBigError(
-            modelFile,
+            fileName,
             MAX_SKIN_FILE_SIZE + 1,
             MAX_SKIN_FILE_SIZE,
             FileType.SKIN
@@ -796,7 +796,7 @@ describe('when loading an item file', () => {
       it('should throw an error signaling that the file is too big', () => {
         return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
           new FileTooBigError(
-            modelFile,
+            fileName,
             MAX_EMOTE_FILE_SIZE + 1,
             MAX_EMOTE_FILE_SIZE,
             FileType.EMOTE

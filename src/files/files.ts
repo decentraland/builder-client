@@ -60,7 +60,7 @@ export async function loadFile<T extends Content>(
 ): Promise<LoadedFile<T>> {
   const extension = getExtension(fileName)
   if (extension === '.zip') {
-    return handleZippedModelFiles(file)
+    return handleZippedModelFiles(fileName, file)
   } else if (isModelPath(fileName)) {
     return handleFileModel(fileName, file)
   } else {
@@ -102,6 +102,7 @@ function isModelPath(fileName: string) {
  * @param zipFile - The ZIP file.
  */
 async function handleZippedModelFiles<T extends Content>(
+  fileName: string,
   zipFile: T
 ): Promise<LoadedFile<T>> {
   const zip: JSZip = await JSZip.loadAsync(zipFile)
@@ -137,6 +138,24 @@ async function handleZippedModelFiles<T extends Content>(
     acc[fileName] = fileContents[index]
     return acc
   }, {})
+  const contentsSize = Object.entries(content).reduce(
+    (acc, [fileName, fileContent]) =>
+      fileName !== THUMBNAIL_PATH ? acc + getFileSize(fileContent) : acc,
+    0
+  )
+
+  const thumbnailFileSize = content[THUMBNAIL_PATH]
+    ? getFileSize(content[THUMBNAIL_PATH])
+    : 0
+  // Verify that the thumbnail size does not exceed the maximum allowed size
+  if (thumbnailFileSize > MAX_THUMBNAIL_FILE_SIZE) {
+    throw new FileTooBigError(
+      THUMBNAIL_PATH,
+      thumbnailFileSize,
+      MAX_THUMBNAIL_FILE_SIZE,
+      FileType.THUMBNAIL
+    )
+  }
 
   let wearable: WearableConfig | undefined = undefined
   let scene: SceneConfig | undefined = undefined
@@ -148,69 +167,21 @@ async function handleZippedModelFiles<T extends Content>(
   const builderZipFile = zip.file(BUILDER_MANIFEST)
   const emoteZipFile = zip.file(EMOTE_MANIFEST)
 
+  // Validate that the files mentioned in the wearable file are present
   if (!wearableZipFile && sceneZipFile) {
     throw new FileNotFoundError(WEARABLE_MANIFEST)
   } else if (wearableZipFile) {
     const wearableFileContents = await wearableZipFile.async('uint8array')
     wearable = await loadWearableConfig(wearableFileContents)
     const wearableData = wearable.data
+    // Check that all the files mentioned in the wearable data are present
     wearableData.representations.forEach((representation) => {
       representation.contents.forEach((representationContent) => {
-        if (!zip.file(representation.mainFile)) {
+        // Check that the file is present in the contents
+        if (!zip.file(representationContent)) {
           throw new FileNotFoundError(representationContent)
         }
-        const isSkin = wearableData.category == WearableCategory.SKIN
-
-        let size: number
-
-        if (
-          globalThis.Blob &&
-          content[representation.mainFile] instanceof globalThis.Blob
-        ) {
-          size = (content[representation.mainFile] as Blob).size
-        } else {
-          size = (content[representation.mainFile] as Uint8Array).length
-        }
-
-        if (isSkin && size > MAX_SKIN_FILE_SIZE) {
-          throw new FileTooBigError(
-            representation.mainFile,
-            size,
-            MAX_SKIN_FILE_SIZE,
-            FileType.SKIN
-          )
-        }
-
-        if (!isSkin && size > MAX_WEARABLE_FILE_SIZE) {
-          throw new FileTooBigError(
-            representation.mainFile,
-            size,
-            MAX_WEARABLE_FILE_SIZE,
-            FileType.WEARABLE
-          )
-        }
       })
-    })
-
-    // Verify Max thumbnail size
-    Object.keys(content).forEach((file) => {
-      if (file.endsWith('.png') && content[file] instanceof Uint8Array) {
-        let size: number
-        if (globalThis.Blob && content[file] instanceof globalThis.Blob) {
-          size = (content[file] as Blob).size
-        } else {
-          size = (content[file] as Uint8Array).length
-        }
-
-        if (size > MAX_THUMBNAIL_FILE_SIZE) {
-          throw new FileTooBigError(
-            file,
-            size,
-            MAX_THUMBNAIL_FILE_SIZE,
-            FileType.THUMBNAIL
-          )
-        }
-      }
     })
 
     // Smart Wearables also have a scene.json file representing the required permissions
@@ -221,6 +192,25 @@ async function handleZippedModelFiles<T extends Content>(
       if (!zip.file(scene.main)) {
         throw new FileNotFoundError(scene.main)
       }
+    }
+
+    // Check that the whole content size does not exceed the maximum allowed size
+    const isSkin = wearableData.category == WearableCategory.SKIN
+
+    if (isSkin && contentsSize > MAX_SKIN_FILE_SIZE) {
+      throw new FileTooBigError(
+        fileName,
+        contentsSize,
+        MAX_SKIN_FILE_SIZE,
+        FileType.SKIN
+      )
+    } else if (!isSkin && contentsSize > MAX_WEARABLE_FILE_SIZE) {
+      throw new FileTooBigError(
+        fileName,
+        contentsSize,
+        MAX_WEARABLE_FILE_SIZE,
+        FileType.WEARABLE
+      )
     }
   }
 
@@ -233,28 +223,14 @@ async function handleZippedModelFiles<T extends Content>(
     const emoteZipFileContents = await emoteZipFile.async('uint8array')
     emote = await loadEmoteConfig(emoteZipFileContents)
 
-    Object.keys(content).forEach((file) => {
-      if (
-        (file.endsWith('.glb') || file.endsWith('.gltf')) &&
-        content[file] instanceof Uint8Array
-      ) {
-        let size: number
-        if (globalThis.Blob && content[file] instanceof globalThis.Blob) {
-          size = (content[file] as Blob).size
-        } else {
-          size = (content[file] as Uint8Array).length
-        }
-
-        if (size > MAX_EMOTE_FILE_SIZE) {
-          throw new FileTooBigError(
-            file,
-            size,
-            MAX_EMOTE_FILE_SIZE,
-            FileType.EMOTE
-          )
-        }
-      }
-    })
+    if (contentsSize > MAX_EMOTE_FILE_SIZE) {
+      throw new FileTooBigError(
+        fileName,
+        contentsSize,
+        MAX_EMOTE_FILE_SIZE,
+        FileType.EMOTE
+      )
+    }
   }
 
   let result: LoadedFile<T> = { content }
@@ -285,6 +261,19 @@ function handleFileModel<T extends Content>(
   file: T
 ): LoadedFile<T> {
   return { content: { [fileName]: file }, mainModel: fileName }
+}
+
+function getFileSize<T extends Content>(file: T): number {
+  if (globalThis.Blob && file instanceof globalThis.Blob) {
+    return file.size
+  } else if (Buffer.isBuffer(file)) {
+    return file.length
+  } else if (file instanceof Uint8Array) {
+    return file.buffer.byteLength
+  } else if (file instanceof ArrayBuffer) {
+    return file.byteLength
+  }
+  throw new Error('Unknown file format')
 }
 
 async function readContent<T extends Content>(file: T): Promise<string> {
