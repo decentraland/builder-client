@@ -100,7 +100,8 @@ beforeEach(async () => {
       representations: [],
       replaces: [],
       hides: [],
-      tags: []
+      tags: [],
+      blockVrmExport: false
     },
     content_hash: 'aContentHash'
   }

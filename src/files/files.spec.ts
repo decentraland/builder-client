@@ -142,7 +142,8 @@ describe('when loading an item file', () => {
                   overrideHides: [],
                   overrideReplaces: []
                 }
-              ]
+              ],
+              blockVrmExport: false
             }
           }
 
@@ -224,7 +225,8 @@ describe('when loading an item file', () => {
                   overrideHides: [],
                   overrideReplaces: []
                 }
-              ]
+              ],
+              blockVrmExport: true
             }
           }
           zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
