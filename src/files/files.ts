@@ -195,7 +195,7 @@ async function handleZippedModelFiles<T extends Content>(
     }
 
     // Check that the whole content size does not exceed the maximum allowed size
-    const isSkin = wearableData.category == WearableCategory.SKIN
+    const isSkin = wearableData.category === WearableCategory.SKIN
 
     if (isSkin && contentsSize > MAX_SKIN_FILE_SIZE) {
       throw new FileTooBigError(
