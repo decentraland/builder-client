@@ -66,5 +66,6 @@ export enum FileType {
   WEARABLE = 'wearable',
   SKIN = 'skin',
   THUMBNAIL = 'thumbnail',
-  EMOTE = 'emote'
+  EMOTE = 'emote',
+  SMART_WEARABLE = 'smart-wearable'
 }

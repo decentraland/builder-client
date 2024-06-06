@@ -15,7 +15,8 @@ import {
   MAX_SKIN_FILE_SIZE,
   MAX_WEARABLE_FILE_SIZE,
   MAX_THUMBNAIL_FILE_SIZE,
-  MAX_EMOTE_FILE_SIZE
+  MAX_EMOTE_FILE_SIZE,
+  MAX_SMART_WEARABLE_FILE_SIZE
 } from './constants'
 import {
   WearableConfig,
@@ -193,7 +194,7 @@ async function handleZippedModelFiles<T extends Content>(
         throw new FileNotFoundError(scene.main)
       }
     }
-
+    const isSmartWearable = !!scene && !!wearable
     // Check that the whole content size does not exceed the maximum allowed size
     const isSkin = wearableData.category === WearableCategory.SKIN
 
@@ -204,7 +205,22 @@ async function handleZippedModelFiles<T extends Content>(
         MAX_SKIN_FILE_SIZE,
         FileType.SKIN
       )
-    } else if (!isSkin && contentsSize > MAX_WEARABLE_FILE_SIZE) {
+    } else if (
+      !isSkin &&
+      isSmartWearable &&
+      contentsSize > MAX_SMART_WEARABLE_FILE_SIZE
+    ) {
+      throw new FileTooBigError(
+        fileName,
+        contentsSize,
+        MAX_SMART_WEARABLE_FILE_SIZE,
+        FileType.SMART_WEARABLE
+      )
+    } else if (
+      !isSkin &&
+      !isSmartWearable &&
+      contentsSize > MAX_WEARABLE_FILE_SIZE
+    ) {
       throw new FileTooBigError(
         fileName,
         contentsSize,

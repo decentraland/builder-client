@@ -14,7 +14,8 @@ import {
   BUILDER_MANIFEST,
   SCENE_MANIFEST,
   EMOTE_MANIFEST,
-  MAX_EMOTE_FILE_SIZE
+  MAX_EMOTE_FILE_SIZE,
+  MAX_SMART_WEARABLE_FILE_SIZE
 } from './constants'
 import { loadFile } from './files'
 import {
@@ -802,6 +803,72 @@ describe('when loading an item file', () => {
             MAX_EMOTE_FILE_SIZE + 1,
             MAX_EMOTE_FILE_SIZE,
             FileType.EMOTE
+          )
+        )
+      })
+    })
+
+    describe('and the zip file is a smart wearable that exceeds the maximum file size limit', () => {
+      const modelFile = 'test.glb'
+
+      beforeEach(async () => {
+        zipFile.file(
+          modelFile,
+          new Uint8Array(MAX_SMART_WEARABLE_FILE_SIZE + 1)
+        )
+        const wearableConfigFile: WearableConfig = {
+          id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+          name: 'test',
+          rarity: Rarity.COMMON,
+          data: {
+            category: WearableCategory.EYEBROWS,
+            hides: [],
+            replaces: [],
+            tags: [],
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                mainFile: modelFile,
+                contents: [modelFile],
+                overrideHides: [],
+                overrideReplaces: []
+              }
+            ]
+          }
+        }
+        zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableConfigFile))
+        zipFileContent = await zipFile.generateAsync({
+          type: 'uint8array'
+        })
+        const sceneMainFile = 'game.js'
+        const sceneMainFileContent = new Uint8Array([])
+        const sceneFileContent: SceneConfig = {
+          scene: {
+            parcels: ['0,0', '0,1', '1,0', '1,1'],
+            base: '0,0'
+          },
+          main: sceneMainFile,
+          requiredPermissions: [
+            RequiredPermission.ALLOW_TO_TRIGGER_AVATAR_EMOTE
+          ]
+        }
+        zipFile.file(SCENE_MANIFEST, JSON.stringify(sceneFileContent))
+        zipFileContent = await zipFile.generateAsync({
+          type: 'uint8array'
+        })
+        zipFile.file(sceneMainFile, sceneMainFileContent)
+        zipFileContent = await zipFile.generateAsync({
+          type: 'uint8array'
+        })
+      })
+
+      it('should throw an error signaling that the file is too big', () => {
+        return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+          new FileTooBigError(
+            fileName,
+            MAX_SMART_WEARABLE_FILE_SIZE + 1,
+            MAX_SMART_WEARABLE_FILE_SIZE,
+            FileType.SMART_WEARABLE
           )
         )
       })
