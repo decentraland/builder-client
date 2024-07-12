@@ -2,7 +2,7 @@ import JSZip, { OutputType } from 'jszip'
 import { basename } from 'path'
 import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
-import addAjvKeywords from 'ajv-keywords'
+// import addAjvKeywords from 'ajv-keywords'
 import addAjvErrors from 'ajv-errors'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
@@ -41,15 +41,19 @@ import {
   WrongExtensionError
 } from './files.errors'
 import { handleAjvErrors } from './errorHandler'
-import { WearableCategory } from '@dcl/schemas'
+import { RangeMapping, WearableCategory } from '@dcl/schemas'
 
 const ajv = new Ajv({ $data: true, allErrors: true })
 
 addAjvFormats(ajv)
-addAjvKeywords(ajv)
+// addAjvKeywords(ajv)
 addAjvErrors(ajv, { singleError: true })
 
 const validator = ajv
+  .addKeyword({
+    ...RangeMapping._fromLessThanOrEqualTo,
+    keyword: '_fromLessThanOrEqualTo'
+  })
   .addSchema(WearableConfigSchema, 'WearableConfig')
   .addSchema(SceneConfigSchema, 'SceneConfig')
   .addSchema(BuilderConfigSchema, 'BuilderConfig')

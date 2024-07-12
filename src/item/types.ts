@@ -3,7 +3,8 @@ import {
   WearableCategory,
   WearableRepresentation,
   BodyShape as WearableBodyShape,
-  HideableWearableCategory
+  HideableWearableCategory,
+  Mapping
 } from '@dcl/schemas'
 
 import { Content, RawContent } from '../content/types'
@@ -33,6 +34,7 @@ export type RemoteItem = {
   in_catalyst: boolean
   created_at: number
   updated_at: number
+  mappings: Mapping[] | null
 }
 
 export type LocalItem = Omit<

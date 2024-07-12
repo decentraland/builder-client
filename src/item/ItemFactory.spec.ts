@@ -1,4 +1,4 @@
-import { Rarity, WearableRepresentation } from '@dcl/schemas'
+import { MappingType, Rarity, WearableRepresentation } from '@dcl/schemas'
 import { prefixContentName } from '../content/content'
 import { Content } from '../content/types'
 import { BuilderConfig, WearableConfig } from '../files/types'
@@ -830,6 +830,7 @@ describe('when creating a new item from a wearable and builder config file objec
           description: wearableConfig.description,
           contents: maleHashedContent,
           content_hash: null,
+          mappings: null,
           metrics: DEFAULT_METRICS
         } as LocalItem,
         newContent: {
@@ -876,7 +877,8 @@ describe('when creating a new item from a wearable and builder config file objec
           description: wearableConfig.description,
           contents: maleHashedContent,
           content_hash: null,
-          metrics: DEFAULT_METRICS
+          metrics: DEFAULT_METRICS,
+          mappings: null
         } as LocalItem,
         newContent: {
           [prefixedMaleModel]: contents[modelPath],
@@ -922,7 +924,8 @@ describe('when creating a new item from a wearable and builder config file objec
           description: wearableConfig.description,
           contents: maleHashedContent,
           content_hash: null,
-          metrics: DEFAULT_METRICS
+          metrics: DEFAULT_METRICS,
+          mappings: null
         } as LocalItem,
         newContent: {
           [prefixedMaleModel]: contents[modelPath],
@@ -968,6 +971,8 @@ testPropertyBuilder(
   'urn',
   'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id'
 )
+
+testPropertyBuilder('mappings', [{ type: MappingType.ANY }])
 
 testPropertyBuilder('description', 'anotherDescription')
 

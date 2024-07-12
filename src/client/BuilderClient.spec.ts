@@ -103,7 +103,8 @@ beforeEach(async () => {
       tags: [],
       blockVrmExport: false
     },
-    content_hash: 'aContentHash'
+    content_hash: 'aContentHash',
+    mappings: null
   }
   remoteItem = {
     ...item,
