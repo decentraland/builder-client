@@ -41,7 +41,7 @@ import {
   WrongExtensionError
 } from './files.errors'
 import { handleAjvErrors } from './errorHandler'
-import { WearableCategory } from '@dcl/schemas'
+import { RangeMapping, WearableCategory } from '@dcl/schemas'
 
 const ajv = new Ajv({ $data: true, allErrors: true })
 
@@ -50,6 +50,10 @@ addAjvKeywords(ajv)
 addAjvErrors(ajv, { singleError: true })
 
 const validator = ajv
+  .addKeyword({
+    ...RangeMapping._fromLessThanOrEqualTo,
+    keyword: '_fromLessThanOrEqualTo'
+  })
   .addSchema(WearableConfigSchema, 'WearableConfig')
   .addSchema(SceneConfigSchema, 'SceneConfig')
   .addSchema(BuilderConfigSchema, 'BuilderConfig')

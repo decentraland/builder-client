@@ -3,6 +3,7 @@ import {
   EmotePlayMode,
   HideableWearableCategory,
   JSONSchema,
+  Mapping,
   Scene,
   WearableRepresentation
 } from '@dcl/schemas'
@@ -84,6 +85,13 @@ export const WearableConfigSchema: JSONSchema<WearableConfig> = {
         }
       },
       required: ['replaces', 'hides', 'tags', 'representations', 'category']
+    },
+    mappings: {
+      type: 'array',
+      items: { ...Mapping.schema },
+      minItems: 1,
+      maxItems: 1,
+      nullable: true
     }
   },
   additionalProperties: false,

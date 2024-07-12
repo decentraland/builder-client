@@ -1,5 +1,6 @@
 import {
   HideableWearableCategory,
+  Mapping,
   Rarity,
   WearableRepresentation
 } from '@dcl/schemas'
@@ -65,7 +66,8 @@ export class ItemFactory<X extends Content> {
         representations: []
       },
       metrics: DEFAULT_METRICS,
-      contents: {}
+      contents: {},
+      mappings: null
     }
     return this
   }
@@ -229,6 +231,24 @@ export class ItemFactory<X extends Content> {
       [THUMBNAIL_PATH]: thumbnail
     }
     delete this.item.contents[THUMBNAIL_PATH]
+
+    return this
+  }
+
+  /**
+   * Sets or updates the item's mappings.
+   * It requires the item to be defined first.
+   * @param mappings - The item's mappings.
+   */
+  public withMappings(mappings: Mapping[]): ItemFactory<X> {
+    if (!this.item) {
+      throw new ItemNotInitializedError()
+    }
+
+    this.item = {
+      ...this.item,
+      mappings
+    }
 
     return this
   }
