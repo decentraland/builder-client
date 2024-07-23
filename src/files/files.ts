@@ -4,6 +4,7 @@ import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
 import addAjvKeywords from 'ajv-keywords'
 import addAjvErrors from 'ajv-errors'
+import { Mappings, RangeMapping, WearableCategory } from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
@@ -41,7 +42,6 @@ import {
   WrongExtensionError
 } from './files.errors'
 import { handleAjvErrors } from './errorHandler'
-import { RangeMapping, WearableCategory } from '@dcl/schemas'
 
 const ajv = new Ajv({ $data: true, allErrors: true })
 
@@ -54,6 +54,7 @@ const validator = ajv
     ...RangeMapping._fromLessThanOrEqualTo,
     keyword: '_fromLessThanOrEqualTo'
   })
+  .addKeyword({ ...Mappings._isMappingsValid, keyword: '_isMappingsValid' })
   .addSchema(WearableConfigSchema, 'WearableConfig')
   .addSchema(SceneConfigSchema, 'SceneConfig')
   .addSchema(BuilderConfigSchema, 'BuilderConfig')

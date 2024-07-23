@@ -972,7 +972,9 @@ testPropertyBuilder(
   'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id'
 )
 
-testPropertyBuilder('mappings', [{ type: MappingType.ANY }])
+testPropertyBuilder('mappings', {
+  amoy: { '0x0': [{ type: MappingType.ANY }] }
+})
 
 testPropertyBuilder('description', 'anotherDescription')
 

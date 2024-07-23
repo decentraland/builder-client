@@ -1,6 +1,7 @@
 import {
   EmoteCategory,
   EmotePlayMode,
+  MappingType,
   RequiredPermission,
   BodyShape as WearableBodyShape
 } from '@dcl/schemas'
@@ -286,6 +287,95 @@ describe('when loading an item file', () => {
                 [modelFile]: Buffer.from(modelFileContent.buffer),
                 [textureFile]: Buffer.from(textureFileContent.buffer),
                 [THUMBNAIL_PATH]: Buffer.from(thumbnailContent.buffer)
+              },
+              wearable: wearableFileContent
+            })
+          })
+        })
+      })
+
+      describe('and the zip contains mappings', () => {
+        let wearableFileContent: WearableConfig
+        let modelFile: string
+        let modelFileContent: Uint8Array
+        let textureFile: string
+        let textureFileContent: Uint8Array
+
+        beforeEach(() => {
+          modelFile = 'some-model.glb'
+          modelFileContent = new Uint8Array([0, 1, 2, 3, 4])
+          textureFile = 'a-texture-file.png'
+          textureFileContent = new Uint8Array([5, 6, 7])
+
+          wearableFileContent = {
+            id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+            name: 'test',
+            rarity: Rarity.COMMON,
+            data: {
+              category: WearableCategory.EYEBROWS,
+              hides: [],
+              replaces: [],
+              tags: [],
+              representations: [
+                {
+                  bodyShapes: [WearableBodyShape.MALE],
+                  mainFile: modelFile,
+                  contents: [modelFile, textureFile],
+                  overrideHides: [],
+                  overrideReplaces: []
+                }
+              ],
+              blockVrmExport: true
+            }
+          }
+          zipFile.file(modelFile, modelFileContent)
+          zipFile.file(textureFile, textureFileContent)
+        })
+
+        describe('and the mappings are invalid', () => {
+          beforeEach(async () => {
+            wearableFileContent.mappings = {
+              amoy: {
+                '0x74c78f5A4ab22F01d5fd08455cf0Ff5C3367535C': [
+                  { type: MappingType.ANY },
+                  { type: MappingType.SINGLE, id: '0' }
+                ]
+              }
+            }
+            zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
+            zipFileContent = await zipFile.generateAsync({
+              type: 'uint8array'
+            })
+          })
+
+          it('should throw an error signaling that the mappings are invalid', () => {
+            return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+              new InvalidWearableConfigFileError()
+            )
+          })
+        })
+
+        describe('and the mappings are valid', () => {
+          beforeEach(async () => {
+            wearableFileContent.mappings = {
+              amoy: {
+                '0x74c78f5A4ab22F01d5fd08455cf0Ff5C3367535C': [
+                  { type: MappingType.ANY }
+                ]
+              }
+            }
+            zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
+            zipFileContent = await zipFile.generateAsync({
+              type: 'uint8array'
+            })
+          })
+
+          it('should build the LoadedFile with the zipped contents and the wearable config file with the same buffer format as the zip', () => {
+            return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+              content: {
+                [modelFile]: modelFileContent,
+                [textureFile]: textureFileContent,
+                [THUMBNAIL_PATH]: thumbnailContent
               },
               wearable: wearableFileContent
             })
