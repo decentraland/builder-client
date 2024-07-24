@@ -1,6 +1,6 @@
 import {
   HideableWearableCategory,
-  Mapping,
+  Mappings,
   Rarity,
   WearableRepresentation
 } from '@dcl/schemas'
@@ -240,7 +240,7 @@ export class ItemFactory<X extends Content> {
    * It requires the item to be defined first.
    * @param mappings - The item's mappings.
    */
-  public withMappings(mappings: Mapping[]): ItemFactory<X> {
+  public withMappings(mappings: Mappings): ItemFactory<X> {
     if (!this.item) {
       throw new ItemNotInitializedError()
     }
