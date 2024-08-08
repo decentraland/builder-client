@@ -294,7 +294,7 @@ describe('when loading an item file', () => {
         })
       })
 
-      describe('and the zip contains mappings', () => {
+      describe('and the zip contains a mapping', () => {
         let wearableFileContent: WearableConfig
         let modelFile: string
         let modelFileContent: Uint8Array
@@ -332,15 +332,12 @@ describe('when loading an item file', () => {
           zipFile.file(textureFile, textureFileContent)
         })
 
-        describe('and the mappings are invalid', () => {
+        describe('and the mapping is invalid', () => {
           beforeEach(async () => {
-            wearableFileContent.mappings = {
-              amoy: {
-                '0x74c78f5A4ab22F01d5fd08455cf0Ff5C3367535C': [
-                  { type: MappingType.ANY },
-                  { type: MappingType.SINGLE, id: '0' }
-                ]
-              }
+            wearableFileContent.mapping = {
+              type: MappingType.RANGE,
+              from: '10',
+              to: '1'
             }
             zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
             zipFileContent = await zipFile.generateAsync({
@@ -355,15 +352,9 @@ describe('when loading an item file', () => {
           })
         })
 
-        describe('and the mappings are valid', () => {
+        describe('and the mapping is valid', () => {
           beforeEach(async () => {
-            wearableFileContent.mappings = {
-              amoy: {
-                '0x74c78f5A4ab22F01d5fd08455cf0Ff5C3367535C': [
-                  { type: MappingType.ANY }
-                ]
-              }
-            }
+            wearableFileContent.mapping = { type: MappingType.ANY }
             zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
             zipFileContent = await zipFile.generateAsync({
               type: 'uint8array'

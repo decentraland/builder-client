@@ -48,7 +48,7 @@ const testPropertyBuilder = <T extends keyof LocalItem>(
     })
 
     describe('and the item has been initialized', () => {
-      beforeEach(async () => {
+      beforeEach(() => {
         createBasicItem(factory)
       })
 
