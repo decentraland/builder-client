@@ -4,7 +4,7 @@ import Ajv from 'ajv'
 import addAjvFormats from 'ajv-formats'
 import addAjvKeywords from 'ajv-keywords'
 import addAjvErrors from 'ajv-errors'
-import { Mappings, RangeMapping, WearableCategory } from '@dcl/schemas'
+import { RangeMapping, WearableCategory } from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 import { THUMBNAIL_PATH } from '../item/constants'
 import { TextDecoder as NodeTextDecoder } from 'util'
@@ -54,7 +54,6 @@ const validator = ajv
     ...RangeMapping._fromLessThanOrEqualTo,
     keyword: '_fromLessThanOrEqualTo'
   })
-  .addKeyword({ ...Mappings._isMappingsValid, keyword: '_isMappingsValid' })
   .addSchema(WearableConfigSchema, 'WearableConfig')
   .addSchema(SceneConfigSchema, 'SceneConfig')
   .addSchema(BuilderConfigSchema, 'BuilderConfig')
@@ -143,7 +142,7 @@ async function handleZippedModelFiles<T extends Content>(
   const content: RawContent<T> = fileNames.reduce((acc, fileName, index) => {
     acc[fileName] = fileContents[index]
     return acc
-  }, {})
+  }, {} as RawContent<T>)
   const contentsSize = Object.entries(content).reduce(
     (acc, [fileName, fileContent]) =>
       fileName !== THUMBNAIL_PATH ? acc + getFileSize(fileContent) : acc,

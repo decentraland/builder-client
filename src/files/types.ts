@@ -6,12 +6,15 @@ import {
   Scene,
   EmoteCategory,
   EmotePlayMode,
-  Rarity
+  Rarity,
+  Mapping
 } from '@dcl/schemas'
 import { Content, RawContent } from '../content/types'
 
 export type WearableConfig = Omit<
-  Wearable & Partial<StandardProps> & Partial<ThirdPartyProps>,
+  Wearable &
+    Partial<StandardProps> &
+    Partial<Omit<ThirdPartyProps, 'mappings'>>,
   | 'id'
   | 'collectionAddress'
   | 'content'
@@ -25,6 +28,7 @@ export type WearableConfig = Omit<
 > & {
   id?: string
   description?: string
+  mapping?: Mapping
 }
 
 export type BuilderConfig = {
