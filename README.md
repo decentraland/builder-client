@@ -1,12 +1,56 @@
 <img src="https://ui.decentraland.org/decentraland_256x256.png" height="128" width="128" />
 
-# Builder client
+# Builder Client
 
 [![NPM version](https://badge.fury.io/js/@dcl%2Fbuilder-client.svg)](https://www.npmjs.com/package/@dcl/builder-client/v/latest)
 [![Install Size](https://packagephobia.now.sh/badge?p=@dcl/builder-client@latest)](https://packagephobia.now.sh/result?p=@dcl/builder-client@latest)
 [![Coverage Status](https://coveralls.io/repos/github/decentraland/builder-client/badge.svg?branch=main)](https://coveralls.io/github/decentraland/builder-client?branch=main)
 
-## Using the Builder client
+A TypeScript/JavaScript client library for interacting with the Decentraland Builder Server API. It provides utilities for managing wearables, emotes, and other items programmatically.
+
+## Table of Contents
+
+- [Features](#features)
+- [Dependencies & Related Services](#dependencies--related-services)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Using the Builder Client](#using-the-builder-client)
+  - [Using the Item Factory](#using-the-item-factory)
+  - [Loading Items from Files](#loading-items-from-files)
+- [Testing](#testing)
+
+## Features
+
+- **BuilderClient**: HTTP client for Builder Server API with authenticated requests using `@dcl/crypto`
+- **ItemFactory**: Builder pattern for creating and editing wearable/emote items
+- **File Loading**: Utilities to load items from ZIP files, model files, and config files (`wearable.json`, `builder.json`)
+- **Content Hashing**: Content hash generation for item files using `@dcl/hashing`
+- **Third-Party Support**: Fetch and manage third-party collections and items
+
+## Dependencies & Related Services
+
+This library interacts with the following services:
+
+- **[Builder Server](https://github.com/decentraland/builder-server)**: Backend API for storing projects, items, collections, and content
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js**: Version 14.x or higher
+- **npm**: Version 6.x or higher
+
+### Installation
+
+```bash
+npm install @dcl/builder-client
+```
+
+## Usage
+
+### Using the Builder Client
 
 Using the builder client requires an `AuthIdentity` to be created.
 
@@ -18,7 +62,7 @@ An `AuthIdentity` is an object containing:
 
 The library provides a function `createIdentity` that uses a `Signer` from `ethers`, but any other implementation can be created to craft such identity.
 
-Creating the identity using the `createIdentity` can be easily done in NodeJS by instantiating an ethers wallet using a private key:
+Creating the identity using the `createIdentity` can be easily done in Node.js by instantiating an ethers wallet using a private key:
 
 ```typescript
 const wallet = new ethers.Wallet('aPrivateKey')
@@ -34,14 +78,18 @@ const provider = new ethers.providers.JsonRpcProvider()
 To use the `BuilderClient`, just instantiate the class with the builder-server url, the identity and the signer's address:
 
 ```typescript
-const client = new BuilderClient('https://httpdump.io', identity, address)
+const client = new BuilderClient(
+  'https://builder-api.decentraland.org/v1',
+  identity,
+  address
+)
 ```
 
-## Using the Item Factory
+### Using the Item Factory
 
 Building items is done by using the `ItemFactory`. The `ItemFactory` is a class that can be instantiated with an older item or in blank.
 
-### Initializing a new item
+#### Initializing a new item
 
 If the factory was instantiated without an item, a new item can be created by using the `newItem` method that creates a basic item to later work on it.
 
@@ -59,7 +107,7 @@ itemFactory.newItem({
 })
 ```
 
-### Editing an item
+#### Editing an item
 
 An `ItemFactory` instantiated with an older item or with a new item can modify every aspect of the item. This is done by using the factory methods:
 
@@ -74,9 +122,9 @@ itemFactory
   .withDescription('aDescription')
 ```
 
-### Adding or removing representations to an item
+#### Adding or removing representations
 
-Representations can be added using the `withRepresentation`: or `withoutRepresentation` methods.
+Representations can be added using the `withRepresentation` or `withoutRepresentation` methods.
 
 ```typescript
 const itemFactory = new ItemFactory(oldItem)
@@ -105,23 +153,23 @@ itemFactory.withoutRepresentation(BodyShapeType.FEMALE)
 When defining the representation's content, the `contents` field must contain the model and the thumbnail.
 The library's user is responsible for providing a thumbnail. The thumbnail can be also be changed / set using the `withThumbnail` method.
 
-### Loading items from files
+### Loading Items from Files
 
 This library provides a function `loadItem` that can be used to load an item from a file. The function accepts four types of files:
 
 1. A zip file that contains only the item's contents.
 2. A model file, that contains only the item's model.
 3. A zip file that contains the item's contents and the wearable config file `wearable.json` describing the item's information.
-4. A zip file that contains the item's contents, the builder config file `builder.json` describing information required for the builder platform and **optionally**
-   the wearable config file `wearable.json` describing the item's information.
+4. A zip file that contains the item's contents, the builder config file `builder.json` describing information required for the builder platform and **optionally** the wearable config file `wearable.json` describing the item's information.
 
-For the 1st and 2nd cases, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`,
-that is content ready to be used with the ItemFactory, and the property `mainModel` that defines the main model file of the contents.
+For the 1st and 2nd cases, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`, that is content ready to be used with the ItemFactory, and the property `mainModel` that defines the main model file of the contents.
 
-After loading the file, the `LoadedItem` object can be used to create an item using the `ItemFactory`:
+#### Loading a ZIP file with contents only
+
+When loading a ZIP file that contains only the item's contents (models, textures, etc.) without any config files:
 
 ```typescript
-// Loads a ZIP file without the wearable config file or a model file
+// Loads a ZIP file without the wearable config file
 const loadedItem = await loadItem('model-without-wearable-config.zip')
 const itemFactory = new ItemFactory()
 itemFactory.newItem({
@@ -148,12 +196,45 @@ itemFactory.newItem({
   )
 ```
 
-For the 3rd case, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`, and it will also contain the wearable property
-that contains the information of the wearable config file.
+#### Loading a model file directly
 
-A wearable config file is a JSON file that contains the item's information and it has the following shape:
+When loading a single model file (e.g., `.glb`, `.gltf`) directly without zipping:
 
 ```typescript
+// Loads a model file directly
+const loadedItem = await loadItem('model.glb')
+const itemFactory = new ItemFactory()
+itemFactory.newItem({
+  id: 'anId'
+  name: 'aName',
+  rarity: Rarity.COMMON,
+  category: WearableCategory.EYEBROWS,
+  collection_id: 'aCollectionId',
+  description: 'aDescription'
+}).withRepresentation(
+    WearableBodyShape.MALE,
+    // Uses the main model from the loadedItem variable
+    loadedItem.mainModel,
+    // Uses the content from the loadedItem variable
+    loadedItem.content,
+    {
+      triangles: 106,
+      materials: 107,
+      meshes: 108,
+      bodies: 109,
+      entities: 110,
+      textures: 111
+    }
+  )
+```
+
+#### Loading a ZIP with wearable.json
+
+For this case, the function will create a `LoadedItem` object that will contain the item's contents as `RawContent`, and it will also contain the `wearable` property that contains the information from the wearable config file.
+
+A wearable config file (`wearable.json`) is a JSON file that contains the item's information:
+
+```json
 {
   // The item's URN (optional)
   "id": "urn:decentraland:matic:collections-thirdparty:third-party-id:collection-id:item-id",
@@ -194,18 +275,19 @@ A wearable config file is a JSON file that contains the item's information and i
 }
 ```
 
-After loading the file zip file that contains a `wearable.json` file, the `LoadedItem` object can be used to create an item using the `ItemFactory`:
-
 ```typescript
 const loadedItem = await loadItem('model-with-wearable-config.zip')
 const itemFactory = new ItemFactory()
 itemFactory.fromConfig(loadedItem.wearable, loadedItem.content)
 ```
 
-For the 4th case, providing a `builder.json` file we can extract information related to the Builder platform. This file can be accompanied optionally with a `wearable.json` file,
-resulting in a zipped wearable that describes a wearable and its place in the Builder platform.
+#### Loading a ZIP with builder.json and wearable.json
 
-```typescript
+For this case, providing a `builder.json` file allows extracting information related to the Builder platform. This file can be accompanied optionally with a `wearable.json` file, resulting in a zipped wearable that describes a wearable and its place in the Builder platform.
+
+A builder config file (`builder.json`) is a JSON file that contains Builder platform-specific information:
+
+```json
 {
   // The item's ID in the builder platform (optional)
   "id": "f12313b4-a76b-4c9e-a2a3-ab460f59bd67",
@@ -213,8 +295,6 @@ resulting in a zipped wearable that describes a wearable and its place in the Bu
   "collectionId": "34262929-3ba9-4a9e-8769-d1a92623d6d1"
 }
 ```
-
-After loading the file zip file that contains a `builder.json` and `wearable.json` files, the `LoadedItem` object can be used to create an item using the `ItemFactory`:
 
 ```typescript
 const loadedItem = await loadItem('model-with-wearable-and-builder-config.zip')
@@ -226,14 +306,9 @@ itemFactory.fromConfig(
 )
 ```
 
-**To consider**
+#### Building an item
 
-The item's thumbnail and the wearable image must be set either manually, by using the factory's `withThumbnail` method or by including the file `thumbnail.png` in the item's contents.
-
-### Building an item
-
-Building an item is the last step of the item's creation. The `build` method returns a `Promise` that resolves to an object containing the
-item and the item's new contents, that is the variables values that are needed to do an item insert or update using the client.
+Building an item is the last step of the item's creation. The `build` method returns a `Promise` that resolves to an object containing the item and the item's new contents:
 
 ```typescript
 const itemFactory = new ItemFactory(oldItem)
@@ -260,3 +335,51 @@ const builtItem = await itemFactory
   .build()
 await client.upsertItem(builtItem.item, builtItem.newContent)
 ```
+
+**To consider**
+
+The item's thumbnail and the wearable image must be set either manually, by using the factory's `withThumbnail` method or by including the file `thumbnail.png` in the item's contents.
+
+## Testing
+
+This library contains tests that assert the behavior of the client, item factory, and file utilities.
+
+### Running tests
+
+Run all tests:
+
+```bash
+npm run test
+```
+
+Run tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+Run all tests with coverage:
+
+```bash
+npm run test:coverage
+```
+
+### Test Structure
+
+Tests are written in files named along the file they're testing, with a `.spec.ts` extension:
+
+```
+src/
+  client/
+    BuilderClient.ts
+    BuilderClient.spec.ts
+  item/
+    ItemFactory.ts
+    ItemFactory.spec.ts
+```
+
+## AI Agent Context
+
+For detailed AI Agent context, see [docs/ai-agent-context.md](docs/ai-agent-context.md).
+
+---
