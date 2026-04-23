@@ -127,6 +127,7 @@ async function handleZippedModelFiles<T extends Content>(
 
   zip.forEach((filePath, file) => {
     if (
+      !file.dir &&
       !basename(filePath).startsWith('.') &&
       basename(filePath) !== WEARABLE_MANIFEST &&
       basename(filePath) !== BUILDER_MANIFEST &&
@@ -140,7 +141,10 @@ async function handleZippedModelFiles<T extends Content>(
 
   const fileContents = await Promise.all(promiseOfFileContents)
   const content: RawContent<T> = fileNames.reduce((acc, fileName, index) => {
-    acc[fileName] = fileContents[index]
+    const fileContent = fileContents[index]
+    if (getFileSize(fileContent) > 0) {
+      acc[fileName] = fileContent
+    }
     return acc
   }, {} as RawContent<T>)
   const contentsSize = Object.entries(content).reduce(
@@ -264,9 +268,20 @@ async function handleZippedModelFiles<T extends Content>(
   }
 
   if (wearable) {
-    result = { ...result, wearable, scene }
+    const validFiles = new Set(Object.keys(content))
+    const filteredWearable = {
+      ...wearable,
+      data: {
+        ...wearable.data,
+        representations: wearable.data.representations.map(rep => ({
+          ...rep,
+          contents: rep.contents.filter(f => validFiles.has(f))
+        }))
+      }
+    }
+    result = { ...result, wearable: filteredWearable, scene }
   } else {
-    const mainModelFile = fileNames.find(isModelPath)
+    const mainModelFile = Object.keys(content).find(isModelPath)
     if (!mainModelFile) {
       throw new ModelFileNotFoundError()
     }
