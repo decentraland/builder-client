@@ -1100,12 +1100,9 @@ describe('when loading an item file', () => {
 
         it('should strip 0-byte files from wearable representations', async () => {
           const result = await loadFile(fileName, zipFileContent)
-          expect(result.wearable!.data.representations[0].contents).toEqual([
-            modelFile
-          ])
-          expect(
-            result.wearable!.data.representations[0].contents
-          ).not.toContain('empty.crdt')
+          const contents = result.wearable?.data.representations[0].contents
+          expect(contents).toEqual([modelFile])
+          expect(contents).not.toContain('empty.crdt')
         })
       })
     })
