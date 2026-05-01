@@ -273,9 +273,9 @@ async function handleZippedModelFiles<T extends Content>(
       ...wearable,
       data: {
         ...wearable.data,
-        representations: wearable.data.representations.map(rep => ({
+        representations: wearable.data.representations.map((rep) => ({
           ...rep,
-          contents: rep.contents.filter(f => validFiles.has(f))
+          contents: rep.contents.filter((f) => validFiles.has(f))
         }))
       }
     }
