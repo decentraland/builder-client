@@ -992,6 +992,110 @@ describe('when loading an item file', () => {
           })
         })
       })
+
+      describe('and it contains a base PNG alongside facial expressions auxiliaries', () => {
+        const baseImage = 'red_eyes.png'
+        const maskImage = 'red_eyes_mask.png'
+        const expressionsImage = 'red_eyes_expressions.png'
+        const expressionsMaskImage = 'red_eyes_expressions_mask.png'
+        let expressionsContent: Uint8Array
+        let expressionsMaskContent: Uint8Array
+        let maskContent: Uint8Array
+
+        beforeEach(async () => {
+          maskContent = new Uint8Array([10, 11])
+          expressionsContent = new Uint8Array([20, 21])
+          expressionsMaskContent = new Uint8Array([30, 31])
+          zipFile.file(baseImage, modelContent)
+          zipFile.file(maskImage, maskContent)
+          zipFile.file(expressionsImage, expressionsContent)
+          zipFile.file(expressionsMaskImage, expressionsMaskContent)
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should pick the base PNG as the main model and keep every auxiliary file in the contents', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [baseImage]: modelContent,
+              [maskImage]: maskContent,
+              [expressionsImage]: expressionsContent,
+              [expressionsMaskImage]: expressionsMaskContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            mainModel: baseImage
+          })
+        })
+      })
+
+      describe('and it contains only an _expressions.png file without its base PNG', () => {
+        const expressionsImage = 'red_eyes_expressions.png'
+        let expressionsContent: Uint8Array
+
+        beforeEach(async () => {
+          expressionsContent = new Uint8Array([20, 21])
+          zipFile.file(expressionsImage, expressionsContent)
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should treat the expressions file as auxiliary and throw a model-not-found error', () => {
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new ModelFileNotFoundError()
+          )
+        })
+      })
+
+      describe('and it contains only an _expressions_mask.png file without its base PNG', () => {
+        const expressionsMaskImage = 'red_eyes_expressions_mask.png'
+        let expressionsMaskContent: Uint8Array
+
+        beforeEach(async () => {
+          expressionsMaskContent = new Uint8Array([30, 31])
+          zipFile.file(expressionsMaskImage, expressionsMaskContent)
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should treat the expressions mask as auxiliary and throw a model-not-found error', () => {
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new ModelFileNotFoundError()
+          )
+        })
+      })
+
+      describe('and it contains only a _mask.png file without its base PNG', () => {
+        const maskImage = 'red_eyes_mask.png'
+        let maskContent: Uint8Array
+
+        beforeEach(async () => {
+          maskContent = new Uint8Array([10, 11])
+          zipFile.file(maskImage, maskContent)
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should treat the mask file as auxiliary and throw a model-not-found error', () => {
+          return expect(loadFile(fileName, zipFileContent)).rejects.toThrow(
+            new ModelFileNotFoundError()
+          )
+        })
+      })
+
+      describe('and it contains a PNG whose name has `_mask` somewhere other than as the suffix', () => {
+        const mainImage = 'red_mask_eyes.png'
+
+        beforeEach(async () => {
+          zipFile.file(mainImage, modelContent)
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should treat the file as a main model, since only filenames ending in `_mask.png` are auxiliary', () => {
+          return expect(loadFile(fileName, zipFileContent)).resolves.toEqual({
+            content: {
+              [mainImage]: modelContent,
+              [THUMBNAIL_PATH]: thumbnailContent
+            },
+            mainModel: mainImage
+          })
+        })
+      })
     })
   })
 })
