@@ -90,12 +90,13 @@ function isModelFile(fileName: string) {
 
 function isModelPath(fileName: string) {
   fileName = fileName.toLowerCase()
-  // we ignore PNG files that end with "_mask", since those are auxiliary
-  const isMask = fileName.includes('_mask')
+  // PNG files for masks and facial expressions are auxiliary; only the base PNG is the main file
+  const isAuxiliary =
+    fileName.endsWith('_mask.png') || fileName.endsWith('_expressions.png')
   return (
     isModelFile(fileName) ||
     (fileName.indexOf(THUMBNAIL_PATH) === -1 &&
-      !isMask &&
+      !isAuxiliary &&
       isImageFile(fileName))
   )
 }
