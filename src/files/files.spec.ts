@@ -1097,5 +1097,118 @@ describe('when loading an item file', () => {
         })
       })
     })
+
+    describe('and the zip contains directory entries', () => {
+      let modelFile: string
+      let modelFileContent: Uint8Array
+      let wearableFileContent: WearableConfig
+
+      beforeEach(() => {
+        modelFile = 'some-model.glb'
+        modelFileContent = new Uint8Array([0, 1, 2, 3, 4])
+
+        wearableFileContent = {
+          id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+          name: 'test',
+          rarity: Rarity.COMMON,
+          data: {
+            category: WearableCategory.EYEBROWS,
+            hides: [],
+            replaces: [],
+            tags: [],
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                mainFile: modelFile,
+                contents: [modelFile, 'bin/game.js'],
+                overrideHides: [],
+                overrideReplaces: []
+              }
+            ],
+            blockVrmExport: false
+          }
+        }
+
+        zipFile.file(modelFile, modelFileContent)
+        // Adding a file in a subdir auto-creates the bin/ directory entry in the zip
+        zipFile.file('bin/game.js', new Uint8Array([1, 2, 3]))
+        zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
+      })
+
+      describe('and the zip file is in the Uint8Array format', () => {
+        beforeEach(async () => {
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should exclude the auto-created directory entry from content', async () => {
+          const result = await loadFile(fileName, zipFileContent)
+          expect(Object.keys(result.content)).not.toContain('bin/')
+          expect(result.content).toMatchObject({
+            [modelFile]: modelFileContent,
+            'bin/game.js': new Uint8Array([1, 2, 3]),
+            [THUMBNAIL_PATH]: thumbnailContent
+          })
+        })
+      })
+    })
+
+    describe('and the zip contains 0-byte files listed in the wearable representations', () => {
+      let modelFile: string
+      let modelFileContent: Uint8Array
+      let wearableFileContent: WearableConfig
+
+      beforeEach(() => {
+        modelFile = 'some-model.glb'
+        modelFileContent = new Uint8Array([0, 1, 2, 3, 4])
+
+        wearableFileContent = {
+          id: 'urn:decentraland:mumbai:collections-thirdparty:thirdparty-id:collection-id:token-id',
+          name: 'test',
+          rarity: Rarity.COMMON,
+          data: {
+            category: WearableCategory.EYEBROWS,
+            hides: [],
+            replaces: [],
+            tags: [],
+            representations: [
+              {
+                bodyShapes: [WearableBodyShape.MALE],
+                mainFile: modelFile,
+                contents: [modelFile, 'empty.crdt'],
+                overrideHides: [],
+                overrideReplaces: []
+              }
+            ],
+            blockVrmExport: false
+          }
+        }
+
+        zipFile.file(modelFile, modelFileContent)
+        zipFile.file('empty.crdt', new Uint8Array(0))
+        zipFile.file(WEARABLE_MANIFEST, JSON.stringify(wearableFileContent))
+      })
+
+      describe('and the zip file is in the Uint8Array format', () => {
+        beforeEach(async () => {
+          zipFileContent = await zipFile.generateAsync({ type: 'uint8array' })
+        })
+
+        it('should exclude 0-byte files from content', async () => {
+          const result = await loadFile(fileName, zipFileContent)
+          expect(Object.keys(result.content)).not.toContain('empty.crdt')
+          expect(result.content).toMatchObject({
+            [modelFile]: modelFileContent,
+            [THUMBNAIL_PATH]: thumbnailContent
+          })
+        })
+
+        it('should strip 0-byte files from wearable representations', async () => {
+          const result = await loadFile(fileName, zipFileContent)
+          const contents = result.wearable?.data.representations[0].contents
+          expect(contents).toEqual([modelFile])
+          expect(contents).not.toContain('empty.crdt')
+        })
+      })
+    })
   })
 })
