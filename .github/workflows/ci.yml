@@ -42,4 +42,3 @@ jobs:
           access: public
           ## Sign the deployment
           provenance: true
-        env:
